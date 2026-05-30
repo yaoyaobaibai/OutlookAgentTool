@@ -1,0 +1,43 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+$$$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# PyInstaller
+*.spec
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*_logs/
+*.log
+
+# Temp files
+*.tmp
+*.temp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Release ZIPs (keep EXEs, skip ZIPs)
+release_package/*.zip
+
+# Test output
+merged*.pdf

@@ -1,0 +1,3 @@
+pywin32>=305
+win10toast>=0.9
+extract-msg>=0.55
