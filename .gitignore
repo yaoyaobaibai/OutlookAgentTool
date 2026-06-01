@@ -1,0 +1,5 @@
+agent_tool/测试/
+__pycache__/
+*.pyc
+*.pyo
+*.spec

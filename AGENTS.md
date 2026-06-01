@@ -1,0 +1,40 @@
+# OutlookAgent 项目指南
+
+> 基于 Andrej Karpathy 编码原则 + 本项目血泪教训
+
+## 1. 编码前思考
+- 不要假设。不确定时显式写出假设
+- 困惑时停下来，请求澄清
+- 有更简单的方案就说
+
+## 2. 简洁优先
+- 不写"以后可能用"的代码
+- **日志用英文 ASCII**：--windowed EXE 中文全变 ??
+- 自问："高级工程师会说这过度设计吗？"
+
+## 3. 精准修改
+- 不改没坏的东西，不顺手优化
+- 匹配现有风格
+- **写完立验**：改完立即 python -m py_compile
+
+## 4. 目标驱动执行
+- 强标准：日志出现 CJK font registered ✓ 而非 "修复中文乱码"
+
+## 项目结构
+- agent_tool/outlook_agent/ → OutlookAgent.exe
+- agent_tool/pdf_merge_tool/ → PDFMergeTool.exe
+- agent_tool/release_package/ → 版本发布
+- .sisyphus/ → 项目文档
+
+## ⚠️ 关键陷阱
+- _html_body_to_pdf 在 attachment_handler.py 和 msg_to_pdf.py 各有一份，修一个必须同步修另一个
+- --windowed EXE 吞 stderr → logger.warning 是唯一可见输出
+- 禁止 print() 中文 → cp1252 崩溃
+- 动态路径导入 PyInstaller 可能追踪不到 → 需 --hidden-import
+- 构建前 kill 旧进程，确认文件大小刷新，重新 ZIP
+
+## 5. 会话管理
+- **Handoff 时机**：遇到自然断点（需要测试、等待用户确认、API 余额不足）时生成临时 handoff（标记 session 编号）；会话结束时生成最终 handoff 合并或取代临时版本
+- **SKILL 更新**：会话即将结束时，Agent 主动输出本次新增经验表格（错误签名→修复、决策、否决方案），格式为 Markdown 表格，供用户审查。用户确认后，Agent 分区追加到 SKILL.md（不重写全文）。触发条件：用户说"结束会话"、"输出 handoff"、或 Agent 检测到会话即将结束
+- **测试目录不入 Git**：`agent_tool/测试/` 含保密数据，已在 .gitignore 中排除
+- **README 更新**：每次打包 release 时，基于前一个版本的 README.txt 追加新版本 changelog，不要重写。changelog 用用户能理解的语言（如"修复邮件格式丢失"），不要用技术术语（如"PyInstaller 打包不包含 attachment_handler.py"）

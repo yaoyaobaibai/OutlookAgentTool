@@ -1,0 +1,24 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.12.7, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\P1313993\AppData\Local\Programs\Python\Python312\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Open AI Proj\agent_tool
+configfile: pyproject.toml
+plugins: cov-7.1.0
+collecting ... collected 3 items
+
+tests/test_html_extraction_fallback.py::test_extraction_tries_com_first FAILED [ 33%]
+tests/test_html_extraction_fallback.py::test_extraction_falls_back_on_com_failure FAILED [ 66%]
+tests/test_html_extraction_fallback.py::test_extraction_returns_html_on_com_success FAILED [100%]
+
+================================== FAILURES ===================================
+E   AttributeError: <module 'pdf_merge_tool.converters.msg_to_pdf' from 'C:\\Open AI Proj\\agent_tool\\pdf_merge_tool\\converters\\msg_to_pdf.py'> does not have the attribute '_read_msg_html_via_outlook'
+C:\Users\P1313993\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1436: AttributeError: <module 'pdf_merge_tool.converters.msg_to_pdf' from 'C:\\Open AI Proj\\agent_tool\\pdf_merge_tool\\converters\\msg_to_pdf.py'> does not have the attribute '_read_msg_html_via_outlook'
+E   AttributeError: <module 'pdf_merge_tool.converters.msg_to_pdf' from 'C:\\Open AI Proj\\agent_tool\\pdf_merge_tool\\converters\\msg_to_pdf.py'> does not have the attribute '_read_msg_html_via_outlook'
+C:\Users\P1313993\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1436: AttributeError: <module 'pdf_merge_tool.converters.msg_to_pdf' from 'C:\\Open AI Proj\\agent_tool\\pdf_merge_tool\\converters\\msg_to_pdf.py'> does not have the attribute '_read_msg_html_via_outlook'
+E   AttributeError: <module 'pdf_merge_tool.converters.msg_to_pdf' from 'C:\\Open AI Proj\\agent_tool\\pdf_merge_tool\\converters\\msg_to_pdf.py'> does not have the attribute '_read_msg_html_via_outlook'
+C:\Users\P1313993\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1436: AttributeError: <module 'pdf_merge_tool.converters.msg_to_pdf' from 'C:\\Open AI Proj\\agent_tool\\pdf_merge_tool\\converters\\msg_to_pdf.py'> does not have the attribute '_read_msg_html_via_outlook'
+=========================== short test summary info ===========================
+FAILED tests/test_html_extraction_fallback.py::test_extraction_tries_com_first
+FAILED tests/test_html_extraction_fallback.py::test_extraction_falls_back_on_com_failure
+FAILED tests/test_html_extraction_fallback.py::test_extraction_returns_html_on_com_success
+============================== 3 failed in 1.00s ==============================
