@@ -185,6 +185,14 @@ class PDFMergeTool:
         )
         self.page_size_combo.pack(side=tk.LEFT, padx=5)
         
+        # 合并邮件附件选项
+        self.include_msg_attachments_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(
+            options_frame,
+            text="合并邮件附件",
+            variable=self.include_msg_attachments_var
+        ).pack(side=tk.LEFT, padx=(20, 5))
+        
         # ===== 输出文件区域 =====
         output_frame = ttk.LabelFrame(main_frame, text="输出", padding="10")
         output_frame.pack(fill=tk.X, pady=(0, 10))
@@ -475,7 +483,8 @@ class PDFMergeTool:
                 elif file_type == 'msg':
                     # .msg 文件：提取附件并转换为 PDF（不包含邮件信息页）
                     from converters.msg_to_pdf import msg_to_pdf
-                    success, error = msg_to_pdf(file_path, temp_pdf, include_info_page=False, page_size=page_pts)
+                    success, error = msg_to_pdf(file_path, temp_pdf, include_info_page=False, page_size=page_pts,
+                                                include_attachments=self.include_msg_attachments_var.get())
                     if success:
                         temp_pdf_files.append(temp_pdf)
                         logger.info(f"MSG 转换成功: {temp_pdf}")
@@ -738,7 +747,8 @@ def merge_files_silent(files: List[str], output_path: str, add_page_nums: bool =
                     return (idx, None, f"图片转换失败: {os.path.basename(fp)}")
             elif ft == 'msg':
                 from converters.msg_to_pdf import msg_to_pdf
-                ok, err = msg_to_pdf(fp, temp_pdf, include_info_page=False, page_size=page_pts)
+                ok, err = msg_to_pdf(fp, temp_pdf, include_info_page=False, page_size=page_pts,
+                                   include_attachments=True)
                 if ok:
                     if os.path.exists(temp_pdf):
                         return (idx, temp_pdf, None)

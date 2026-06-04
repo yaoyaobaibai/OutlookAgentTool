@@ -383,17 +383,106 @@ def _read_msg_html_via_outlook(msg_path):
         logger.info("COM: OpenSharedItem OK, reading HTMLBody")
         html = mail.HTMLBody
         logger.info(f"COM: HTMLBody len={len(html) if html else 0}")
+
+        # Read inline image attachments before closing mail
+        attachments = []
+        try:
+            att_count = mail.Attachments.Count
+            logger.info(f"COM: Found {att_count} attachments")
+            for i in range(1, att_count + 1):
+                try:
+                    att = mail.Attachments.Item(i)
+                    # Get contentId (MAPI property tag for PR_ATTACH_CONTENT_ID)
+                    content_id = None
+                    try:
+                        prop_accessor = att.PropertyAccessor
+                        content_id = prop_accessor.GetProperty(
+                            "http://schemas.microsoft.com/mapi/proptag/0x3712001E")
+                    except:
+                        pass
+
+                    if content_id:
+                        # Read attachment binary data via temp file
+                        data = None
+                        try:
+                            temp_path = os.path.join(tempfile.gettempdir(), att.FileName)
+                            att.SaveAsFile(temp_path)
+                            with open(temp_path, 'rb') as f:
+                                data = f.read()
+                            try:
+                                os.unlink(temp_path)
+                            except:
+                                pass
+                        except Exception as e:
+                            logger.warning(f"COM: Failed to read attachment {i}: {e}")
+
+                        if data:
+                            # Get MIME type (MAPI property tag for PR_ATTACH_MIME_TAG)
+                            mime_type = 'image/png'
+                            try:
+                                prop_accessor = att.PropertyAccessor
+                                mime_type = prop_accessor.GetProperty(
+                                    "http://schemas.microsoft.com/mapi/proptag/0x370E001E") or 'image/png'
+                            except:
+                                pass
+
+                            attachments.append({
+                                'contentId': content_id,
+                                'data': data,
+                                'mimetype': mime_type,
+                                'hidden': True
+                            })
+                            logger.info(f"COM: Inline image: {att.FileName}, size={len(data)//1024}KB, cid={content_id}")
+                except Exception as e:
+                    logger.warning(f"COM: Failed to process attachment {i}: {e}")
+        except Exception as e:
+            logger.warning(f"COM: Failed to enumerate attachments: {e}")
+
         mail.Close(0)  # olDiscard = 0, don't save changes
         if html and html.strip():
-            logger.info(f"COM: SUCCESS, html len={len(html)}")
-            return html
+            logger.info(f"COM: SUCCESS, html len={len(html)}, attachments={len(attachments)}")
+            return html, attachments
         logger.warning("COM: HTMLBody is empty or None")
-        return None
+        return None, []
     except Exception as e:
         logger.warning(f"COM reader FAILED: {type(e).__name__}: {e}")
-        return None
+        return None, []
     finally:
         pythoncom.CoUninitialize()
+
+
+def _compress_image_if_needed(data, max_size=200*1024):
+    """Compress image if it exceeds max_size, preserving content."""
+    if len(data) <= max_size:
+        return data
+    
+    try:
+        from PIL import Image
+        import io
+        
+        img = Image.open(io.BytesIO(data))
+        
+        # Calculate scale ratio
+        ratio = (max_size / len(data)) ** 0.5
+        new_size = (int(img.width * ratio), int(img.height * ratio))
+        
+        # Resize and compress
+        img = img.resize(new_size, Image.LANCZOS)
+        output = io.BytesIO()
+        
+        # Convert RGBA to RGB if needed (for PNG with transparency)
+        if img.mode == 'RGBA':
+            background = Image.new('RGB', img.size, (255, 255, 255))
+            background.paste(img, mask=img.split()[3])
+            img = background
+        
+        img.save(output, format='JPEG', quality=85, optimize=True)
+        compressed = output.getvalue()
+        logger.info(f"Compressed image from {len(data)//1024}KB to {len(compressed)//1024}KB")
+        return compressed
+    except Exception as e:
+        logger.warning(f"Image compression failed: {e}, using original")
+        return data
 
 
 def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None):
@@ -421,18 +510,26 @@ def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None):
     MAX_INLINE_IMG_SIZE = 200 * 1024  # 200KB
     for att in msg.attachments:
         try:
-            if getattr(att, 'hidden', False) and getattr(att, 'contentId', None):
-                cid = att.contentId
+            # Support both dict (from COM) and object (from extract_msg) formats
+            if isinstance(att, dict):
+                hidden = att.get('hidden', False)
+                cid = att.get('contentId')
+                data = att.get('data')
+                mime = att.get('mimetype', 'image/png')
+            else:
+                hidden = getattr(att, 'hidden', False)
+                cid = getattr(att, 'contentId', None)
                 data = att.data
-                if isinstance(data, bytes):
-                    if len(data) > MAX_INLINE_IMG_SIZE:
-                        logger.warning(f"Skipping large inline image ({len(data)//1024}KB): cid={cid}")
-                        continue
-                    b64 = base64.b64encode(data).decode('ascii')
-                    mime = att.mimetype or 'image/png'
-                    data_uri = f'data:{mime};base64,{b64}'
-                    # Replace cid: references
-                    html_body = html_body.replace(f'cid:{cid}', data_uri)
+                mime = att.mimetype or 'image/png'
+
+            if hidden and cid and isinstance(data, bytes):
+                if len(data) > MAX_INLINE_IMG_SIZE:
+                    data = _compress_image_if_needed(data, MAX_INLINE_IMG_SIZE)
+                b64 = base64.b64encode(data).decode('ascii')
+                data_uri = f'data:{mime};base64,{b64}'
+                # Replace cid: references
+                html_body = html_body.replace(f'cid:{cid}', data_uri)
+                logger.info(f"Embedded image: cid={cid}, size={len(data)//1024}KB, mime={mime}")
         except:
             pass
     
@@ -553,6 +650,7 @@ def msg_to_pdf(
     output_pdf: str, 
     include_info_page: bool = False,
     page_size=None,
+    include_attachments: bool = True,
     _depth: int = 0
 ) -> Tuple[bool, str]:
     """
@@ -593,14 +691,14 @@ def msg_to_pdf(
         
         # 2. Try Outlook COM first (handles RTF encoding internally)
         body_ok = False
-        html_body = _read_msg_html_via_outlook(msg_path)
+        html_body, com_attachments = _read_msg_html_via_outlook(msg_path)
         if html_body:
             logger.info("PATH: Outlook COM HTML reader: success")
             class _COMResult:
                 pass
             com_result = _COMResult()
             com_result.htmlBody = html_body
-            com_result.attachments = []
+            com_result.attachments = com_attachments
             body_ok = _html_body_to_pdf(com_result, body_pdf_path, temp_dir,
                                          page_size=page_size or (595.28, 841.89))
         # Fallback: extract_msg path
@@ -637,105 +735,108 @@ def msg_to_pdf(
         if body_ok:
             pdf_files.append(body_pdf_path)
         
-        # 3. æå–é™„ä»¶
-        extract_ok, attachments, extract_err = extract_attachments_from_msg(msg_path, temp_dir, _depth + 1, page_size=page_size)
-        
-        if not attachments:
-            logger.info(f".msg has no attachments, body only: {os.path.basename(msg_path)}")
-        # å³ä½¿æ— é™„ä»¶ä¹Ÿç»§ç»­ â€”â€” æ­£æ–‡ PDF å·²åœ¨ pdf_files ä¸­
-        
-        # 4. è½¬æ¢æ¯ä¸ªé™„ä»¶ä¸º PDF
-        if extract_ok and attachments:
-            for attachment in attachments:
-                file_type = get_file_type(attachment)
-                temp_pdf = os.path.join(temp_dir, f"{os.path.basename(attachment)}.pdf")
-                
-                conv_ok = False
-                
-                if file_type == 'pdf':
-                    pdf_files.append(attachment)
-                    conv_ok = True
-                elif file_type == 'text':
-                    conv_ok = txt_to_pdf(attachment, temp_pdf, page_size=page_size)
-                elif file_type == 'image':
-                    conv_ok = image_to_pdf([attachment], temp_pdf, page_size=page_size)
-                elif file_type == 'word':
-                    conv_ok, _ = word_to_pdf(attachment, temp_pdf, page_size=page_size)
-                elif file_type == 'excel':
-                    conv_ok, _ = excel_to_pdf(attachment, temp_dir, page_size=page_size)
-                    # Excel å¯èƒ½ç”Ÿæˆä¸åŒåç§°
-                    base = os.path.splitext(os.path.basename(attachment))[0]
-                    excel_pdf = os.path.join(temp_dir, f"{base}.pdf")
-                    if os.path.exists(excel_pdf):
-                        temp_pdf = excel_pdf
+        # 3. Extract attachments (if enabled)
+        if include_attachments:
+            extract_ok, attachments, extract_err = extract_attachments_from_msg(msg_path, temp_dir, _depth + 1, page_size=page_size)
+            
+            if not attachments:
+                logger.info(f".msg has no attachments, body only: {os.path.basename(msg_path)}")
+            # å³ä½¿æ— é™„ä»¶ä¹Ÿç»§ç»­ â€”â€” æ­£æ–‡ PDF å·²åœ¨ pdf_files ä¸­
+            
+            # 4. è½¬æ¢æ¯ä¸ªé™„ä»¶ä¸º PDF
+            if extract_ok and attachments:
+                for attachment in attachments:
+                    file_type = get_file_type(attachment)
+                    temp_pdf = os.path.join(temp_dir, f"{os.path.basename(attachment)}.pdf")
+                    
+                    conv_ok = False
+                    
+                    if file_type == 'pdf':
+                        pdf_files.append(attachment)
+                        conv_ok = True
+                    elif file_type == 'text':
+                        conv_ok = txt_to_pdf(attachment, temp_pdf, page_size=page_size)
+                    elif file_type == 'image':
+                        conv_ok = image_to_pdf([attachment], temp_pdf, page_size=page_size)
+                    elif file_type == 'word':
+                        conv_ok, _ = word_to_pdf(attachment, temp_pdf, page_size=page_size)
+                    elif file_type == 'excel':
+                        conv_ok, _ = excel_to_pdf(attachment, temp_dir, page_size=page_size)
+                        # Excel å¯èƒ½ç”Ÿæˆä¸åŒåç§°
+                        base = os.path.splitext(os.path.basename(attachment))[0]
+                        excel_pdf = os.path.join(temp_dir, f"{base}.pdf")
+                        if os.path.exists(excel_pdf):
+                            temp_pdf = excel_pdf
+                        else:
+                            conv_ok = False
+                    elif file_type == 'zip':
+                        # è§£åŽ‹ ZIP å¹¶è½¬æ¢å†…éƒ¨æ–‡ä»¶
+                        from converters.zip_handler import extract_from_zip
+                        zip_temp = os.path.join(temp_dir, "_zip_" + os.path.basename(attachment))
+                        os.makedirs(zip_temp, exist_ok=True)
+                        z_ok, z_files, z_err = extract_from_zip(attachment, zip_temp)
+                        if z_ok and z_files:
+                            for zf in z_files:
+                                z_type = get_file_type(zf)
+                                z_pdf = os.path.join(temp_dir, os.path.basename(zf) + ".pdf")
+                                z_success = False
+                                if z_type == 'pdf':
+                                    pdf_files.append(zf)
+                                    z_success = True
+                                elif z_type == 'text':
+                                    z_success = txt_to_pdf(zf, z_pdf, page_size=page_size)
+                                elif z_type == 'image':
+                                    z_success = image_to_pdf([zf], z_pdf, page_size=page_size)
+                                elif z_type == 'word':
+                                    z_success, _ = word_to_pdf(zf, z_pdf, page_size=page_size)
+                                elif z_type == 'excel':
+                                    z_success, _ = excel_to_pdf(zf, temp_dir, page_size=page_size)
+                                    if z_success:
+                                        base = os.path.splitext(os.path.basename(zf))[0]
+                                        alt_pdf = os.path.join(temp_dir, f"{base}.pdf")
+                                        if os.path.exists(alt_pdf):
+                                            z_pdf = alt_pdf
+                                elif z_type == 'zip':
+                                    # åµŒå¥— ZIPï¼šä¸å†é€’å½’å¤„ç†ï¼Œè·³è¿‡
+                                    logger.info(f"è·³è¿‡åµŒå¥—åŽ‹ç¼©åŒ…: {os.path.basename(zf)}")
+                                    z_success = True
+                                elif z_type == 'msg':
+                                    nested_pdf = os.path.join(temp_dir, os.path.basename(zf) + ".pdf")
+                                    z_success, _ = msg_to_pdf(zf, nested_pdf, False, _depth + 1)
+                                
+                                if z_success and os.path.exists(z_pdf):
+                                    pdf_files.append(z_pdf)
+                                elif z_success and z_type == 'pdf':
+                                    pass  # already added
+                                else:
+                                    logger.warning(f"ZIP å†…æ–‡ä»¶è½¬æ¢å¤±è´¥: {os.path.basename(zf)}")
+                        else:
+                            logger.warning(f"ZIP è§£åŽ‹å¤±è´¥ï¼Œè·³è¿‡: {os.path.basename(attachment)}")
+                        conv_ok = True  # ZIP å¤„ç†ä¸ä¸­æ–­æ•´ä½“
+    
+                    elif file_type == 'msg':
+                        # åµŒå¥—é‚®ä»¶ï¼šé€’å½’æå–é™„ä»¶
+                        if _depth >= 3:
+                            logger.warning(f"åµŒå¥—é‚®ä»¶æ·±åº¦å·²è¾¾ä¸Šé™ï¼Œè·³è¿‡: {os.path.basename(attachment)}")
+                        else:
+                            nested_pdf = os.path.join(temp_dir, os.path.basename(attachment) + ".pdf")
+                            nested_ok, nested_err = msg_to_pdf(attachment, nested_pdf, False, _depth + 1)
+                            if nested_ok and os.path.exists(nested_pdf):
+                                pdf_files.append(nested_pdf)
+                                conv_ok = True
+                            elif nested_err and nested_err.strip():
+                                logger.warning(f"åµŒå¥—é‚®ä»¶è½¬æ¢å¤±è´¥: {os.path.basename(attachment)} - {nested_err}")
+                    
+                    if conv_ok and file_type == 'zip':
+                        pass  # ZIP contents already added to pdf_files
+                    elif conv_ok and os.path.exists(temp_pdf):
+                        pdf_files.append(temp_pdf)
+                    elif conv_ok and file_type == 'pdf':
+                        pass  # PDF æ–‡ä»¶å·²ç»æ·»åŠ 
                     else:
-                        conv_ok = False
-                elif file_type == 'zip':
-                    # è§£åŽ‹ ZIP å¹¶è½¬æ¢å†…éƒ¨æ–‡ä»¶
-                    from converters.zip_handler import extract_from_zip
-                    zip_temp = os.path.join(temp_dir, "_zip_" + os.path.basename(attachment))
-                    os.makedirs(zip_temp, exist_ok=True)
-                    z_ok, z_files, z_err = extract_from_zip(attachment, zip_temp)
-                    if z_ok and z_files:
-                        for zf in z_files:
-                            z_type = get_file_type(zf)
-                            z_pdf = os.path.join(temp_dir, os.path.basename(zf) + ".pdf")
-                            z_success = False
-                            if z_type == 'pdf':
-                                pdf_files.append(zf)
-                                z_success = True
-                            elif z_type == 'text':
-                                z_success = txt_to_pdf(zf, z_pdf, page_size=page_size)
-                            elif z_type == 'image':
-                                z_success = image_to_pdf([zf], z_pdf, page_size=page_size)
-                            elif z_type == 'word':
-                                z_success, _ = word_to_pdf(zf, z_pdf, page_size=page_size)
-                            elif z_type == 'excel':
-                                z_success, _ = excel_to_pdf(zf, temp_dir, page_size=page_size)
-                                if z_success:
-                                    base = os.path.splitext(os.path.basename(zf))[0]
-                                    alt_pdf = os.path.join(temp_dir, f"{base}.pdf")
-                                    if os.path.exists(alt_pdf):
-                                        z_pdf = alt_pdf
-                            elif z_type == 'zip':
-                                # åµŒå¥— ZIPï¼šä¸å†é€’å½’å¤„ç†ï¼Œè·³è¿‡
-                                logger.info(f"è·³è¿‡åµŒå¥—åŽ‹ç¼©åŒ…: {os.path.basename(zf)}")
-                                z_success = True
-                            elif z_type == 'msg':
-                                nested_pdf = os.path.join(temp_dir, os.path.basename(zf) + ".pdf")
-                                z_success, _ = msg_to_pdf(zf, nested_pdf, False, _depth + 1)
-                            
-                            if z_success and os.path.exists(z_pdf):
-                                pdf_files.append(z_pdf)
-                            elif z_success and z_type == 'pdf':
-                                pass  # already added
-                            else:
-                                logger.warning(f"ZIP å†…æ–‡ä»¶è½¬æ¢å¤±è´¥: {os.path.basename(zf)}")
-                    else:
-                        logger.warning(f"ZIP è§£åŽ‹å¤±è´¥ï¼Œè·³è¿‡: {os.path.basename(attachment)}")
-                    conv_ok = True  # ZIP å¤„ç†ä¸ä¸­æ–­æ•´ä½“
-
-                elif file_type == 'msg':
-                    # åµŒå¥—é‚®ä»¶ï¼šé€’å½’æå–é™„ä»¶
-                    if _depth >= 3:
-                        logger.warning(f"åµŒå¥—é‚®ä»¶æ·±åº¦å·²è¾¾ä¸Šé™ï¼Œè·³è¿‡: {os.path.basename(attachment)}")
-                    else:
-                        nested_pdf = os.path.join(temp_dir, os.path.basename(attachment) + ".pdf")
-                        nested_ok, nested_err = msg_to_pdf(attachment, nested_pdf, False, _depth + 1)
-                        if nested_ok and os.path.exists(nested_pdf):
-                            pdf_files.append(nested_pdf)
-                            conv_ok = True
-                        elif nested_err and nested_err.strip():
-                            logger.warning(f"åµŒå¥—é‚®ä»¶è½¬æ¢å¤±è´¥: {os.path.basename(attachment)} - {nested_err}")
-                
-                if conv_ok and file_type == 'zip':
-                    pass  # ZIP contents already added to pdf_files
-                elif conv_ok and os.path.exists(temp_pdf):
-                    pdf_files.append(temp_pdf)
-                elif conv_ok and file_type == 'pdf':
-                    pass  # PDF æ–‡ä»¶å·²ç»æ·»åŠ 
-                else:
-                    logger.warning(f"Failed to convert attachment: {os.path.basename(attachment)}")
+                        logger.warning(f"Failed to convert attachment: {os.path.basename(attachment)}")
+        else:
+            logger.info(f"Skipping attachments (include_attachments=False): {os.path.basename(msg_path)}")
         
         # 5. å¦‚æžœæ²¡æœ‰ä»»ä½• PDF å†…å®¹ï¼Œè¿”å›žé”™è¯¯
         if not pdf_files:

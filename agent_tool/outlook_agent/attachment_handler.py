@@ -521,6 +521,40 @@ def extract_attachments_from_msg(
         return False, [], str(e)
 
 
+def _compress_image_if_needed(data, max_size=200*1024):
+    """Compress image if it exceeds max_size, preserving content."""
+    if len(data) <= max_size:
+        return data
+    
+    try:
+        from PIL import Image
+        import io
+        
+        img = Image.open(io.BytesIO(data))
+        
+        # Calculate scale ratio
+        ratio = (max_size / len(data)) ** 0.5
+        new_size = (int(img.width * ratio), int(img.height * ratio))
+        
+        # Resize and compress
+        img = img.resize(new_size, Image.LANCZOS)
+        output = io.BytesIO()
+        
+        # Convert RGBA to RGB if needed (for PNG with transparency)
+        if img.mode == 'RGBA':
+            background = Image.new('RGB', img.size, (255, 255, 255))
+            background.paste(img, mask=img.split()[3])
+            img = background
+        
+        img.save(output, format='JPEG', quality=85, optimize=True)
+        compressed = output.getvalue()
+        logger.info(f"Compressed image from {len(data)//1024}KB to {len(compressed)//1024}KB")
+        return compressed
+    except Exception as e:
+        logger.warning(f"Image compression failed: {e}, using original")
+        return data
+
+
 def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None):
     """使用 xhtml2pdf 将邮件 HTML 正文转换为 PDF（保留表格和图片）"""
 
@@ -546,17 +580,25 @@ def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None):
     MAX_INLINE_IMG_SIZE = 200 * 1024  # 200KB
     for att in msg.attachments:
         try:
-            if getattr(att, 'hidden', False) and getattr(att, 'contentId', None):
-                cid = att.contentId
+            # Support both dict format (from COM) and object format (from extract_msg)
+            if isinstance(att, dict):
+                hidden = att.get('hidden', False)
+                cid = att.get('contentId')
+                data = att.get('data')
+                mime = att.get('mimetype', 'image/png')
+            else:
+                hidden = getattr(att, 'hidden', False)
+                cid = getattr(att, 'contentId', None)
                 data = att.data
-                if isinstance(data, bytes):
-                    if len(data) > MAX_INLINE_IMG_SIZE:
-                        logger.warning(f"OA Skipping large inline image ({len(data)//1024}KB): cid={cid}")
-                        continue
-                    b64 = base64.b64encode(data).decode('ascii')
-                    mime = att.mimetype or 'image/png'
-                    data_uri = f'data:{mime};base64,{b64}'
-                    html_body = html_body.replace(f'cid:{cid}', data_uri)
+                mime = att.mimetype or 'image/png'
+
+            if hidden and cid and isinstance(data, bytes):
+                if len(data) > MAX_INLINE_IMG_SIZE:
+                    data = _compress_image_if_needed(data, MAX_INLINE_IMG_SIZE)
+                b64 = base64.b64encode(data).decode('ascii')
+                data_uri = f'data:{mime};base64,{b64}'
+                html_body = html_body.replace(f'cid:{cid}', data_uri)
+                logger.info(f"OA Embedded image: cid={cid}, size={len(data)//1024}KB, mime={mime}")
         except:
             pass
 
