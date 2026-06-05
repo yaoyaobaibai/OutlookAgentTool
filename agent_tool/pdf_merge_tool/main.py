@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from converters import txt_to_pdf, image_to_pdf, word_to_pdf, excel_to_pdf, merge_pdfs
 from utils import get_file_type, get_temp_dir, cleanup_temp_files, add_page_numbers
 
-__version__ = "1.2.6"
+__version__ = "1.2.7"
 
 # 纸张大小映射
 PAGE_SIZES = {

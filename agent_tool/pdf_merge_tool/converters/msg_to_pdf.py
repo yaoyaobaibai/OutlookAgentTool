@@ -485,7 +485,55 @@ def _compress_image_if_needed(data, max_size=200*1024):
         return data
 
 
-def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None):
+def _build_email_header_html(email_info):
+    """Generate Outlook-style email header HTML for injection into PDF body.
+    
+    Format (plain text style, compatible with xhtml2pdf):
+        From: Zhi Hui Shi (NCS)
+        Sent: Monday, May 18, 2026 11:31 AM
+        To: He Yao Charlie (NCS) <charlie.he@ncs.co>
+        Cc: someone@example.com
+        Subject: RE: PDF文件合并
+    
+    Args:
+        email_info: dict from get_msg_email_info() with keys: sender, sender_email,
+                    subject, date, to, cc
+        
+    Returns:
+        HTML string with Outlook-style header, or empty string if email_info is None/empty
+    """
+    if not email_info:
+        return ""
+    
+    sender = email_info.get('sender', '') or "Unknown"
+    sender_email = email_info.get('sender_email', '') or ""
+    subject = email_info.get('subject', '') or "(No Subject)"
+    date = email_info.get('date', '') or ""
+    to = email_info.get('to', '') or ""
+    cc = email_info.get('cc', '') or ""
+    
+    # Build sender display: "Name (Company)" or "Name <email>" or just "Name"
+    if sender_email and sender_email not in sender:
+        sender_display = f"{sender} &lt;{sender_email}&gt;"
+    else:
+        sender_display = sender
+    
+    lines = []
+    lines.append(f'<div style="font-family: Arial, Helvetica, sans-serif; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #cccccc;">')
+    lines.append(f'<div style="margin-bottom: 4px;"><span style="font-weight: bold">From:</span> {sender_display}</div>')
+    if date:
+        lines.append(f'<div style="margin-bottom: 4px;"><span style="font-weight: bold">Sent:</span> {date}</div>')
+    if to:
+        lines.append(f'<div style="margin-bottom: 4px;"><span style="font-weight: bold">To:</span> {to}</div>')
+    if cc:
+        lines.append(f'<div style="margin-bottom: 4px;"><span style="font-weight: bold">Cc:</span> {cc}</div>')
+    lines.append(f'<div style="margin-bottom: 4px;"><span style="font-weight: bold">Subject:</span> {subject}</div>')
+    lines.append('</div>')
+    
+    return '\n'.join(lines)
+
+
+def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None, email_info=None):
     """ä½¿ç”¨ xhtml2pdf å°†é‚®ä»¶ HTML æ­£æ–‡è½¬æ¢ä¸º PDFï¼ˆä¿ç•™è¡¨æ ¼å’Œå›¾ç‰‡ï¼‰"""
     import base64
     _init_cjk_font()  # Lazy-init CJK font (logging configured by now)
@@ -535,6 +583,18 @@ def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None):
     
     # Log original size for diagnostics
     logger.info(f"PATH: _html_body_to_pdf before CSS strip, html len={len(html_body)}")
+    
+    # Inject Outlook-style email header if email_info provided
+    if email_info:
+        header_html = _build_email_header_html(email_info)
+        if header_html:
+            body_match = re.search(r'<body[^>]*>', html_body, re.IGNORECASE)
+            if body_match:
+                insert_pos = body_match.end()
+                html_body = html_body[:insert_pos] + header_html + html_body[insert_pos:]
+            else:
+                html_body = header_html + html_body
+            logger.info("Email header HTML injected into body, header len=" + str(len(header_html)))
     
     # Inject @page CSS for paper size (A3/A4/Letter) â€” use mm units
     # xhtml2pdf has known issues with pt units in @page, causing A3 infinite loops
@@ -700,7 +760,8 @@ def msg_to_pdf(
             com_result.htmlBody = html_body
             com_result.attachments = com_attachments
             body_ok = _html_body_to_pdf(com_result, body_pdf_path, temp_dir,
-                                         page_size=page_size or (595.28, 841.89))
+                                         page_size=page_size or (595.28, 841.89),
+                                         email_info=info)
         # Fallback: extract_msg path
         if not body_ok:
             logger.info("PATH: Outlook COM HTML reader: fallback to extract_msg")
@@ -708,7 +769,8 @@ def msg_to_pdf(
                 import extract_msg
                 msg_obj = extract_msg.Message(msg_path)
                 body_ok = _html_body_to_pdf(msg_obj, body_pdf_path, temp_dir,
-                                             page_size=page_size or (595.28, 841.89))
+                                             page_size=page_size or (595.28, 841.89),
+                                             email_info=info)
                 msg_obj.close()
             except Exception as e:
                 logger.debug(f"HTML body render not available: {e}")
