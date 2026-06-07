@@ -534,7 +534,7 @@ def _build_email_header_html(email_info):
 
 
 def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None, email_info=None):
-    """ä½¿ç”¨ xhtml2pdf å°†é‚®ä»¶ HTML æ­£æ–‡è½¬æ¢ä¸º PDFï¼ˆä¿ç•™è¡¨æ ¼å’Œå›¾ç‰‡ï¼‰"""
+    """Use weasyprint to convert email HTML body to PDF (preserves tables and images)"""
     import base64
     _init_cjk_font()  # Lazy-init CJK font (logging configured by now)
     
@@ -596,108 +596,71 @@ def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None, email_info=None
                 html_body = header_html + html_body
             logger.info("Email header HTML injected into body, header len=" + str(len(header_html)))
     
-    # Inject @page CSS for paper size (A3/A4/Letter) â€” use mm units
-    # xhtml2pdf has known issues with pt units in @page, causing A3 infinite loops
+    # Build @page CSS for weasyprint (plain CSS string, not HTML <style> tag)
+    page_css_parts = []
     if page_size and isinstance(page_size, (list, tuple)) and len(page_size) == 2:
         width_mm = page_size[0] * 0.3528
         height_mm = page_size[1] * 0.3528
-        page_css = f'<style>@page {{ size: {width_mm:.1f}mm {height_mm:.1f}mm; margin: 15mm; }} table {{ width: 100%; table-layout: fixed; border-collapse: collapse; }} td, th {{ word-wrap: break-word; overflow-wrap: break-word; }} tr {{ page-break-inside: avoid; }} img {{ max-width: 100%; max-height: 90%; height: auto; page-break-inside: avoid; }}</style>'
-        if '<head>' in html_body.lower():
-            html_body = html_body.replace('<head>', f'<head>{page_css}', 1).replace('<HEAD>', f'<HEAD>{page_css}', 1)
-        else:
-            html_body = page_css + html_body
+        page_css_parts.append(f'@page {{ size: {width_mm:.1f}mm {height_mm:.1f}mm; margin: 15mm; }}')
+        logger.info(f"PAGE CSS: @page size {width_mm:.1f}mm {height_mm:.1f}mm")
     
-    logger.info(f"PATH: _html_body_to_pdf after CSS inject, html len={len(html_body)}")
-    # Patch both DEFAULT_CSS AND DEFAULT_FONT so xhtml2pdf resolves to CJK font
+    # Table and image formatting CSS
+    page_css_parts.append('table { width: 100%; table-layout: fixed; border-collapse: collapse; }')
+    page_css_parts.append('td, th { word-wrap: break-word; overflow-wrap: break-word; }')
+    page_css_parts.append('tr { page-break-inside: avoid; }')
+    page_css_parts.append('img { max-width: 100%; max-height: 90%; height: auto; page-break-inside: avoid; }')
+    
+    # Line spacing control
+    page_css_parts.append('body { line-height: 1.2; }')
+    page_css_parts.append('p { margin: 0 0 8px 0; }')
+    page_css_parts.append('div { margin: 0; }')
+    
+    # CJK font fallback
     if _CJK_FONT_FAMILY:
-        try:
-            import xhtml2pdf.default as _xd
-            _xd.DEFAULT_CSS = _xd.DEFAULT_CSS.replace(
-                'font-family: Helvetica;',
-                'font-family: ' + _CJK_FONT_FAMILY + ';'
-            )
-            _xd.DEFAULT_FONT['helvetica'] = _CJK_FONT_FAMILY
-            _xd.DEFAULT_FONT['helvetica-bold'] = _CJK_FONT_FAMILY
-            _xd.DEFAULT_FONT['sansserif'] = _CJK_FONT_FAMILY
-            _xd.DEFAULT_FONT['sans'] = _CJK_FONT_FAMILY
-            _xd.DEFAULT_FONT['arial'] = _CJK_FONT_FAMILY
-            _xd.DEFAULT_FONT['verdana'] = _CJK_FONT_FAMILY
-            _xd.DEFAULT_FONT[_CJK_FONT_FAMILY.lower()] = _CJK_FONT_FAMILY
-            logger.info("CJK font patched xhtml2pdf CSS+fontmap: " + _CJK_FONT_FAMILY)
-        except Exception as _pe:
-            logger.warning("Failed to patch xhtml2pdf: " + str(_pe))
+        page_css_parts.append(f'body {{ font-family: "{_CJK_FONT_FAMILY}", Arial, Helvetica, sans-serif; }}')
     
-    # Convert HTML to PDF - try with styles first, strip and retry if fails
+    page_css = '\n'.join(page_css_parts)
+    logger.info(f"PATH: _html_body_to_pdf CSS built, html len={len(html_body)}")
+    
+    # Strip all <style> blocks from original email HTML (weasyprint handles CSS via stylesheets)
+    html_body = re.sub(r'<style[^>]*>.*?</style>', '', html_body, flags=re.DOTALL | re.IGNORECASE)
+    logger.info(f"PATH: _html_body_to_pdf after CSS strip, html len={len(html_body)}")
+    
+    # Convert HTML to PDF using weasyprint
     body_rendered = False
     try:
-        import logging as _logging
+        from weasyprint import HTML, CSS
         
-        # First attempt: render with original styles (preserves formatting)
-        logger.info("PATH: _html_body_to_pdf attempting render WITH styles...")
-        _logging.disable(_logging.CRITICAL)
+        logger.info("PATH: _html_body_to_pdf attempting weasyprint render...")
+        
+        # Create HTML object
+        html_obj = HTML(string=html_body)
+        
+        # Create CSS object with page size and table styles
+        css_obj = CSS(string=page_css)
+        
+        # Render PDF with stylesheets
+        html_obj.write_pdf(output_pdf, stylesheets=[css_obj])
+        
+        body_rendered = True
+        logger.info("PATH: _html_body_to_pdf weasyprint render SUCCESS")
+    except Exception as e:
+        import traceback
+        logger.warning(f"PATH: weasyprint render FAILED: {type(e).__name__}: {e}")
+        logger.warning(f"TRACEBACK: {traceback.format_exc()}")
+        
+        # Fallback: try without custom page size
         try:
-            from xhtml2pdf import pisa
-            result = [None]
-            def render_pdf():
-                try:
-                    with open(output_pdf, 'wb') as f:
-                        pisa.CreatePDF(html_body, f, encoding='utf-8')
-                    result[0] = True
-                except Exception:
-                    pass
-
-            render_thread = threading.Thread(target=render_pdf)
-            render_thread.start()
-            render_thread.join(timeout=45.0)
-            body_rendered = (result[0] is True)
-        except Exception:
-            pass
-        finally:
-            _logging.disable(_logging.NOTSET)
-        
-        # Second attempt: strip styles and retry if first attempt failed
-        if not body_rendered:
-            logger.warning("PATH: render WITH styles failed, stripping styles and retrying...")
-            html_body = re.sub(
-                r'<style[^>]*>.*?</style>',
-                '',
-                html_body,
-                flags=re.DOTALL | re.IGNORECASE
-            )
-            # Re-inject @page CSS after stripping
-            if page_size and isinstance(page_size, (list, tuple)) and len(page_size) == 2:
-                width_mm = page_size[0] * 0.3528
-                height_mm = page_size[1] * 0.3528
-                page_css = f'<style>@page {{ size: {width_mm:.1f}mm {height_mm:.1f}mm; margin: 15mm; }} table {{ width: 100%; table-layout: fixed; border-collapse: collapse; }} td, th {{ word-wrap: break-word; overflow-wrap: break-word; }} tr {{ page-break-inside: avoid; }} img {{ max-width: 100%; max-height: 90%; height: auto; page-break-inside: avoid; }}</style>'
-                if '<head>' in html_body.lower():
-                    html_body = html_body.replace('<head>', f'<head>{page_css}', 1).replace('<HEAD>', f'<HEAD>{page_css}', 1)
-                else:
-                    html_body = page_css + html_body
-            
-            logger.info(f"PATH: _html_body_to_pdf after CSS strip, html len={len(html_body)}")
-            _logging.disable(_logging.CRITICAL)
-            try:
-                result = [None]
-                def render_pdf2():
-                    try:
-                        with open(output_pdf, 'wb') as f:
-                            pisa.CreatePDF(html_body, f, encoding='utf-8')
-                        result[0] = True
-                    except Exception:
-                        pass
-
-                render_thread2 = threading.Thread(target=render_pdf2)
-                render_thread2.start()
-                render_thread2.join(timeout=45.0)
-                body_rendered = (result[0] is True)
-            except Exception:
-                pass
-            finally:
-                _logging.disable(_logging.NOTSET)
-        
-        logger.info(f"PATH: _html_body_to_pdf render result: body_rendered={body_rendered}")
-    except Exception:
-        pass
+            logger.info("PATH: attempting weasyprint render WITHOUT custom page size...")
+            html_obj = HTML(string=html_body)
+            # Use only table/image CSS, no @page
+            fallback_css = '\n'.join(page_css_parts[1:]) if len(page_css_parts) > 1 else ''
+            css_obj = CSS(string=fallback_css)
+            html_obj.write_pdf(output_pdf, stylesheets=[css_obj])
+            body_rendered = True
+            logger.info("PATH: weasyprint fallback render SUCCESS")
+        except Exception as e2:
+            logger.warning(f"PATH: weasyprint fallback FAILED: {type(e2).__name__}: {e2}")
     
     if body_rendered and os.path.exists(output_pdf) and os.path.getsize(output_pdf) > 0:
         return True
