@@ -733,7 +733,8 @@ def msg_to_pdf(
         body_pdf_path = os.path.join(temp_dir, "_email_body.pdf")
         
         # Get final output directory for HTML debug backup
-        final_output_dir = os.path.dirname(output_pdf)
+        if not final_output_dir:
+            final_output_dir = os.path.dirname(output_pdf)
         
         # 2. Try Outlook COM first (handles RTF encoding internally)
         body_ok = False
