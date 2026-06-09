@@ -693,7 +693,8 @@ def msg_to_pdf(
     include_info_page: bool = False,
     page_size=None,
     include_attachments: bool = True,
-    _depth: int = 0
+    _depth: int = 0,
+    final_output_dir: str = None
 ) -> Tuple[bool, str]:
     """
     å°† .msg æ–‡ä»¶ä¸­çš„é™„ä»¶è½¬æ¢ä¸º PDF
