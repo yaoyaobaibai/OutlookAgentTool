@@ -484,7 +484,8 @@ class PDFMergeTool:
                     # .msg 文件：提取附件并转换为 PDF（不包含邮件信息页）
                     from converters.msg_to_pdf import msg_to_pdf
                     success, error = msg_to_pdf(file_path, temp_pdf, include_info_page=False, page_size=page_pts,
-                                                include_attachments=self.include_msg_attachments_var.get())
+                                                include_attachments=self.include_msg_attachments_var.get(),
+                                                final_output_dir=os.path.dirname(output_path))
                     if success:
                         temp_pdf_files.append(temp_pdf)
                         logger.info(f"MSG 转换成功: {temp_pdf}")
