@@ -533,7 +533,7 @@ def _build_email_header_html(email_info):
     return '\n'.join(lines)
 
 
-def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None, email_info=None):
+def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None, email_info=None, final_output_dir=None):
     """Use weasyprint to convert email HTML body to PDF (preserves tables and images)"""
     import base64
     _init_cjk_font()  # Lazy-init CJK font (logging configured by now)
@@ -628,7 +628,13 @@ def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None, email_info=None
     
     # Save HTML backup for debugging (before weasyprint render)
     try:
-        debug_html_path = output_pdf.replace('.pdf', '_debug.html')
+        # Use final_output_dir if provided, otherwise fall back to temp dir
+        if final_output_dir:
+            # Get the base name from output_pdf (e.g., _email_body.pdf -> _email_body)
+            base_name = os.path.splitext(os.path.basename(output_pdf))[0]
+            debug_html_path = os.path.join(final_output_dir, f"{base_name}_debug.html")
+        else:
+            debug_html_path = output_pdf.replace('.pdf', '_debug.html')
         with open(debug_html_path, 'w', encoding='utf-8') as f:
             f.write('<!DOCTYPE html>\n<html>\n<head>\n<meta charset="utf-8">\n')
             f.write('<style>\n' + page_css + '\n</style>\n')
@@ -725,6 +731,9 @@ def msg_to_pdf(
         # 2. å§‹ç»ˆç”Ÿæˆæ­£æ–‡ PDFï¼ˆä¼˜å…ˆ HTML æ¸²æŸ“ï¼Œä¿ç•™è¡¨æ ¼å’Œå›¾ç‰‡ï¼‰
         body_pdf_path = os.path.join(temp_dir, "_email_body.pdf")
         
+        # Get final output directory for HTML debug backup
+        final_output_dir = os.path.dirname(output_pdf)
+        
         # 2. Try Outlook COM first (handles RTF encoding internally)
         body_ok = False
         html_body, com_attachments = _read_msg_html_via_outlook(msg_path)
@@ -737,7 +746,8 @@ def msg_to_pdf(
             com_result.attachments = com_attachments
             body_ok = _html_body_to_pdf(com_result, body_pdf_path, temp_dir,
                                          page_size=page_size or (595.28, 841.89),
-                                         email_info=info)
+                                         email_info=info,
+                                         final_output_dir=final_output_dir)
         # Fallback: extract_msg path
         if not body_ok:
             logger.info("PATH: Outlook COM HTML reader: fallback to extract_msg")
@@ -746,7 +756,8 @@ def msg_to_pdf(
                 msg_obj = extract_msg.Message(msg_path)
                 body_ok = _html_body_to_pdf(msg_obj, body_pdf_path, temp_dir,
                                              page_size=page_size or (595.28, 841.89),
-                                             email_info=info)
+                                             email_info=info,
+                                             final_output_dir=final_output_dir)
                 msg_obj.close()
             except Exception as e:
                 logger.debug(f"HTML body render not available: {e}")
