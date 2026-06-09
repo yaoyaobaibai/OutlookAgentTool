@@ -626,6 +626,19 @@ def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None, email_info=None
     html_body = re.sub(r'<style[^>]*>.*?</style>', '', html_body, flags=re.DOTALL | re.IGNORECASE)
     logger.info(f"PATH: _html_body_to_pdf after CSS strip, html len={len(html_body)}")
     
+    # Save HTML backup for debugging (before weasyprint render)
+    try:
+        debug_html_path = output_pdf.replace('.pdf', '_debug.html')
+        with open(debug_html_path, 'w', encoding='utf-8') as f:
+            f.write('<!DOCTYPE html>\n<html>\n<head>\n<meta charset="utf-8">\n')
+            f.write('<style>\n' + page_css + '\n</style>\n')
+            f.write('</head>\n<body>\n')
+            f.write(html_body)
+            f.write('\n</body>\n</html>')
+        logger.info(f"DEBUG: HTML backup saved to {debug_html_path}")
+    except Exception as e:
+        logger.warning(f"DEBUG: Failed to save HTML backup: {e}")
+
     # Convert HTML to PDF using weasyprint
     body_rendered = False
     try:
