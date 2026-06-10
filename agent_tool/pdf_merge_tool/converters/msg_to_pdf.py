@@ -611,8 +611,8 @@ def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None, email_info=None
     page_css_parts.append('img { max-width: 100%; max-height: 90%; height: auto; page-break-inside: avoid; }')
     
     # Line spacing control
-    page_css_parts.append('body { line-height: 1.2; }')
-    page_css_parts.append('p { margin: 0 0 8px 0; }')
+    page_css_parts.append('body { line-height: 1.0; }')
+    page_css_parts.append('p { margin: 0; }')
     page_css_parts.append('div { margin: 0; }')
     
     # CJK font fallback
