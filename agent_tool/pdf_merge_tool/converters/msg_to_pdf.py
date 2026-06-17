@@ -533,7 +533,7 @@ def _build_email_header_html(email_info):
     return '\n'.join(lines)
 
 
-def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None, email_info=None, final_output_dir=None):
+def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None, email_info=None, final_output_dir=None, zoom=100):
     """Use weasyprint to convert email HTML body to PDF (preserves tables and images)"""
     import base64
     _init_cjk_font()  # Lazy-init CJK font (logging configured by now)
@@ -607,7 +607,7 @@ def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None, email_info=None
     # Table and image formatting CSS
     page_css_parts.append('table { width: 100%; table-layout: fixed; border-collapse: collapse; }')
     page_css_parts.append('td, th { word-wrap: break-word; overflow-wrap: break-word; }')
-    page_css_parts.append('tr { page-break-inside: avoid; }')
+    page_css_parts.append('tr { page-break-inside: auto; }')
     page_css_parts.append('img { max-width: 100%; max-height: 90%; height: auto; page-break-inside: avoid; }')
     
     # Line spacing control
@@ -619,11 +619,24 @@ def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None, email_info=None
     if _CJK_FONT_FAMILY:
         page_css_parts.append(f'body {{ font-family: "{_CJK_FONT_FAMILY}", Arial, Helvetica, sans-serif; }}')
     
+    # Email zoom scaling (only shrink, not expand to avoid overflow)
+    if zoom < 100:
+        scale = zoom / 100
+        page_css_parts.append(f'body {{ font-size: {zoom}%; }}')
+        page_css_parts.append(f'table {{ width: {zoom}% !important; table-layout: auto !important; }}')
+
+        page_css_parts.append(f'td, th {{ padding: {scale * 0.3}cm; }}')
+        page_css_parts.append(f'img {{ max-width: {zoom}%; height: auto; }}')
+    
     page_css = '\n'.join(page_css_parts)
     logger.info(f"PATH: _html_body_to_pdf CSS built, html len={len(html_body)}")
     
     # Strip all <style> blocks from original email HTML (weasyprint handles CSS via stylesheets)
     html_body = re.sub(r'<style[^>]*>.*?</style>', '', html_body, flags=re.DOTALL | re.IGNORECASE)
+    # Fix MS Office border shorthand format (weasyprint doesn't understand)
+    # border:solid windowtext 1.0pt -> border:1pt solid black
+    html_body = re.sub(r'border\s*:\s*solid\s+windowtext\s+(\d+\.?\d*\w*)', r'border:\1 solid black', html_body)
+    html_body = re.sub(r'border-(bottom|right|left|top)\s*:\s*solid\s+windowtext\s+(\d+\.?\d*\w*)', r'border-\1:\2 solid black', html_body)
     logger.info(f"PATH: _html_body_to_pdf after CSS strip, html len={len(html_body)}")
     
     # Save HTML backup for debugging (before weasyprint render)
@@ -696,7 +709,8 @@ def msg_to_pdf(
     page_size=None,
     include_attachments: bool = True,
     _depth: int = 0,
-    final_output_dir: str = None
+    final_output_dir: str = None,
+    zoom: int = 100
 ) -> Tuple[bool, str]:
     """
     å°† .msg æ–‡ä»¶ä¸­çš„é™„ä»¶è½¬æ¢ä¸º PDF
@@ -751,7 +765,8 @@ def msg_to_pdf(
             body_ok = _html_body_to_pdf(com_result, body_pdf_path, temp_dir,
                                          page_size=page_size or (595.28, 841.89),
                                          email_info=info,
-                                         final_output_dir=final_output_dir)
+                                         final_output_dir=final_output_dir,
+                                         zoom=zoom)
         # Fallback: extract_msg path
         if not body_ok:
             logger.info("PATH: Outlook COM HTML reader: fallback to extract_msg")
@@ -761,7 +776,8 @@ def msg_to_pdf(
                 body_ok = _html_body_to_pdf(msg_obj, body_pdf_path, temp_dir,
                                              page_size=page_size or (595.28, 841.89),
                                              email_info=info,
-                                             final_output_dir=final_output_dir)
+                                             final_output_dir=final_output_dir,
+                                             zoom=zoom)
                 msg_obj.close()
             except Exception as e:
                 logger.debug(f"HTML body render not available: {e}")
@@ -855,7 +871,7 @@ def msg_to_pdf(
                                     z_success = True
                                 elif z_type == 'msg':
                                     nested_pdf = os.path.join(temp_dir, os.path.basename(zf) + ".pdf")
-                                    z_success, _ = msg_to_pdf(zf, nested_pdf, False, _depth + 1)
+                                    z_success, _ = msg_to_pdf(zf, nested_pdf, False, _depth + 1, zoom=zoom)
                                 
                                 if z_success and os.path.exists(z_pdf):
                                     pdf_files.append(z_pdf)
@@ -873,7 +889,7 @@ def msg_to_pdf(
                             logger.warning(f"åµŒå¥—é‚®ä»¶æ·±åº¦å·²è¾¾ä¸Šé™ï¼Œè·³è¿‡: {os.path.basename(attachment)}")
                         else:
                             nested_pdf = os.path.join(temp_dir, os.path.basename(attachment) + ".pdf")
-                            nested_ok, nested_err = msg_to_pdf(attachment, nested_pdf, False, _depth + 1)
+                            nested_ok, nested_err = msg_to_pdf(attachment, nested_pdf, False, _depth + 1, zoom=zoom)
                             if nested_ok and os.path.exists(nested_pdf):
                                 pdf_files.append(nested_pdf)
                                 conv_ok = True

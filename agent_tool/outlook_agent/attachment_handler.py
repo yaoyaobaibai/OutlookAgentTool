@@ -555,7 +555,7 @@ def _compress_image_if_needed(data, max_size=200*1024):
         return data
 
 
-def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None):
+def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None, zoom=100):
     """Use weasyprint to convert email HTML body to PDF (preserves tables and images)"""
 
     _init_cjk_font_oa()
@@ -613,23 +613,53 @@ def _html_body_to_pdf(msg, output_pdf, temp_dir, page_size=None):
     # Table and image formatting CSS
     page_css_parts.append('table { width: 100%; table-layout: fixed; border-collapse: collapse; }')
     page_css_parts.append('td, th { word-wrap: break-word; overflow-wrap: break-word; }')
-    page_css_parts.append('tr { page-break-inside: avoid; }')
+    page_css_parts.append('tr { page-break-inside: auto; }')
     page_css_parts.append('img { max-width: 100%; max-height: 90%; height: auto; page-break-inside: avoid; }')
     
     # Line spacing control
-    page_css_parts.append('body { line-height: 1.2; }')
-    page_css_parts.append('p { margin: 0 0 8px 0; }')
+    page_css_parts.append('body { line-height: 1.0; }')
+    page_css_parts.append('p { margin: 0; }')
     page_css_parts.append('div { margin: 0; }')
     
     # CJK font fallback
     if _CJK_FONT_FAMILY_OA:
         page_css_parts.append(f'body {{ font-family: "{_CJK_FONT_FAMILY_OA}", Arial, Helvetica, sans-serif; }}')
     
+    # Email zoom scaling (only shrink, not expand to avoid overflow)
+    if zoom < 100:
+        scale = zoom / 100
+        page_css_parts.append(f'body {{ font-size: {zoom}%; }}')
+        page_css_parts.append(f'table {{ width: {zoom}% !important; table-layout: auto !important; }}')
+
+        page_css_parts.append(f'td, th {{ padding: {scale * 0.3}cm; }}')
+        page_css_parts.append(f'img {{ max-width: {zoom}%; height: auto; }}')
+
     page_css = '\n'.join(page_css_parts)
     
     # Strip all <style> blocks from original email HTML (weasyprint handles CSS via stylesheets)
     html_body = re.sub(r'<style[^>]*>.*?</style>', '', html_body, flags=re.DOTALL | re.IGNORECASE)
+    # Fix MS Office border shorthand format (weasyprint doesn't understand)
+    # border:solid windowtext 1.0pt -> border:1pt solid black
+    html_body = re.sub(r'border\s*:\s*solid\s+windowtext\s+(\d+\.?\d*\w*)', r'border:\1 solid black', html_body)
+    html_body = re.sub(r'border-(bottom|right|left|top)\s*:\s*solid\s+windowtext\s+(\d+\.?\d*\w*)', r'border-\1:\2 solid black', html_body)
     logger.info(f"OA PATH: _html_body_to_pdf after CSS strip, html len={len(html_body)}")
+
+    # Save HTML backup for debugging (before weasyprint render)
+    # Only when PDFMERGE_DEBUG_HTML=1 environment variable is set
+    if os.environ.get('PDFMERGE_DEBUG_HTML') == '1':
+        try:
+            # Use temp_dir for HTML backup
+            base_name = os.path.splitext(os.path.basename(output_pdf))[0]
+            debug_html_path = os.path.join(temp_dir, f"{base_name}_debug.html")
+            with open(debug_html_path, 'w', encoding='utf-8') as f:
+                f.write('<!DOCTYPE html>\n<html>\n<head>\n<meta charset="utf-8">\n')
+                f.write('<style>\n' + page_css + '\n</style>\n')
+                f.write('</head>\n<body>\n')
+                f.write(html_body)
+                f.write('\n</body>\n</html>')
+            logger.info(f"OA DEBUG: HTML backup saved to {debug_html_path}")
+        except Exception as e:
+            logger.warning(f"OA DEBUG: Failed to save HTML backup: {e}")
 
     # Convert HTML to PDF using weasyprint
     body_rendered = False

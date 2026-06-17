@@ -99,17 +99,21 @@ def word_to_pdf(
             word = win32com.client.Dispatch("Word.Application")
             word.Visible = False
             word.DisplayAlerts = False
-            # Bypass Trust Center file block (msoAutomationSecurityLow = 1)
+            # Backup and set AutomationSecurity to bypass Protected View
+            # msoAutomationSecurityForceDisable = 3 (disables all macros, no security warnings)
+            original_security = None
             try:
-                word.AutomationSecurity = 1
-            except:
-                pass
+                original_security = word.AutomationSecurity
+                word.AutomationSecurity = 3
+                logger.info("Word AutomationSecurity set to 3 (ForceDisable)")
+            except Exception as _sec_err:
+                logger.warning(f"Word AutomationSecurity set failed: {_sec_err}")
             logger.info("Word ??????")
             
             try:
                 # ????
                 try:
-                    doc = word.Documents.Open(word_path_abs)
+                    doc = word.Documents.Open(word_path_abs, ReadOnly=True)
                 except Exception as _open_err:
                     # Trust Center file block? Copy to temp and retry
                     _err_str = str(_open_err)
@@ -119,7 +123,7 @@ def word_to_pdf(
                         _tmp_path = os.path.join(_tmp_dir, os.path.basename(word_path_abs))
                         _sh.copy2(word_path_abs, _tmp_path)
                         logger.warning("Trust Center BLOCKED - retry from temp: " + _tmp_path)
-                        doc = word.Documents.Open(_tmp_path)
+                        doc = word.Documents.Open(_tmp_path, ReadOnly=True)
                         word_path_abs = _tmp_path  # Use temp path for subsequent operations
                     else:
                         raise
@@ -167,6 +171,13 @@ def word_to_pdf(
                     return False, "PDF ?????"
             
             finally:
+                # Restore original AutomationSecurity
+                if original_security is not None:
+                    try:
+                        word.AutomationSecurity = original_security
+                        logger.info(f"Word AutomationSecurity restored to {original_security}")
+                    except Exception as _restore_err:
+                        logger.warning(f"Word AutomationSecurity restore failed: {_restore_err}")
                 try:
                     word.Quit()
                 except:

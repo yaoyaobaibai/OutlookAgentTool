@@ -39,6 +39,8 @@ from reportlab.platypus import Paragraph  # 模块级导入
 - CID 替换前验证
 - 附件格式兼容（字典 vs 对象）
 - `<a>` 标签替换 + CSS underline 移除
+- weasyprint DLL 配置（`WEASYPRINT_DLL_DIRECTORIES`）
+- 行间距 CSS（`line-height` + `p margin`）
 
 ### 4. CSS 处理顺序：先清后注 [P0]
 ```python
@@ -48,14 +50,14 @@ page_css = f'<style>@page {{ size: {w:.1f}mm {h:.1f}mm; margin: 15mm; }}</style>
 
 # ❌ 错误：先注后清 → 刚注入的样式被自己删掉 → 正文纯文本
 ```
-**原因**: xhtml2pdf 的 CSS 解析器无法处理现代邮件 CSS，会导致卡死或空 PDF。
+**原因**: 现代邮件 CSS 包含大量浏览器专用样式，会导致渲染引擎卡死或空 PDF。
 
 ### 5. @page CSS 用 mm 不用 pt [P1]
 ```python
 width_mm = page_size[0] * 0.3528   # pt → mm, 1pt = 0.3528mm
 height_mm = page_size[1] * 0.3528
 ```
-**原因**: xhtml2pdf 对 pt 支持不全，A3 会死循环。
+**原因**: xhtml2pdf 对 pt 支持不全，A3 会死循环。weasyprint 原生支持 mm，效果更可靠。
 
 ### 6. Word COM 后强制杀僵尸进程 [P1]
 ```python
@@ -99,6 +101,44 @@ workbook.ExportAsFixedFormat(0, output_path)
 excel.ActivePrinter = original_printer
 ```
 **原因**: `ExportAsFixedFormat` 依赖默认打印机的纸张支持，不支持 A3 时静默降级到 A4。
+
+### 11. Excel COM 必须显式释放 [P0]
+```python
+finally:
+    try: excel.Quit()
+    except: pass
+    try: del workbook
+    except: pass
+    try: del excel
+    except: pass
+finally:
+    pythoncom.CoUninitialize()
+    subprocess.run(['taskkill', '/f', '/im', 'EXCEL.EXE'],
+                   capture_output=True, timeout=5, creationflags=0x08000000)
+```
+**原因**: Excel COM 对象未释放会导致文件句柄被占用，用户无法打开原始 Excel 文件。
+
+### 12. weasyprint 需设置 WEASYPRINT_DLL_DIRECTORIES [P1]
+```python
+if sys.platform == 'win32':
+    if hasattr(sys, '_MEIPASS'):
+        os.environ['WEASYPRINT_DLL_DIRECTORIES'] = sys._MEIPASS
+    else:
+        _msys = r'C:\msys64\mingw64\bin'
+        if os.path.exists(_msys):
+            os.environ['WEASYPRINT_DLL_DIRECTORIES'] = _msys
+```
+**原因**: weasyprint 使用 cffi 动态加载 GTK3 DLL，PyInstaller 打包后需要告诉它 DLL 的位置。
+
+### 13. 邮件头部信息使用 `<div>` 布局 [P2]
+```python
+# ✅ 正确：用 div 布局
+header_html = '<div style="margin-bottom: 4px;"><b>From:</b> ...</div>'
+
+# ❌ 错误：用 table 布局（weasyprint 表格渲染行间距过大）
+header_html = '<tr><td><b>From:</b></td><td>...</td></tr>'
+```
+**原因**: weasyprint 对 `<table>` 的渲染与 xhtml2pdf 不同，行间距过大。
 
 ---
 
@@ -176,9 +216,10 @@ excel.ActivePrinter = original_printer
 **否决原因**: 本机 Word COM 返回 `RPC_E_SERVERCALL_REJECTED`，兼容性差；用户环境也可能无 Word。
 **替代方案**: xhtml2pdf 优先 + 纯文本 fallback。
 
-### ❌ 方案19：weasyprint 渲染 HTML→PDF [P2]
-**否决原因**: pip 安装依赖重（需 cairo/pango 系统库），网络下载超时。
-**替代方案**: xhtml2pdf（已集成，依赖轻）。
+### ~~❌ 方案19~~ ✅ 已采纳：weasyprint 替代 xhtml2pdf [v1.2.7+]
+**原否决原因**: pip 安装依赖重（需 cairo/pango 系统库），网络下载超时。
+**现状**: v1.2.7 起已改用 weasyprint，解决了 xhtml2pdf 的 pt 单位死循环、CSS 支持差等问题。
+**构建依赖**: 需安装 MSYS2 + pango（`winget install MSYS2.MSYS2`，然后 `pacman -S mingw-w64-x86_64-pango`）。
 
 ### ❌ 方案20：跳过大图片（>200KB） [P1]
 **否决原因**: 用户截图丢失，内容缺失。
@@ -199,6 +240,22 @@ excel.ActivePrinter = original_printer
 ### ❌ 方案24：CSS `!important` 修复下划线 [P2]
 **否决原因**: xhtml2pdf 可能不支持 `!important`，导致 CSS 修复无效。
 **替代方案**: 移除 `<a>` 标签替换为 `<span>` + 移除 CSS `text-decoration:underline`。
+
+### ❌ 方案25：`<b>` 标签改成 `<span style="font-weight: bold">` [P2]
+**否决原因**: 没有解决下划线问题，根因不明。
+**替代方案**: 保持 `<b>` 标签，下划线问题在 weasyprint 迁移后自行解决。
+
+### ❌ 方案26：HTML 备份始终生成 [P1]
+**否决原因**: 会在生产环境生成不必要的临时文件。
+**替代方案**: 通过环境变量 `PDFMERGE_DEBUG_HTML=1` 控制，默认关闭。
+
+### ❌ 方案27：从 `output_pdf` 推导 `final_output_dir` [P1]
+**否决原因**: `output_pdf` 是临时目录中的文件，推导出的目录是临时目录，不是最终输出目录。
+**替代方案**: 通过参数传递 `final_output_dir`，调用方传入 `os.path.dirname(output_path)`。
+
+### ❌ 方案28：使用 `<table>` 布局邮件头部 [P2]
+**否决原因**: weasyprint 对 `<table>` 的渲染与 xhtml2pdf 不同，行间距过大。
+**替代方案**: 使用 `<div>` 布局，CSS 控制更精确。
 
 ---
 
@@ -237,6 +294,12 @@ excel.ActivePrinter = original_printer
 | COM 路径图片不显示（HTML 只有 3KB） | `_read_msg_html_via_outlook` 只返回 HTML 不返回附件 | 函数返回 `(html_body, attachments)` 元组 | 手动修复 | P0 |
 | PDF 中链接/邮箱有多余下划线 | xhtml2pdf 渲染 `<a>` 标签 + CSS underline | 移除 CSS `text-decoration:underline` + `<a>` 替换为 `<span>` | 手动修复 | P1 |
 | 清空列表后再次合并出现旧内容 | `_clear_list()` 没清理临时文件 | 添加 `cleanup_temp_files()` 调用 | 手动修复 | P1 |
+| Excel 文件被锁定（无法在其他程序中打开） | Excel COM 对象未释放，文件句柄被占用 | `finally` 块中 `del workbook/excel` + `taskkill EXCEL.EXE` | 手动修复 | P0 |
+| weasyprint 纸张大小不生效（A3 输出为 A4） | 需用 `@page` CSS + mm 单位 + CSS 对象传递 | `CSS(string=page_css)` 传入 `write_pdf(stylesheets=[css_obj])` | 手动修复 | P1 |
+| weasyprint 行间距过大 | 默认 CSS 与 xhtml2pdf 不同 | `body { line-height: 1.0; } p { margin: 0; } div { margin: 0; }` | 手动修复 | P1 |
+| PyInstaller 缓存导致旧代码被执行 | `.pyc` 优先于 `.py` | `--clean` + 删 `__pycache__` + 删 `%APPDATA%\pyinstaller` | 手动修复 | P1 |
+| `msg_to_pdf() got unexpected keyword argument` | 函数签名与调用处参数不匹配 | 确保函数签名包含调用方传入的所有参数 | 手动修复 | P1 |
+| HTML 备份保存到临时目录 | `final_output_dir` 被无条件覆盖 | 仅当 `final_output_dir is None` 时才从 `output_pdf` 推导 | 手动修复 | P2 |
 
 ---
 
@@ -420,9 +483,22 @@ pyinstaller --onefile --windowed --name "OutlookAgent" ^
   --hidden-import=attachment_handler ^
   --hidden-import=win32timezone --hidden-import=pythoncom --hidden-import=pywintypes ^
   --hidden-import=win10toast --hidden-import=extract_msg --hidden-import=olefile ^
-  --hidden-import=xhtml2pdf --hidden-import=xhtml2pdf.pisa ^
-  --collect-all reportlab ^
+  --hidden-import=weasyprint --hidden-import=cffi ^
+  --collect-all weasyprint --collect-all reportlab ^
   main.py
+```
+
+**构建前置条件**（weasyprint 依赖）:
+```
+# 安装 MSYS2
+winget install MSYS2.MSYS2
+
+# 初始化 keyring + 安装 pango
+C:\msys64\usr\bin\bash.exe -lc "pacman-key --init && pacman-key --populate"
+C:\msys64\usr\bin\pacman.exe -S mingw-w64-x86_64-pango --noconfirm
+
+# 构建时设置 PATH
+$env:PATH = "C:\msys64\mingw64\bin;" + $env:PATH
 ```
 
 ### 完整发布流程
@@ -500,6 +576,30 @@ pyinstaller --onefile --windowed --name "OutlookAgent" ^
 
 ### README 更新规范
 每次打包 release 时，基于前一个版本的 README.txt 追加新版本 changelog，不要重写。changelog 用用户能理解的语言（如"修复邮件格式丢失"），不要用技术术语（如"PyInstaller 打包不包含 attachment_handler.py"）。
+
+### 版本号管理规则 [P0]
+
+**何时更新版本号**：
+- ✅ 正式 release 给用户时才更新版本号
+- ❌ 测试阶段不要自动递增版本号
+
+**构建流程**：
+1. **测试阶段**：使用当前版本号构建，**不要修改** `__version__`
+2. **正式发布**：用户明确要求时才更新 `__version__`
+3. **构建前确认**：读取当前版本号，不要自动更新
+
+**错误示范**：
+```python
+# ❌ 错误：每次构建都更新版本号
+content = content.replace('__version__ = "1.2.10"', '__version__ = "1.2.11"')
+```
+
+**正确示范**：
+```python
+# ✅ 正确：读取当前版本号，不修改
+version = re.search(r'__version__\s*=\s*"([^"]+)"', content).group(1)
+print(f"Current version: {version}")
+```
 
 ---
 
@@ -665,6 +765,28 @@ pyinstaller --onefile --windowed --name "OutlookAgent" ^
 2. **压缩 > 跳过**：用户宁可看到压缩图也看不到丢失的截图
 3. **CID 替换要先验证**：`str.replace` 的静默行为是隐形 bug 来源
 4. **MIME 类型要跟着数据走**：数据变了 MIME 必须同步变
+
+---
+
+### v1.2.7 经验 (2026-06-06)
+
+#### 新增知识点
+1. **Excel COM 对象必须显式释放**：`finally` 块中 `del workbook/excel` + `taskkill EXCEL.EXE`，否则文件句柄被占用
+2. **邮件头部信息注入**：在 HTML 渲染前注入 From/Sent/To/Cc/Subject，用 `<div>` 布局（不用 `<table>`）
+3. **weasyprint 需设置 `WEASYPRINT_DLL_DIRECTORIES`**：PyInstaller 打包后需告诉 cffi DLL 的位置
+4. **weasyprint 构建依赖 MSYS2 + pango**：`winget install MSYS2.MSYS2` + `pacman -S mingw-w64-x86_64-pango`
+
+#### 硬伤记录
+| # | 硬伤 | 后果 | 修复 |
+|:-:|------|------|------|
+| 1 | Excel COM 对象未释放 | 原始 Excel 文件被锁定 | `finally` 块显式删除 + taskkill |
+| 2 | weasyprint DLL 路径未设置 | PyInstaller 打包后报 DLL 加载失败 | 设置 `WEASYPRINT_DLL_DIRECTORIES` |
+| 3 | 邮件头部用 `<table>` 布局 | weasyprint 渲染行间距过大 | 改用 `<div>` 布局 |
+
+#### 教训
+1. **COM 对象必须显式释放**：Excel 比 Word 更容易泄漏句柄
+2. **weasyprint 的 DLL 依赖**：PyInstaller 打包后需要特殊处理
+3. **`<table>` vs `<div>`**：weasyprint 对表格渲染与 xhtml2pdf 不同，优先用 div
 
 ---
 

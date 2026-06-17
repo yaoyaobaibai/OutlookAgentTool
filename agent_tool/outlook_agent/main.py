@@ -25,7 +25,7 @@ from attachment_handler import AttachmentHandler
 from merge_launcher import MergeLauncher
 from gui import show_confirm_dialog, MainWindow
 
-__version__ = "1.2.7"
+__version__ = "1.2.9"
 
 # 纸张大小映射 (points)
 PAGE_SIZES_FOR_HTML = {

@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from converters import txt_to_pdf, image_to_pdf, word_to_pdf, excel_to_pdf, merge_pdfs
 from utils import get_file_type, get_temp_dir, cleanup_temp_files, add_page_numbers
 
-__version__ = "1.2.7"
+__version__ = "1.2.9"
 
 # 纸张大小映射
 PAGE_SIZES = {
@@ -103,6 +103,7 @@ class PDFMergeTool:
         
         # 纸张大小选择
         self.page_size_var = tk.StringVar(value="A4")
+        self.zoom_var = tk.StringVar(value="100")
         
         # 创建界面
         self._create_widgets()
@@ -184,6 +185,17 @@ class PDFMergeTool:
             state='readonly'
         )
         self.page_size_combo.pack(side=tk.LEFT, padx=5)
+        
+        # 邮件缩放
+        ttk.Label(options_frame, text="邮件缩放:").pack(side=tk.LEFT, padx=(20, 5))
+        self.zoom_combo = ttk.Combobox(
+            options_frame,
+            textvariable=self.zoom_var,
+            values=['100', '90', '80', '70', '60'],
+            width=5,
+            state='readonly'
+        )
+        self.zoom_combo.pack(side=tk.LEFT, padx=5)
         
         # 合并邮件附件选项
         self.include_msg_attachments_var = tk.BooleanVar(value=False)
@@ -394,12 +406,12 @@ class PDFMergeTool:
         page_size = self.page_size_var.get()
         thread = threading.Thread(
             target=self._merge_worker,
-            args=(self.files.copy(), output_path, page_size),
+            args=(self.files.copy(), output_path, page_size, int(self.zoom_var.get())),
             daemon=True
         )
         thread.start()
     
-    def _merge_worker(self, files: List[str], output_path: str, page_size: str = 'A4'):
+    def _merge_worker(self, files: List[str], output_path: str, page_size: str = 'A4', zoom: int = 100):
         """合并工作线程"""
         try:
             logger.info(f"开始合并任务，文件数: {len(files)}")
@@ -483,7 +495,7 @@ class PDFMergeTool:
                 elif file_type == 'msg':
                     # .msg 文件：提取附件并转换为 PDF（不包含邮件信息页）
                     from converters.msg_to_pdf import msg_to_pdf
-                    success, error = msg_to_pdf(file_path, temp_pdf, include_info_page=False, page_size=page_pts,
+                    success, error = msg_to_pdf(file_path, temp_pdf, include_info_page=False, page_size=page_pts, zoom=int(self.zoom_var.get()),
                                                 include_attachments=self.include_msg_attachments_var.get(),
                                                 final_output_dir=os.path.dirname(output_path))
                     if success:
@@ -673,7 +685,7 @@ class PDFMergeTool:
             self.root.destroy()
 
 
-def merge_files_silent(files: List[str], output_path: str, add_page_nums: bool = True, page_position: str = 'bottom-center', page_size: str = 'A4') -> tuple[bool, str]:
+def merge_files_silent(files: List[str], output_path: str, add_page_nums: bool = True, page_position: str = 'bottom-center', page_size: str = 'A4', zoom: int = 100) -> tuple[bool, str]:
     """
     静默合并文件（无 GUI）
     
@@ -748,7 +760,7 @@ def merge_files_silent(files: List[str], output_path: str, add_page_nums: bool =
                     return (idx, None, f"图片转换失败: {os.path.basename(fp)}")
             elif ft == 'msg':
                 from converters.msg_to_pdf import msg_to_pdf
-                ok, err = msg_to_pdf(fp, temp_pdf, include_info_page=False, page_size=page_pts,
+                ok, err = msg_to_pdf(fp, temp_pdf, include_info_page=False, page_size=page_pts, zoom=int(zoom) if zoom else 100,
                                    include_attachments=True)
                 if ok:
                     if os.path.exists(temp_pdf):
