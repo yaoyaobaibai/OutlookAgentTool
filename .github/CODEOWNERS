@@ -1,0 +1,31 @@
+# OutlookAgent Code Owners
+# Last updated: 2026-07-10
+#
+# Order matters: the last matching pattern takes precedence.
+# These owners will be requested for review when someone opens a PR.
+
+# Core application code
+agent_tool/outlook_agent/        @project-lead
+agent_tool/pdf_merge_tool/       @project-lead
+
+# Critical sync-point files (modifications require careful review)
+agent_tool/outlook_agent/attachment_handler.py   @project-lead
+agent_tool/pdf_merge_tool/converters/msg_to_pdf.py   @project-lead
+
+# Build configuration
+agent_tool/**/build.bat          @project-lead
+agent_tool/**/*.spec             @project-lead
+
+# Documentation
+AGENTS.md                        @project-lead
+.sisyphus/skills/SKILL.md        @project-lead
+.sisyphus/skills/SKILL-extended.md   @project-lead
+
+# CI/CD
+.github/                         @project-lead
+
+# Scripts
+scripts/                         @project-lead
+
+# Release packaging
+agent_tool/release_package/      @project-lead

@@ -1,0 +1,130 @@
+name: OutlookAgent CI
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'agent_tool/**'
+      - 'scripts/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'agent_tool/**'
+      - 'scripts/**'
+      - '.github/workflows/ci.yml'
+
+jobs:
+  lint:
+    name: Lint & Syntax Check
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pylint pyflakes
+
+      - name: Python Syntax Check (py_compile)
+        run: |
+          Get-ChildItem -Recurse -Path agent_tool -Filter *.py | ForEach-Object {
+            Write-Host "Checking: $($_.FullName)"
+            python -m py_compile $_.FullName
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+      - name: Pyflakes (detect unused imports, undefined names)
+        continue-on-error: true
+        run: |
+          pyflakes agent_tool\
+
+  constraints:
+    name: Project Constraint Checks
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Check subprocess creationflags (P0)
+        run: |
+          $violations = Select-String -Path agent_tool\**\*.py -Pattern 'subprocess\.(run|Popen|call)\(' -List |
+            ForEach-Object { $_.Path } |
+            Where-Object {
+              $content = Get-Content $_ -Raw
+              # Check if any subprocess call lacks creationflags
+              $content -match 'subprocess\.(run|Popen|call)\([^)]*\)' -and
+              $content -notmatch 'creationflags\s*=\s*0x08000000'
+            }
+          if ($violations) {
+            Write-Host "ERROR: subprocess calls missing creationflags=0x08000000:"
+            $violations | ForEach-Object { Write-Host "  $_" }
+            exit 1
+          }
+          Write-Host "PASS: All subprocess calls have creationflags"
+
+      - name: Check CSS processing order (P0)
+        run: |
+          $files = @(
+            'agent_tool\outlook_agent\attachment_handler.py',
+            'agent_tool\pdf_merge_tool\converters\msg_to_pdf.py'
+          )
+          foreach ($f in $files) {
+            if (-not (Test-Path $f)) { continue }
+            $content = Get-Content $f -Raw
+            # Verify re.sub (clear) appears before page_css injection
+            if ($content -match 're\.sub.*style.*\n.*page_css' -or
+                $content -match 're\.sub.*style[\s\S]*?page_css') {
+              Write-Host "PASS: $f - CSS clear before inject"
+            } else {
+              Write-Host "WARNING: $f - CSS ordering unclear, manual review needed"
+            }
+          }
+
+      - name: Check _html_body_to_pdf sync (P0)
+        run: |
+          $f1 = 'agent_tool\outlook_agent\attachment_handler.py'
+          $f2 = 'agent_tool\pdf_merge_tool\converters\msg_to_pdf.py'
+          $count1 = (Select-String -Path $f1 -Pattern '_html_body_to_pdf' -ErrorAction SilentlyContinue).Count
+          $count2 = (Select-String -Path $f2 -Pattern '_html_body_to_pdf' -ErrorAction SilentlyContinue).Count
+          Write-Host "attachment_handler.py: $count1 references to _html_body_to_pdf"
+          Write-Host "msg_to_pdf.py: $count2 references to _html_body_to_pdf"
+          Write-Host "REMINDER: If either file was modified, ensure both are synced"
+
+      - name: Check ASCII-only log messages (P1)
+        run: |
+          $violations = Select-String -Path agent_tool\**\*.py -Pattern 'logger\.\w+\([^)]*[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]'
+          if ($violations) {
+            Write-Host "WARNING: Non-ASCII characters in log messages (may appear as ?? in --windowed EXE):"
+            $violations | ForEach-Object { Write-Host "  $($_.Path):$($_.LineNumber): $($_.Line.Trim())" }
+          } else {
+            Write-Host "PASS: No CJK characters in log messages"
+          }
+
+  summary:
+    name: CI Summary
+    needs: [lint, constraints]
+    runs-on: windows-latest
+    if: always()
+    steps:
+      - name: Overall Status
+        run: |
+          Write-Host "========================================="
+          Write-Host "OutlookAgent CI Complete"
+          Write-Host "========================================="
+          Write-Host "Lint: ${{ needs.lint.result }}"
+          Write-Host "Constraints: ${{ needs.constraints.result }}"
+          Write-Host "========================================="
+          if ("${{ needs.lint.result }}" -eq "failure" -or "${{ needs.constraints.result }}" -eq "failure") {
+            Write-Host "Review the job logs above for details."
+            exit 1
+          }

@@ -1,0 +1,27 @@
+﻿# Mail Agent default rules
+# Format: list of rules. Each rule has conditions (field-op-value) and actions.
+# Supported operators: equals, not_equals, contains, not_contains,
+#                     starts_with, ends_with, matches_regex
+# Compound conditions: use "all:" for AND, "any:" for OR
+
+rules:
+  - name: "PR_FORM_REQUEST"
+    enabled: true
+    description: "Match PR-form-related incoming mail"
+    conditions:
+      - all:
+          - field: subject
+            op: contains
+            value: "[PR]"
+          - field: sender_email
+            op: ends_with
+            value: "@company.com"
+    actions:
+      - download_attachments
+      - mark_as_processed
+
+settings:
+  poll_interval_seconds: 120
+  inbox_root: "%USERPROFILE%/PRPOAgent/inbox"
+  log_level: "INFO"
+  log_file: "%USERPROFILE%/PRPOAgent/mail_agent.log"
