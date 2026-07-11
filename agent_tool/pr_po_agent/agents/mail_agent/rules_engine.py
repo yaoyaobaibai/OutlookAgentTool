@@ -101,7 +101,11 @@ def _get_field(email: dict, field: str):
 
 
 def _check_single_condition(email: dict, condition: dict) -> bool:
-    """Evaluate a single condition dict with 'field', 'op', 'value' keys."""
+    """Evaluate a single condition dict with 'field', 'op', 'value' keys.
+
+    List-valued fields (e.g. attachment_names): a string op matches if
+    ANY element of the list satisfies it. Empty list = no match.
+    """
     field = condition.get("field", "")
     op_name = condition.get("op", "")
     expected = condition.get("value", "")
@@ -113,7 +117,14 @@ def _check_single_condition(email: dict, condition: dict) -> bool:
     actual = _get_field(email, field)
     if actual is None:
         actual = ""
-    return _OPERATORS[op_name](str(actual), str(expected))
+    op = _OPERATORS[op_name]
+    # List fields: any-item match semantics
+    if isinstance(actual, (list, tuple)):
+        if not actual:
+            return False
+        exp_str = str(expected)
+        return any(op(str(x), exp_str) for x in actual if x is not None)
+    return op(str(actual), str(expected))
 
 
 def _check_conditions(email: dict, conditions: list) -> bool:

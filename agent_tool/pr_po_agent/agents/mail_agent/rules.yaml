@@ -2,17 +2,19 @@
 # Format: list of rules. Each rule has conditions (field-op-value) and actions.
 # Supported operators: equals, not_equals, contains, not_contains,
 #                     starts_with, ends_with, matches_regex
-# Compound conditions: use "all:" for AND, "any:" for OR
+# Compound conditions: "all:" = AND, "any:" = OR
+# List-valued fields (e.g. attachment_names): a string op matches if
+# ANY element of the list satisfies it. Empty list = no match.
 
 rules:
-  - name: "PR_FORM_REQUEST"
+  - name: "PR_FORM_ATTACHED"
     enabled: true
-    description: "Match PR-form-related incoming mail"
+    description: "Match internal emails with attachment name containing 'PR Form'"
     conditions:
       - all:
-          - field: subject
+          - field: attachment_names
             op: contains
-            value: "[PR]"
+            value: "PR Form"
           - field: sender_email
             op: ends_with
             value: "@company.com"

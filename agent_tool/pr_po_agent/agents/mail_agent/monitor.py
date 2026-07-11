@@ -182,13 +182,25 @@ class MailAgent:
             rt_str = rt.strftime("%Y-%m-%dT%H:%M:%S") if hasattr(rt, "strftime") else str(rt)
         except Exception:
             rt_str = str(rt) if rt else ""
+        # Extract attachment names for rule matching
+        raw_att = email.get("attachments") or []
+        att_names = []
+        for a in raw_att:
+            if isinstance(a, dict):
+                n = a.get("name", "")
+                if n:
+                    att_names.append(n)
+            elif isinstance(a, str) and a:
+                att_names.append(a)
+
         normalized = {
             "message_id": message_id,
             "subject": email.get("subject", "") or "",
             "sender_email": email.get("sender_email", "") or email.get("sender", "") or "",
             "body": email.get("body", "") or "",
             "received_at": rt_str,
-            "attachment_count": len(email.get("attachments") or []),
+            "attachment_count": len(raw_att),
+            "attachment_names": att_names,
         }
 
         rules = get_enabled_rules(self._rules_data)
