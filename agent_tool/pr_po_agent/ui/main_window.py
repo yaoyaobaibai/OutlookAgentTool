@@ -22,17 +22,28 @@ from config import (
 class MainWindow:
     """Main application window for PR/PO Agent (Chinese UI)."""
 
-    def __init__(self, root):
+    def __init__(self, root, mail_controller=None):
         self.root = root
         self.root.title(APP_TITLE)
         self.root.geometry(DEFAULT_WINDOW_SIZE)
         self.root.minsize(700, 500)
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
+        # Mail Agent controller (may be None in tests)
+        self.mail_controller = mail_controller
+
         self._build_stats_panel()
         self._build_task_list()
         self._build_bottom_buttons()
         self._build_status_bar()
+        self._build_mail_status_bar()
+
+        # Start polling mail agent status
+        if self.mail_controller is not None:
+            self._refresh_mail_status()
+        else:
+            # No controller: just show disabled state
+            self._set_mail_status(False)
 
     # ------------------------------------------------------------------
     # Stats panel
@@ -183,6 +194,68 @@ class MainWindow:
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
+
+    # ------------------------------------------------------------------
+    # Mail agent status bar (bottom row)
+    # ------------------------------------------------------------------
+
+    def _build_mail_status_bar(self):
+        """Build a status row at the very bottom: status + start/stop."""
+        self._mail_status_frame = ttk.Frame(self.root, padding=(10, 5))
+        self._mail_status_frame.pack(fill="x", side="bottom")
+        self._mail_status_label = ttk.Label(
+            self._mail_status_frame,
+            text="Mail Agent: ...",
+            font=DEFAULT_FONT,
+        )
+        self._mail_status_label.pack(side="left")
+
+        self._mail_start_btn = ttk.Button(
+            self._mail_status_frame,
+            text="Start",
+            command=self._on_mail_start,
+            width=10,
+        )
+        self._mail_start_btn.pack(side="right", padx=(5, 0))
+
+        self._mail_stop_btn = ttk.Button(
+            self._mail_status_frame,
+            text="Stop",
+            command=self._on_mail_stop,
+            width=10,
+        )
+        self._mail_stop_btn.pack(side="right", padx=5)
+
+    def _on_mail_start(self):
+        if self.mail_controller is None:
+            return
+        self.mail_controller.start()
+        self._refresh_mail_status()
+
+    def _on_mail_stop(self):
+        if self.mail_controller is None:
+            return
+        self.mail_controller.stop()
+        self._refresh_mail_status()
+
+    def _set_mail_status(self, is_running):
+        if is_running:
+            self._mail_status_label.config(text="Mail Agent: running")
+            self._mail_start_btn.state(["disabled"])
+            self._mail_stop_btn.state(["!disabled"])
+        else:
+            self._mail_status_label.config(text="Mail Agent: stopped")
+            self._mail_start_btn.state(["!disabled"])
+            self._mail_stop_btn.state(["disabled"])
+
+    def _refresh_mail_status(self):
+        """Poll the controller every 2 seconds and update the status row."""
+        if self.mail_controller is not None:
+            self._set_mail_status(self.mail_controller.is_running())
+        try:
+            self.root.after(2000, self._refresh_mail_status)
+        except Exception:
+            pass
 
     def show(self):
         """Restore the window from tray (called by tray icon)."""
