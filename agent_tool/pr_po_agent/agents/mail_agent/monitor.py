@@ -12,6 +12,13 @@ import sys
 import threading
 import time
 
+# Force PyInstaller to bundle outlook_agent modules.
+# Wrapped in try/except so we don't break anything if it's not available.
+try:
+    import outlook_agent.outlook_monitor  # noqa: F401
+except ImportError:
+    pass
+
 logger = logging.getLogger(__name__)
 
 
@@ -70,8 +77,13 @@ def _resolve_path(template):
 class MailAgent:
     """Main Mail Agent class."""
 
-    def __init__(self, rules_path):
+    def __init__(self, rules_path, outlook_monitor_class=None):
         self.rules_path = rules_path
+        # Optional pre-imported OutlookMonitor class. If None, monitor
+        # will try to import it on first connect (works in source mode).
+        # In PyInstaller EXE mode the parent should pre-import and pass
+        # it in to avoid sys.path confusion inside the bundled module.
+        self._outlook_monitor_class = outlook_monitor_class
         self._stop_event = threading.Event()
         self._thread = None
         self._processed_ids = set()
@@ -108,7 +120,10 @@ class MailAgent:
             logger.warning("Failed to save processed IDs: %s", e)
 
     def _connect_outlook(self):
-        OutlookMonitor = _import_outlook_monitor()
+        if self._outlook_monitor_class is not None:
+            OutlookMonitor = self._outlook_monitor_class
+        else:
+            OutlookMonitor = _import_outlook_monitor()
         self._outlook = OutlookMonitor(keywords=[], match_mode="any")
         ok = self._outlook.connect()
         if not ok:

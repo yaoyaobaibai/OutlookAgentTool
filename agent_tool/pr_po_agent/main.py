@@ -1,8 +1,14 @@
 ﻿# -*- coding: utf-8 -*-
 """PR/PO Agent - Main entry point (Chinese localized).
 
-Auto-launches Mail Agent subprocess on startup. Mail Agent runs in
-background and is terminated when PRPOAgent exits.
+Auto-launches Mail Agent thread on startup. Mail Agent runs in-process
+as a daemon thread (clean shutdown on PRPOAgent exit).
+
+This version was simplified after extensive debugging: the original
+`subprocess.Popen` approach failed inside the PyInstaller --onefile
+EXE because sys.executable points to the EXE itself, not a Python
+interpreter. The in-process thread approach is the simplest fix that
+works in both source and EXE modes.
 """
 
 import io
@@ -44,7 +50,7 @@ def main():
     """Start PR/PO Assistant: hide window, show tray icon, run main loop."""
     root = tk.Tk()
 
-    # Build the main window (gets reference to MailAgentController for UI)
+    # Build the main window with reference to MailAgentController
     mail_controller = MailAgentController()
     window = MainWindow(root, mail_controller=mail_controller)
 
@@ -58,23 +64,25 @@ def main():
         show_callback=window.show,
     )
 
-    # Auto-launch Mail Agent as a child process
-    mail_controller.start()
+    # Auto-launch Mail Agent as in-process thread
+    try:
+        mail_controller.start()
+    except Exception:
+        pass  # Mail Agent failure is non-fatal for PRPOAgent
 
     # Run tray in daemon thread
     run_tray(icon)
 
-    # Hook window close to clean up child process
-    _orig_close = root.protocol("WM_DELETE_WINDOW")
+    # Hook window close to clean up
     def _on_main_close():
-        # If the main window's own _on_close exists, call it (hides window)
+        # Hide-to-tray semantics
         try:
             if hasattr(window, "_on_close"):
                 window._on_close()
-                return  # hide-to-tray semantics: do not exit
+                return
         except Exception:
             pass
-        # No _on_close or it failed: actually stop everything
+        # Actual close
         try:
             mail_controller.stop()
         except Exception:
@@ -93,8 +101,7 @@ def main():
     try:
         root.mainloop()
     finally:
-        # Safety net: always stop Mail Agent on exit regardless of how
-        # the loop ended (exception, kill, etc.)
+        # Safety net: always stop Mail Agent on exit
         try:
             mail_controller.stop()
         except Exception:
