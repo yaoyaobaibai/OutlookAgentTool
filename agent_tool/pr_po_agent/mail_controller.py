@@ -3,7 +3,7 @@
 
 Mail Agent runs IN-PROCESS as a daemon thread (not a subprocess) so it
 works in both source mode and PyInstaller --onefile EXE mode (where
-sys.executable is the EXE itself).
+sys.executable is the EXE itself, not a Python interpreter).
 
 The controller pre-imports the OutlookMonitor class and passes it to
 MailAgent, sidestepping the sys.path shadowing problem.
@@ -14,6 +14,7 @@ Logging is English ASCII per SKILL.md.
 import logging
 import os
 import sys
+import tempfile
 import threading
 import time
 
@@ -22,10 +23,16 @@ logger = logging.getLogger(__name__)
 
 def _setup_logging():
     """Configure file logging for Mail Agent.
+
     Mirrors the setup in agents/mail_agent/__main__.py.
+    Writes to %USERPROFILE%\PRPOAgent\mail_agent.log (and %TEMP% as fallback).
     """
     log_dir = os.path.expandvars(os.path.expanduser(r"%USERPROFILE%/PRPOAgent"))
-    os.makedirs(log_dir, exist_ok=True)
+    try:
+        os.makedirs(log_dir, exist_ok=True)
+    except Exception:
+        log_dir = os.path.join(tempfile.gettempdir(), "PRPOAgent")
+        os.makedirs(log_dir, exist_ok=True)
     log_file = os.path.join(log_dir, "mail_agent.log")
     root = logging.getLogger()
     # Avoid double-setup
@@ -47,20 +54,24 @@ def _setup_logging():
 
 
 def _bootstrap_outlook_monitor_class():
-    """Pre-import OutlookMonitor from outlook_agent.
+    """Get the OutlookMonitor class.
 
-    Mirrors the workaround in monitor.py. outlook_monitor.py does
-    `from config import load_config`. When pr_po_agent/ is on sys.path,
-    its config.py shadows outlook_agent/config.py. We work around that.
+    Fast path: check sys.modules (works inside PyInstaller EXE since
+    modules are already loaded). Fall back to sys.path manipulation
+    (works in source mode).
     """
+    # Fast path: already loaded modules (EXE case)
+    for modname in ("outlook_monitor", "agent_tool.outlook_agent.outlook_monitor"):
+        mod = sys.modules.get(modname)
+        if mod is not None and hasattr(mod, "OutlookMonitor"):
+            return mod.OutlookMonitor
+
+    # Source-mode path manipulation
     here = os.path.abspath(__file__)
-    # mail_controller.py is at agent_tool/pr_po_agent/mail_controller.py
-    # outlook_monitor.py is at agent_tool/outlook_agent/outlook_monitor.py
     pr_po_root = os.path.dirname(here)
     agent_tool_root = os.path.dirname(pr_po_root)
     outlook_agent_dir = os.path.join(agent_tool_root, "outlook_agent")
 
-    # Snapshot
     cached_config = sys.modules.get("config")
     if cached_config is not None:
         try:
@@ -167,20 +178,8 @@ class MailAgentController:
     """Public API for managing Mail Agent lifecycle from PRPOAgent."""
 
     def __init__(self, rules_path=None):
-        import sys as _sys
-        _dbg = open(_sys.path[0] + r"\..\..\mail_controller_debug.log", "a") if False else None
-        def _log(msg):
-            try:
-                log_path = r"C:\Users\P1313993\AppData\Local\Temp\PRPOAgent.controller.log"
-                with open(log_path, "a", encoding="utf-8") as f:
-                    f.write(msg + "\n")
-            except Exception:
-                pass
-        _log("MailAgentController.__init__ start")
         self._lock = threading.Lock()
-        _log("lock created")
         self._impl = None
-        _log("_impl = None")
         if rules_path is None:
             here = os.path.abspath(__file__)
             pr_po_root = os.path.dirname(here)
@@ -188,13 +187,11 @@ class MailAgentController:
                 pr_po_root, "agents", "mail_agent", "rules.yaml"
             )
         self.rules_path = rules_path
-        _log("rules_path=" + self.rules_path)
-        _log("calling _bootstrap_outlook_monitor_class")
         self._outlook_monitor_class = _bootstrap_outlook_monitor_class()
-        _log("bootstrap returned, class=%s" % bool(self._outlook_monitor_class))
         if self._outlook_monitor_class is None:
             logger.warning("OutlookMonitor class not pre-loaded; Mail Agent may fail to connect")
-        _log("__init__ done")
+        # Safety net: ensure log file is set up early (before start() is called)
+        _setup_logging()
 
     def start(self):
         with self._lock:
