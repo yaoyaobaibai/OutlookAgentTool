@@ -21,47 +21,87 @@ import time
 logger = logging.getLogger(__name__)
 
 
-def _setup_logging():
-    """Configure file logging for Mail Agent.
+class MailAgentFilter(logging.Filter):
+    """Only accept records from mail_agent-related loggers (added 2026-07-15).
 
-    Mirrors the setup in agents/mail_agent/__main__.py.
-    Writes to %USERPROFILE%\PRPOAgent\mail_agent.log (and %TEMP% as fallback).
+    Prevents prpo_agent_ui and other unrelated loggers from polluting
+    mail_agent.log.
     """
-    log_dir = os.path.expandvars(os.path.expanduser(r"%USERPROFILE%/PRPOAgent"))
+    def filter(self, record):
+        name = record.name
+        return (
+            name == "mail_agent"
+            or name == "mail_controller"
+            or name.startswith("agents.mail_agent")
+            or name.startswith("agents.")
+        )
+
+
+def _setup_logging():
+    """Configure file logging for Mail Agent (PDFMergeTool pattern).
+
+    File: log_YYYYMMDD_HHMMSS.log
+    Dir:  %USERPROFILE%/PRPOAgent_logs/
+    Each app launch creates a brand-new log file (mode="w", truncated).
+
+    MailAgentFilter (from previous fix) only allows records from
+    mail_agent-related loggers to reach this file - prevents prpo_agent_ui
+    messages from polluting it.
+    """
+    from datetime import datetime
+
+    log_dir = os.path.expandvars(os.path.expanduser(r"%USERPROFILE%/PRPOAgent_logs"))
     try:
         os.makedirs(log_dir, exist_ok=True)
     except Exception:
-        log_dir = os.path.join(tempfile.gettempdir(), "PRPOAgent")
+        log_dir = os.path.join(tempfile.gettempdir(), "PRPOAgent_logs")
         os.makedirs(log_dir, exist_ok=True)
-    log_file = os.path.join(log_dir, "mail_agent.log")
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file = os.path.join(log_dir, f"log_{timestamp}.log")
     root = logging.getLogger()
-    # Avoid double-setup
-    if not any(
-        isinstance(h, logging.FileHandler)
-        and getattr(h, "baseFilename", "").lower() == log_file.lower()
-        for h in root.handlers
-    ):
-        root.setLevel(logging.INFO)
-        fmt = logging.Formatter(
-            "%(asctime)s %(name)s %(levelname)s: %(message)s"
-        )
-        try:
-            fh = logging.FileHandler(log_file, encoding="utf-8")
-            fh.setFormatter(fmt)
-            root.addHandler(fh)
-        except Exception as e:
-            sys.stderr.write("Failed to set up Mail Agent log: %s\n" % e)
+    root.setLevel(logging.INFO)
+
+    fmt = logging.Formatter(
+        "%(asctime)s %(name)s %(levelname)s: %(message)s"
+    )
+    try:
+        fh = logging.FileHandler(log_file, encoding="utf-8", mode="w")
+        fh.setFormatter(fmt)
+        # Filter out non-mail_agent records
+        fh.addFilter(MailAgentFilter())
+        root.addHandler(fh)
+    except Exception as e:
+        sys.stderr.write("Failed to set up Mail Agent log: %s\n" % e)
 
 
 def _bootstrap_outlook_monitor_class():
     """Get the OutlookMonitor class.
 
-    Fast path: check sys.modules (works inside PyInstaller EXE since
-    modules are already loaded). Fall back to sys.path manipulation
-    (works in source mode).
+    Works in three modes:
+    1. PyInstaller --onefile/--onedir frozen mode: use dotted import
+       "outlook_agent.outlook_monitor" (PyInstaller loads via import hooks)
+    2. Source mode with already-loaded modules: check sys.modules
+    3. Source mode fresh: sys.path manipulation to add outlook_agent_dir
+
+    The previous version only handled modes 2-3, which caused
+    ModuleNotFoundError in PyInstaller mode (T5 failure root cause).
     """
-    # Fast path: already loaded modules (EXE case)
-    for modname in ("outlook_monitor", "agent_tool.outlook_agent.outlook_monitor"):
+    # PyInstaller frozen mode: use dotted import via PyInstaller's import hooks
+    if getattr(sys, "frozen", False):
+        try:
+            from outlook_agent.outlook_monitor import OutlookMonitor
+            return OutlookMonitor
+        except ImportError as e:
+            logger.warning("PyInstaller mode: failed to import outlook_agent.outlook_monitor: %s", e)
+            return None
+
+    # Fast path: already loaded modules (source mode)
+    for modname in (
+        "outlook_monitor",
+        "outlook_agent.outlook_monitor",
+        "agent_tool.outlook_agent.outlook_monitor",
+    ):
         mod = sys.modules.get(modname)
         if mod is not None and hasattr(mod, "OutlookMonitor"):
             return mod.OutlookMonitor
@@ -181,11 +221,24 @@ class MailAgentController:
         self._lock = threading.Lock()
         self._impl = None
         if rules_path is None:
-            here = os.path.abspath(__file__)
-            pr_po_root = os.path.dirname(here)
-            rules_path = os.path.join(
-                pr_po_root, "agents", "mail_agent", "rules.yaml"
-            )
+            # PyInstaller frozen mode: rules.yaml is extracted to _MEIPASS
+            if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+                rules_path = os.path.join(
+                    sys._MEIPASS, "agents", "mail_agent", "rules.yaml"
+                )
+            else:
+                # Source mode: resolve relative to this file
+                here = os.path.abspath(__file__)
+                pr_po_root = os.path.dirname(here)
+                rules_path = os.path.join(
+                    pr_po_root, "agents", "mail_agent", "rules.yaml"
+                )
+            logger.info("Mail Agent rules_path=%s", rules_path)
+            if not os.path.isfile(rules_path):
+                logger.error("rules.yaml missing: %s", rules_path)
+                raise FileNotFoundError(
+                    "rules.yaml not found at expected path: %s" % rules_path
+                )
         self.rules_path = rules_path
         self._outlook_monitor_class = _bootstrap_outlook_monitor_class()
         if self._outlook_monitor_class is None:
