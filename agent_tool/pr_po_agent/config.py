@@ -70,6 +70,26 @@ UI_TEXT = {
     "save_settings": "保存设置",
     "cancel": "取消",
     "hint_dialog_title": "提示",
+
+    # -- Mail Agent button labels (Chinese) --
+    "mail_start_btn": "开始监听",
+    "mail_stop_btn": "关闭监听",
+    "view_log_btn": "查看日志",
+    "open_log_folder_btn": "打开日志目录",
+
+    # -- Mail Agent action feedback messages --
+    "action_already_running": "Mail Agent 已在运行中",
+    "action_start_success": "Mail Agent 已启动",
+    "action_start_failed": "Mail Agent 启动失败: {error}",
+    "action_stop_success": "Mail Agent 已停止",
+
+    # -- UI event log entries --
+    "log_entry_click_start": "User clicked [开始监听]",
+    "log_entry_click_stop": "User clicked [关闭监听]",
+
+    # -- Tray menu log entries --
+    "tray_view_log": "查看日志",
+    "tray_open_log_folder": "打开日志目录",
 }
 
 # 设置对话框四个选项卡
