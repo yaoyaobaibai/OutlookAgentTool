@@ -2,7 +2,7 @@
 """PR/PO Agent - 配置文件"""
 
 # 版本
-VERSION = "1.3.0-preview"
+VERSION = "1.3.2-dev"
 
 # 应用标题
 APP_TITLE = "PR/PO 助手"
@@ -100,6 +100,17 @@ SETTINGS_TABS = {
     "ai": "AI 配置",
 }
 
+# 主窗口 6 个 Tab 配置 (v1.3.2+: GR-Acubuy 启用, 其他 5 Tab 显示 v1.5.0+ 启用)
+MAIN_WINDOW_TABS = [
+    # (key, label_chinese, enabled, future_version_msg)
+    ("gr_acubuy",    "GR-Acubuy",   True,  None),
+    ("vendor_in",    "供应商入库",   False, "v1.5.0+"),
+    ("pr_po_consume", "PR-PO 消耗",  False, "v1.5.0+"),
+    ("po_resale",    "PO 转售",      False, "v1.5.0+"),
+    ("contract",     "合同",         False, "v1.5.0+"),
+    ("gr_sap",       "GR-SAP",       False, "v1.5.0+"),
+]
+
 # 设置字段
 SETTINGS_FIELDS = {
     "email": [
@@ -123,6 +134,25 @@ SETTINGS_FIELDS = {
         ("API 端点:", "ai_endpoint"),
         ("API 密钥:", "ai_api_key"),
     ],
+}
+
+# GR-Acubuy Tab UI 文案 (v1.3.2+)
+GR_ACUBUY_UI_TEXT = {
+    "today_overview_title":     "今日概览",
+    "form_section_title":       "GR 表单",
+    "attachments_section_title": "附件",
+    "action_section_title":     "操作",
+    "status_section_title":     "状态",
+    "gr_supplier_label":        "供应商:",
+    "gr_amount_label":          "金额:",
+    "gr_invoice_label":         "发票号:",
+    "gr_add_attachment_btn":    "添加附件",
+    "gr_save_draft_btn":        "保存草稿",
+    "gr_status_disconnected":   "未连接 Acubuy",
+    "gr_status_placeholder":    "等待 Acubuy 客户端连接...",
+    "gr_no_attachments":        "(暂无附件)",
+    "disabled_tab_msg":         "此功能计划在 {version} 启用",
+    "stub_action_msg":          "功能开发中 (v1.3.2 UI 骨架)",
 }
 
 # 确认弹窗
