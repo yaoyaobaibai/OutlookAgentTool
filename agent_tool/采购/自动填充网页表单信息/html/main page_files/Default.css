@@ -1,0 +1,793 @@
+/************************************************************
+  A
+************************************************************/
+/* Usage: Need NOT to colorful hyperlinks */
+table.AnchorNoCOlor A:link
+{
+	color: gray;
+}
+table.AnchorNoCOlor A:visited
+{
+	color: gray;
+}
+table.AnchorNoCOlor A:hover
+{
+	color: gray;
+}
+/************************************************************
+  BODY
+************************************************************/
+body
+{
+	font-family: Arial;
+	font-size: 8pt;
+	margin: 0px 8px 0px 8px;
+	background-color: #f3f3f3;
+}
+/************************************************************
+  HR
+************************************************************/
+hr
+{
+	height: 2px;
+	width: 100%;
+}
+/************************************************************
+  IMAGES
+************************************************************/
+img
+{
+}
+/************************************************************
+  INPUT
+************************************************************/
+input
+{
+	font-weight: normal;
+	color: black;
+	font-size: 8pt;
+}
+input.inputLong
+{
+	font-weight: normal;
+	color: black;
+	font-size: 8pt;
+	width: 400px;
+}
+/************************************************************
+  SELECT
+************************************************************/
+select
+{
+	font-weight: normal;
+	color: black;
+	font-size: 8pt;
+}
+/************************************************************
+  TABLE
+************************************************************/
+table
+{
+	/* 	width: affects .aspMenuControl01 	*/
+}
+table.tableDefault /* Note: Used as Default CSS for table */
+{
+	width: 100%;
+	vertical-align: top;
+}
+table.tableDefault td
+{
+	vertical-align: middle;
+}
+/* Usage: Used in input forms to prevent horizontal scrolling to access 
+   some parts of the forms
+*/
+table.tableDefaultMinWidth
+{
+	border-collapse: collapse;
+}
+table.tableDefaultMinWidth td
+{
+	vertical-align: middle;
+}
+table.tableDefaultWithBorder
+{
+	border-collapse: collapse;
+	width: 100%;
+	border: solid 1px;
+}
+table.tableDefaultWithBorder td
+{
+	border: solid 1px;
+	vertical-align: middle;
+}
+table.tableDefaultWithBorderMinWidth
+{
+	border-collapse: collapse;
+	border: solid 1px;
+}
+table.tableDefaultWithBorderMinWidth td
+{
+	border: solid 1px;
+	vertical-align: middle;
+}
+table.tableForMasterPage /* Note: For Master Page only */ {
+	width: 100%;
+	height: 40px;
+	background-color: #00205c;
+	text-align: center;
+	vertical-align: middle;
+	font-size: 20px;
+	font-family:Arial;
+	color: white;
+}
+
+table.tableForMasterPage td {
+	font-size: 20px;
+	font-family: Arial;
+	color: white;
+}
+
+table.tableForMasterPage .UserName {
+	font-size: 12px;
+	font-family: Arial;
+	color: white;
+}
+
+.FooterLoginPage /* Note: For Login Page only */ {
+		width: 99%;
+		height: 40px;
+		background-color: #00205c;
+		text-align: center;
+		vertical-align: middle;
+		font-size: 12px;
+		font-family: Arial;
+		color: white;
+		position: absolute;
+		bottom: 0;
+}
+
+table.tableContainMenuControl01 /* Note: For Menu Control only */ {
+	border-collapse: collapse;
+	width: 100%;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+	border-bottom-color: #F4F8FF;
+	padding-top:20px;
+	padding-bottom:20px;
+}
+
+table.tableContainMenuControl01 td {
+	font-weight: bold;
+	font-size: 14px;
+}
+
+/* CISAPPSUP-6831: Replace with new CSS
+table.tableContainMenuControl01*/ /* Note: For Menu Control only */ 
+/*{
+	border-collapse: collapse;
+	width: 100%;
+	background-color: #F4F8FF;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+	border-bottom-color: White;
+}
+table.tableContainMenuControl01 td
+{
+	padding-top: 0px;
+	padding-bottom: 0px;
+	font-weight: bold;
+	color: white;
+	font-size: 8pt;
+}*/
+
+
+/* table.tableContainMenuControl01 .tdLeftPane
+{
+	width: 180px;
+	background-color: #006600;
+	font-weight: bold;
+	color: white;
+	text-align: left;
+} */
+table.tableContainContentPlaceHolder01 /* Note: For use within ContentPlaceHolder to define minimum height of table only */
+{
+	width: 100%;
+	height: 450px;
+	border-collapse: collapse;
+	vertical-align: top;
+}
+table.tableContainContentPlaceHolder01 tr
+{
+	vertical-align: top;
+}
+table.tableContainContentPlaceHolder01 td
+{
+}
+table.tableContainContentPlaceHolder01 .tdLeftPane
+{
+	width: 180px;
+	vertical-align: top;
+/*	border: solid 1px black;*/
+}
+table.tableContainContentPlaceHolder01 .tdRightPane
+{
+	vertical-align: top;
+}
+table.tableContainAspTableMiniDashboard01
+{
+	width: 100%;
+	vertical-align: top;
+	height: 265px;
+}
+/************************************************************
+  TD
+************************************************************/
+td
+{
+	font-size: 8pt;
+	font-family: Arial;
+}
+td.tdLoginTitle /* Note: For Login Title only */
+{
+	font-weight: bold;
+	color: white;
+	background-color: #214890;
+}
+
+td.tdBreadCrumbsBlue /* Note: For Bread Crumbs only */
+{
+	font-weight: bold;
+	color: white;
+	background-color: #214890;
+	text-indent: 5px;
+	vertical-align: middle;
+}
+
+/*CISAPPSUP-6831: Replace with new CSS
+	td.tdBreadCrumbs*/ /* Note: For Bread Crumbs only */ /*{
+	font-weight: bold;
+	color: #231f20;
+	background-color: #f3f3f3;
+	text-indent: 5px;
+	vertical-align: middle;
+}
+
+td.tdBreadCrumbs a*/ /* Note: For Bread Crumbs only */ /*{
+	color: #231f20;
+}*/
+
+td.tdBreadCrumbs /* Note: For Bread Crumbs only */ {
+	font-weight: bold;
+	color: #FFFFFF;
+	background-color: #214890;
+	text-indent: 5px;
+	vertical-align: middle;
+}
+
+td.tdBreadCrumbs a /* Note: For Bread Crumbs only */ {
+	color: #FFFFFF;
+}
+
+td.tdSiteMap{
+	font-size:12px;
+	line-height:1.5em;
+	color:#4A4A4A;
+}
+
+td.tdPaneTitle {
+	font-weight: bold;
+	color: white;
+	background-color: #33cc66;
+	text-indent: 20px;
+	vertical-align: middle;
+}
+
+td.tdPaneDescription
+{
+	font-size: 8pt;
+	text-indent: 20px;
+	vertical-align: middle;
+}
+td.tdTableHeader
+{
+	font-weight: bold;
+	color: white;
+	background-color: #006600;
+	vertical-align: middle;
+}
+td.tdTableHeader2
+{
+	font-weight: bold;
+	color: white;
+	background-color: gray;
+}
+td.tdTableHeader3
+{
+	font-weight: bold;
+	color: white;
+	background-color: #66cc33;
+}
+/************************************************************
+  TR
+************************************************************/
+tr.trTitle
+{
+	font-weight: bold;
+	color: white;
+	background-color: #006600;
+	text-indent: 20px;
+}
+
+tr.trIncidentGridColHeader
+{
+	font-weight: bold;
+	color: white;
+	background-color: #006600;
+	text-indent: 0px;
+	vertical-align: middle;
+	text-align:center;
+}
+
+tr.trTableHeader
+{
+	font-weight: bold;
+	color: white;
+	background-color: #214890;
+}
+/************************************************************
+  TEXTAREA
+************************************************************/
+textarea
+{
+	font-weight: normal;
+	color: black;
+	font-size: 8pt;
+}
+textarea.aspTextBox01
+{
+	font-family: Arial;
+	font-weight: normal;
+	color: black;
+	font-size: 8pt;
+}
+
+/************************************************************
+  TOOLTIP
+************************************************************/
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 200px;
+    background-color: #214890;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 1;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+}
+
+/************************************************************
+  ASP.NET CONTROLS
+************************************************************/
+/*.aspButton01
+{
+	font-weight: normal;
+	color: black;
+	vertical-align: middle;
+	font-size: 8pt;
+}*/
+
+.aspButton01 {
+	color: #fff;
+	background-color: #0080dd;
+	border-color: transparent;
+	font-weight: 700;
+	font-family:Arial;
+	/*padding: 4px 4px;*/
+	font-size: 8pt;
+	/*line-height: 1.428rem;*/
+	border-radius: 4px;
+}
+
+.aspButton01:hover {
+	background-color: #0060dd;
+}
+
+.aspDropDownList01
+{
+	font-weight: normal;
+	color: black;
+	font-size: 8pt;
+}
+.aspLabelError01 /* Note: For Error Messages only */
+{
+	font-weight: normal;
+	color: red;
+}
+.aspLabelStatus01 /* Note: For Status Messages only */
+{
+	font-weight: normal;
+	color: blue;
+}
+.aspLabelError02
+{
+	font-weight: bold;
+	color: red;
+	font-size: medium;
+	text-align: center;
+}
+
+.aspLabelNote01
+{
+	font-weight: normal;
+	color: blue;
+	font-size: x-small;
+	text-align: left;
+	font-family: Arial;
+}
+
+.aspLabelField01 /* Note: For Field Title */
+{
+	font-weight: normal;
+	color: black;
+	vertical-align: middle;
+	font-size:10pt;
+}
+.aspLabelTitle01
+{
+	font-weight: normal;
+	color: black;
+	vertical-align: middle;
+}
+.aspListBox01
+{
+	font-weight: normal;
+	color: black;
+	font-size: 8pt;
+}
+
+.ListBoxButton{
+	color: #fff;
+	background-color: #0080dd;
+	border-color: transparent;
+	font-weight: 700;
+	font-family: Arial;
+	font-size: 8pt;
+	border-radius: 4px;
+	width:40px;
+	height:24px;
+}
+
+.ListBoxButton:hover {
+	background-color: #0060dd;
+}
+
+.aspMenuStaticMenu01 {
+	text-transform: uppercase;	
+}
+
+.MenuItemStyle {
+	white-space: nowrap;
+	padding-top: 13px;
+	padding-bottom: 13px;
+	padding-left: 22px;
+	padding-right: 22px;
+	color: #7f7f7f;
+	background-color: #FFFFFF;
+	font-size: 14px;
+	font-weight: bold;
+}
+
+.MenuItemHover {
+	padding-top: 13px;
+	padding-bottom: 13px;
+	color: #0080DD;
+	background-color: #F4F8FF;
+	border-bottom: solid 3px #0080DD;
+}
+
+.SubMenuGroupStyle {
+	border: solid 1px rgba(0,0,0,0.15);
+}
+
+.SubMenuItemStyle {
+	background-color: #FFFFFF !important;
+	color: #231f20 !important;
+	font-family: Arial !important;
+	font-size: 12px !important;
+	padding-bottom: 5px;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+.SubMenuItemHover {
+	color: #0080DD !important;
+	background-color: #F4F8FF !important;
+	font-family: Arial !important;
+	font-size: 12px !important;
+	padding-bottom: 5px;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+.aspPanelMiniDashboard01 /* Note: For Mini Dashboard only */ {
+	border-collapse: collapse;
+	width: 100%;
+}
+.aspTable01 /* Note: Use as default for ASP:Table */
+{
+	width: 100%;
+}
+.aspTableWithBorder01 
+{
+	width: 100%;
+}
+.aspTableWithBorder01 td
+{
+	border: solid 1px;
+}
+.aspTableWithBorderMinWidth01 
+{
+}
+.aspTableWithBorderMinWidth01 td 
+{
+	border: solid 1px;
+}
+.aspTableMiniDashboard01 /* Note: For Mini Dashboard only */
+{
+	width: 100%;
+}
+.aspTableMiniDashboard01 td
+{
+	vertical-align:middle;
+	/* text-align: center;*/
+	border: solid 1px;
+}
+
+.aspTextBox01
+{
+	font-weight: normal;
+	color: black;
+	vertical-align: middle;
+	font-size: 8pt;
+}
+
+.aspTextBox02Num
+{
+	font-weight: normal;
+	color: black;
+	vertical-align: middle;
+	font-size: 8pt;
+	text-align:right;
+}
+
+.aspTreeView01
+{
+	border: 0 0 0 0;
+	margin: 0 0 0 0;
+}
+/************************************************************
+  Miscellaneour
+************************************************************/
+.bgcolorAttention
+{
+	background-color: #ffc0cb; /* Pink */
+}
+.bgcolorClosed
+{
+	background-color: #d3d3d3; /* LightGrey */
+}
+.bgcolorIgnore
+{
+	background-color: #a9a9a9; /* DarkGrey */
+}
+.bgcolorHighRisk
+{
+	background-color: #dc143c; /* Crismon */
+}
+.bgcolorMediumRisk
+{
+	background-color: #ffa500; /* Orange */
+}
+.bgcolorLowRisk
+{
+	background-color: #32cd32; /* LimeGreen */
+}
+.bgcolorOther
+{
+	background-color: #b0e0e6; /* PowderBlue */
+}
+.bgcolorNA
+{
+	background-color: #808080; /* Gray */
+}
+.colorHighRisk
+{
+	color: #dc143c; /* Crimson */
+}
+
+.bgcolorTableAlternateRow
+{
+	background-color:#C0FFC0;
+}
+
+
+.Splitter
+{
+	border: 0px solid #333333;
+}
+
+.SplitterDrag
+{
+	background-color: #000000;  
+	filter:progid:DXImageTransform.Microsoft.Alpha(opacity=60); 
+	opacity: 0.6;
+}
+
+.SplitterHover
+{
+	background-color: #888888;  
+	filter:progid:DXImageTransform.Microsoft.Alpha(opacity=60); 
+	opacity: 0.6;
+}
+
+.SplitterCollapsedHorizontal
+{
+	border: 0px solid #000000;
+	border-bottom-width: 0px;
+}
+
+.SplitterCollapsedVertical
+{
+	border: 0px solid #000000;
+	border-right-width: 0px;	
+}
+
+.PanelStyle
+{
+	text-align:center;border: 1px solid #333333;width:100%;height:100%;
+	
+}
+
+.PanelStyle1
+{
+	text-align:center;border: 1px solid #333333;width:100%;height:100%;
+	filter:progid:DXImageTransform.Microsoft.Gradient
+	(GradientType=0, StartColorStr='#200000FF', EndColorStr='#20FFCC00')
+}
+
+.PanelStyle2
+{
+	text-align:center;border: 1px solid #333333;width:100%;height:100%;
+	filter:progid:DXImageTransform.Microsoft.Gradient
+	(GradientType=0, StartColorStr='#00FF3300', EndColorStr='#50FFCC00')
+}
+
+.PanelStyle3
+{
+	text-align:center;border: 1px solid #333333;width:100%;height:100%;
+	filter:progid:DXImageTransform.Microsoft.Gradient
+	(GradientType=0, StartColorStr='#0099FF33', EndColorStr='#50000000')
+}
+
+.TopicBar
+{
+	border: solid 1px #f0f0f0;
+	width: 200px;
+	background-color: #C8B99D;
+}
+.ExpandedHeader, .CollapsedHeader
+{
+	font-family: Tahoma;
+	font-size: Medium;
+	font-weight:bold;
+	padding-top:0px;
+	padding-bottom:0px;
+	padding-left:20px;
+	padding-right:0px;
+	border: outset 1px;
+	background-color: #C8B99D;
+}
+.TopicBarLinkItem, .TabStripLinkItem
+{
+	font-family: Tahoma;
+	font-size: xx-small;
+	padding-top:2px;
+	padding-bottom:2px;
+	padding-left:20px;
+	padding-right:10px;
+	text-decoration: underline;
+}
+.TopicBarLinkItem {
+	background-color: #C8B99D;
+}
+.TabStripLinkItem {
+	background-color: #C8D0D4;
+}
+
+
+
+.ActiveHeader, .InactiveHeader, .MouseOverInactiveHeader
+{
+	font-family: Tahoma;
+	font-size: X-Small;
+	font-weight:bold;
+	padding-top:0px;
+	padding-bottom:0px;
+	padding-left:20px;
+	padding-right:20px;
+}
+.ActiveHeader 
+{
+	border: outset 1px;
+	background-color: #C8D0D4;
+}
+.InactiveHeader
+{
+	border: solid 1px #d8D0D4;
+	background-color: #d8D0D4;
+}
+.MouseOverInactiveHeader 
+{
+	border: solid 1px #d8E0E4;
+	background-color: #d8E0E4;
+}
+.TabStrip
+{
+	background-color: white;
+}
+.Group
+{
+	padding: 10px;
+	border: outset 1px;
+	background-color: #C8D0D4;
+}
+
+.DataGridHeader{ 
+
+border-width: 4px;
+
+border-color: Black;
+
+position:relative ;
+
+top:expression(this.offsetParent.scrollTop);
+
+z-index: 10;
+}
+
+.star
+{
+    font-weight: bold;
+    font-size: 14px;
+    color: #cc3333;
+    /*font-family: Arial, Helvetica, sans-serif;*/
+    text-decoration: none
+}
+
+.RedStar{
+    font-size: 18px;
+    font-weight: bold;
+    color:red;
+    text-align:center;
+    vertical-align:middle;
+}
+
+.DisabledClass {
+	cursor: default;
+	background-color: rgba(239, 239, 239, 0.3);
+	border-color: rgba(118, 118, 118, 0.3);
+	border-width: 1px;
+}

@@ -1,0 +1,69 @@
+================================================================================
+                         打包完成说明
+================================================================================
+
+✓ 程序已成功打包为 EXE 可执行文件！
+
+一、程序位置
+------------
+主程序目录：dist\FormFiller\
+可执行文件：dist\FormFiller\FormFiller.exe
+快速启动：双击 "启动表单填充工具.bat"
+
+二、包含文件
+------------
+dist\FormFiller\
+  ├── FormFiller.exe           (主程序，48.91 MB)
+  ├── form_config.json         (表单字段配置)
+  ├── attachment_config.json   (附件配置)
+  └── 使用说明.txt             (详细使用说明)
+
+三、如何运行
+------------
+方法 1：直接双击 dist\FormFiller\FormFiller.exe
+方法 2：双击 "启动表单填充工具.bat"
+
+四、功能列表
+------------
+✓ 从 Excel 读取表单数据
+✓ 自动填充网页表单字段
+✓ 支持多个附件上传
+✓ 支持 Chrome/Edge/Chromium 浏览器
+✓ 可保存和加载配置
+✓ 图形化界面操作
+
+五、快速开始
+------------
+1. 运行 FormFiller.exe
+2. 输入目标网址（登录页面）
+3. 添加表单字段（从 Excel 列名对应）
+4. （可选）添加附件
+5. 选择 Excel 文件
+6. 点击"启动填充"
+
+六、推荐字段配置（基于实际网页）
+---------------------------------
+字段名称                  CSS 选择器
+---------------------------------------------------------------
+Proposal #               #ctl00_ContentPlaceHolder1_txtProposalNo
+Cust Ref. No             #ctl00_ContentPlaceHolder1_txtCustRefNo
+Proposal/Contract Value  #ctl00_ContentPlaceHolder1_txtContractValue
+Currency Code            #ctl00_ContentPlaceHolder1_ddlSelPriceCurrCode
+Date of Award            #ctl00_ContentPlaceHolder1_dtDateofAward_txtDate
+
+七、系统要求
+------------
+- Windows 10/11
+- 已安装 Google Chrome 或 Microsoft Edge
+- .NET Framework（通常已预装）
+
+八、其他文件
+------------
+源代码：form_filler.py（如需修改可重新打包）
+打包脚本：form_filler.spec
+批处理启动：启动表单填充工具.bat
+
+================================================================================
+打包时间：2026-07-22
+程序版本：1.0
+================================================================================
