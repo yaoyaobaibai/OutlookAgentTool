@@ -1,0 +1,34 @@
+{
+  "fields": [
+    {
+      "label": "Proposal #",
+      "selector": "#ctl00_ContentPlaceHolder1_txtProposalNo",
+      "value": ""
+    },
+    {
+      "label": "Cust Ref. No",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "value": ""
+    },
+    {
+      "label": "Proposal/Contract Value",
+      "selector": "#ctl00_ContentPlaceHolder1_txtContractValue",
+      "value": ""
+    },
+    {
+      "label": "Selling Price Currency Code",
+      "selector": "#ctl00_ContentPlaceHolder1_ddlSelPriceCurrCode",
+      "value": ""
+    },
+    {
+      "label": "Date of Award",
+      "selector": "#ctl00_ContentPlaceHolder1_dtDateofAward_txtDate",
+      "value": ""
+    },
+    {
+      "label": "Priming Project Manager",
+      "selector": "#ctl00_ContentPlaceHolder1_ucEmpSearch_txtUserName",
+      "value": ""
+    }
+  ]
+}
