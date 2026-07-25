@@ -29,6 +29,7 @@ from config import (
     GR_ACUBUY_UI_TEXT,
 )
 from ui.gr_tab import GrAcubuyTab
+from ui.tools_tab import ToolsTab
 
 # Module-level logger for UI events (separate from mail_agent.log)
 _ui_logger = None
@@ -121,10 +122,15 @@ class MainWindow:
         # Mail Agent controller (may be None in tests)
         self.mail_controller = mail_controller
 
+        # === Use grid layout for proper space distribution ===
+        # Row 0 = notebook (expand, takes all extra space)
+        # Row 1 = bottom container (fixed minimum height for buttons)
+        self.root.grid_rowconfigure(0, weight=1)
+        self.root.grid_rowconfigure(1, minsize=110, weight=0)
+        self.root.grid_columnconfigure(0, weight=1)
+
         self._build_notebook()
-        self._build_bottom_buttons()
-        self._build_status_bar()
-        self._build_mail_status_bar()
+        self._build_bottom_container()  # NEW: single container for all 3 bottom bars
 
         # Start polling mail agent status
         if self.mail_controller is not None:
@@ -140,10 +146,14 @@ class MainWindow:
     def _build_notebook(self):
         """Build the 6-tab notebook. Only GR-Acubuy is enabled in v1.3.2."""
         notebook = ttk.Notebook(self.root)
-        notebook.pack(fill="both", expand=True, padx=10, pady=(10, 5))
+        notebook.grid(row=0, column=0, sticky="nsew", padx=10, pady=(10, 5))
 
         for idx, (key, label, enabled, future_version) in enumerate(MAIN_WINDOW_TABS):
-            if enabled:
+            if key == "tools":
+                # Tools tab: external launchers + utilities
+                tools_tab = ToolsTab(notebook)
+                notebook.add(tools_tab.frame, text=label)
+            elif enabled:
                 # GR-Acubuy tab: real functional stub
                 gr_tab = GrAcubuyTab(notebook)
                 notebook.add(gr_tab.frame, text=label)
@@ -164,9 +174,11 @@ class MainWindow:
     # Bottom buttons
     # ------------------------------------------------------------------
 
-    def _build_bottom_buttons(self):
-        btn_frame = ttk.Frame(self.root, padding=(10, 5))
-        btn_frame.pack(fill="x", padx=10, pady=(0, 5))
+    def _build_bottom_buttons(self, parent=None):
+        if parent is None:
+            parent = self.root
+        btn_frame = ttk.Frame(parent, padding=(10, 5))
+        btn_frame.pack(fill="x", pady=(2, 0))
 
         # Only "Settings" button remains here.
         # Mail Agent Start/Stop controls are in the mail status bar below.
@@ -184,10 +196,12 @@ class MainWindow:
     # Status bar
     # ------------------------------------------------------------------
 
-    def _build_status_bar(self):
+    def _build_status_bar(self, parent=None):
         """Build status bar: left status label + 3 service indicators (right)."""
-        bar = ttk.Frame(self.root, relief="sunken")
-        bar.pack(fill="x", side="bottom")
+        if parent is None:
+            parent = self.root
+        bar = ttk.Frame(parent, relief="sunken")
+        bar.pack(fill="x", pady=(2, 0))
 
         # Left: general status label (kept from previous version)
         status_label = ttk.Label(
@@ -224,17 +238,33 @@ class MainWindow:
         )
 
     # ------------------------------------------------------------------
-    # Public API
+    # Bottom container (consolidated row for all 3 bottom bars)
     # ------------------------------------------------------------------
 
+    def _build_bottom_container(self):
+        """Consolidated bottom container with 3 sub-rows (pack inside)."""
+        container = ttk.Frame(self.root)
+        container.grid(row=1, column=0, sticky="ew", padx=10, pady=(0, 5))
+
+        # Sub-row 1: Mail controls (buttons) — most important, give it room
+        self._build_mail_status_bar(container)
+
+        # Sub-row 2: Service indicators status bar
+        self._build_status_bar(container)
+
+        # Sub-row 3: Settings button row
+        self._build_bottom_buttons(container)
+
     # ------------------------------------------------------------------
-    # Mail agent status bar (bottom row)
+    # Public API + Mail agent status bar
     # ------------------------------------------------------------------
 
-    def _build_mail_status_bar(self):
+    def _build_mail_status_bar(self, parent=None):
         """Build Mail Agent controls (status text + buttons)."""
-        self._mail_status_frame = ttk.Frame(self.root, padding=(10, 5))
-        self._mail_status_frame.pack(fill="x", side="bottom")
+        if parent is None:
+            parent = self.root
+        self._mail_status_frame = ttk.Frame(parent, padding=(10, 5))
+        self._mail_status_frame.pack(fill="x")
 
         # Mail Agent status label
         self._mail_status_label = ttk.Label(
