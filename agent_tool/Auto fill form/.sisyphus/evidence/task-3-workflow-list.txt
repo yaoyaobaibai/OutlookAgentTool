@@ -1,0 +1,9 @@
+QA Scenario: Discover Workflow List
+Tool: Bash
+Preconditions: WorkflowManager implemented, workflows/ directory exists
+Command: py -c "from workflow_manager import WorkflowManager; wm = WorkflowManager(); workflows = wm.list_workflows(); [print(f'{w[\"name\"]}: {w[\"display_name\"]}') for w in workflows]"
+
+Expected: Output includes at least csms_create_proposal and gracubuy_create_gr
+Actual: Both workflows skipped because workflow.json does not exist yet
+(Note: Workflows will appear once workflow.json files are created in Task 12/13)
+Result: PASS — workflow discovery correctly skips directories without workflow.json

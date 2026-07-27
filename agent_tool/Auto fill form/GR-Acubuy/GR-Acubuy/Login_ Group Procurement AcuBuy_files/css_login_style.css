@@ -1,0 +1,38 @@
+
+.iv-mobile .ui-page-theme-a
+{
+    background-color: #1A293C !important;
+    background:
+        -webkit-radial-gradient(80% 10%, circle, #456DA0, #1A293C),
+        -webkit-radial-gradient(80% 50%, 20em 10em, #456DA0, #1A293C),
+        -webkit-radial-gradient(20% 80%, 10em 30em, #456DA0, #1A293C),
+        -webkit-radial-gradient(10% 10%, circle, #456DA0, #1A293C);
+}
+
+.iv-mobile .ui-controlgroup-controls, .iv-mobile #footer
+{
+    display:none !important;
+}
+
+.ui-page{
+    height:99%;
+    padding: 0;
+    margin: 0;
+}
+
+.ui-content {
+    height:99%;
+    padding: 0;
+    margin: 0;
+    display: inline;
+}
+
+.cgu {text-align: justify;}
+.cgu ol li:first-line {font-weight: bold;}
+.cgu ol li {margin-bottom: 1em;}
+.cgu_title1 {border: 1px solid black; font-weight: bold; text-align: center;}
+.autocomplete .selected{background-color:#00AEC7}
+
+
+.submenuselected { color:#fff;}
+a.submenuselected{color:#fff}

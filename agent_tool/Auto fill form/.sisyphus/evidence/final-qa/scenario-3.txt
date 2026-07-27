@@ -1,0 +1,9 @@
+=== QA Scenario 3: Invalid Config Rejected ===
+Command:
+echo '{"bad": "config"}' > /tmp/bad.json && python -c "import sys; sys.path.insert(0, 'workflows/schema'); from validate_workflow import validate_workflow; print(validate_workflow('/tmp/bad.json', 'workflows/schema/workflow-schema.json'))"
+
+Output:
+(False, ["  - [(root)] 'workflow_name' is a required property", "  - [(root)] 'version' is a required property", "  - [(root)] 'fields' is a required property", "  - [(root)] Additional properties are not allowed ('bad' was unexpected)"])
+
+Expected: (False, [...errors...])
+Result: PASS

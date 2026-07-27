@@ -1,0 +1,380 @@
+
+//<script>
+	  var ivScope = (function (ivScope) {
+		  'use strict';
+		  /**
+		  * Merge defaults with user options
+		  * @private
+		  * @param {Object} defaults Default settings
+		  * @param {Object} options User options
+		  * @returns {Object} Merged values of defaults and options
+		  */
+		  var extend = function (defaults, options) {
+			  var extended = {};
+			  var prop;
+			  for (prop in defaults) {
+				  if (Object.prototype.hasOwnProperty.call(defaults, prop)) {
+					  extended[prop] = defaults[prop];
+				  }
+			  }
+			  for (prop in options) {
+				  if (Object.prototype.hasOwnProperty.call(options, prop)) {
+					  extended[prop] = options[prop];
+				  }
+			  }
+			  return extended;
+		  };
+
+		  function initPageInfos(ivScope) {
+			  var infos = {
+				  WwwRoot: null,
+				  PathInfo: null,
+				  QueryStringSplit: null,
+				  QueryString: null,
+				  Querystring: null,
+				  Mode: null,
+				  Lang: null,
+				  Module: null,
+				  Page:null
+
+	}
+
+			  infos.WwwRoot = location.protocol + "//" + location.hostname + (location.port.length > 0 && location.port != 80 ? (":" + location.port) : "") + ivScope.WwwRoot;
+			  infos.PathInfo = location.href.substr(infos.WwwRoot.length + 1).split('?')[0].split("/");
+
+			  infos.QueryStringSplit = location.href.substr(infos.WwwRoot.length + 1).split('?');
+			  infos.QueryString = "";
+			  if (infos.QueryStringSplit.length > 1) {
+				  infos.QueryString = infos.QueryStringSplit[1];
+			  }
+
+			  infos.Querystring = {};
+			  if (infos.QueryString.length != 0) {
+				  var qsCollection = infos.QueryString.split('&');
+		for (var i = 0; i < qsCollection.length; i++) {
+			var pair = qsCollection[i].split('=');
+			var name = decodeURIComponent(pair[0]);
+
+			var value = (pair.length==2)
+				? decodeURIComponent(pair[1].replace(/%XXVII/g, "'").replace(/%XXII/g, "\"")) //to review
+				: "";
+
+					  infos.Querystring[name] = value;
+		}
+	}
+
+			  if (location.href.indexOf(infos.WwwRoot) == 0) {
+				  infos.Mode = infos.PathInfo.shift();
+				  infos.Lang = infos.PathInfo.shift();
+				  infos.Module = infos.PathInfo.shift();
+				  infos.Page = infos.PathInfo.shift();
+	}
+			  return infos;
+}
+
+		  ivScope = ivScope || {};
+		  ivScope = extend(ivScope, {"UserIsExternal":false,"Debug":false,"DebugScript":false,"_texts":{"approval_save_confirm":"Are you sure you want to submit those new qualification statuses to approval ?","approval_creation_count":"This will add up to {count} approvals on your database","add_clause":"Add Master Clause","internal_comment":"","item_added_to_cart":"Item added to shopping cart","could_not_add_item_to_basket":"Could not add item to basket","quicklinks_label":"Quick Links","quicklinks_previously_purchased_items":"Previously Purchased Items","quicklinks_frequently_purchased_item":"Frequently Purchased Items","quicklinks_browse_history":"Browse History","quicklinks_my_shopping_list":"My Shopping Lists","prompt_empty":"{name} must have a value","basket_empty":"Basket empty","prompt_compare_to_value":"{name} must be {compareOperator} {compareValue}","prompt_multiple_of_value":"{name} must be a multiple of {compareValue}","error_txtquantity":"Quantity","confirm_change_template":"Do you want to change your template document?\\nAttention, clauses will be updated.","visible_to_supplier_checkbox":"Visible to Supplier","confirm_export_comment":"The document contains internal comments and comments that have been set to be visible to the supplier. Are you sure you want to export like this","confirm_export_with_comment":"The document contains comments that have been set to be visible to the supplier. Are you sure you want to export those comments?","confirm_export_without_comment":"The export operation will ignore internal comments that have not been set to be visible to the supplier. Are you sure you want to export without those comments?","confirm_lock_item":"Lock item \u0022{0}\u0022 ?","confirm_unlock_item":"Unlock item \u0022{0}\u0022 ?","confirm_delete_item":"Delete item \u0022{0}\u0022 ?","clause_info_deviated_clauses":"AI service has reviewed your contract: {0} low-risk clauses, {1} high-risk clauses, {2} very high-risk clauses","/ctn/document_manage|merge_button":"Merge","/ctn/document_manage|insert_clause_button":"Insert Master Clause","/ctn/document_manage|insert_section_button":"Insert Clause","import_process_pending":"","/ctr/template_manage|import_process_pending":"Processing of the imported file in progress...","/ctr/template_manage|confirm_change_template":"Do you want to change your template document?\\nAttention, clauses will be updated.","confirm_convert_towebdav":"There are {0} internal comment(s) that are not visible to the supplier.\n\nThose comments will be lost when switching to Word™ Authoring for redlining and you will not be able to come back to the Native Authoring editor.\n\nAre you sure you want to proceed?","add_keyword":"Add a merge field","modify_keyword":"Edit merge field","remove_keyword":"Remove merge field","split_clause":"Split clause","change_separator":"Change separator for multiple values","add_repeater":"Add repeater","modify_repeater":"Edit repeater","remove_repeater":"Remove repeater","confirm_merge_between_clauses":"Are you sure you want to merge the two clauses into one single clause? This action won\u0027t be marked as a change.","confirm_merge_between_clauses_trackingoff":"Are you sure you want to merge the two clauses into one single clause?","tooltip_merge_button":"","article":"Item","toc_no_title":"","add_comment":"Add a comment","undefined":"Undefined","authoring_has_unsaved_changes_tooltip":"A clause has unsaved changes. Click outside of the clause to save it automatically.","authoring_is_saving_tooltip":"Please wait for the clauses to be saved.","/auc/auction_console|and":"and","/auc/auction_console|between":"Includes the boundary values","/auc/auction_console|bid":"Bid     ","/auc/auction_console|bid_dut":"Bid","/auc/auction_console|bid_dutfwd":"Bid","/auc/auction_console|bid_eng":"Bid","/auc/auction_console|bid_fwd":"Bid","/auc/auction_console|bid_jap":"Drop out","/auc/auction_console|confirmbid":"Please click OK to confirm and check consistency of your bid","/auc/auction_console|confirmblocsup":"Do you confirm your intent to lock the supplier?","/auc/auction_console|confirmpause":"Do you want to postpone this lot?","/auc/auction_console|confirmpauseall":"Do you want to postpone selected lots ?","/auc/auction_console|confirmrunall":"Do you want to resume all lots ?","/auc/auction_console|confirmunblocsup":"Do you confirm your intent to unlock the supplier?","/auc/auction_console|confirm_lot_japfirst_participation":"By clicking, you confirm that you participate in this reverse Japanese auction. You will have to click the “Drop out” button if your price limit is reached and you wish to quit the auction.  \u003cspan style=\u0022color:red;\u0022\u003e\u003cu\u003eIf you do not \u003cb\u003edrop out\u003c/b\u003e, you will win the auction at the price reached at the auction\u0027s end date.\u003c/u\u003e\u003c/span\u003e","/auc/auction_console|confirm_lot_participation":"By clicking, you confirm that you participate in this reverse Japanese auction. You will have to click the “Drop out” button if your price limit is reached and you wish to quit the auction.  \u003cspan style=\u0022color:red;\u0022\u003e\u003cu\u003eIf you do not \u003cb\u003edrop out\u003c/b\u003e, you will win the auction at the price limit of the last bidder, or if need be, at the price reached at the auction\u0027s end date.\u003c/u\u003e\u003c/span\u003e","/auc/auction_console|confirm_mass_bid":"You\u0027re placing the following bids","/auc/auction_console|confirm_participate":"Are you sure you want to participate in this lot ?","/auc/auction_console|empty_message":"Your message is empty.","/auc/auction_console|fillpassword":"Please fill your password","/auc/auction_console|invalid":"Incorrect format","/auc/auction_console|invalid_bid":"At least one of the offers is invalid, please enter only positive decimal numbers.","/auc/auction_console|invalid_udouble":"invalid positive decimal number","/auc/auction_console|invalid_uinteger":"invalid positive integer","/auc/auction_console|mass_bid":"Mass bid","/auc/auction_console|message_sent":"Message sent.","/auc/auction_console|newoffer":"New bid","/auc/auction_console|newproxy":"New proxy bid","/auc/auction_console|next":"Next","/auc/auction_console|passwordnotset":"Not set","/auc/auction_console|pause_lot":"Pause on this lot","/auc/auction_console|select_lot":"Please select at least one lot.","/auc/auction_console|select_supplier":"Please select at least one supplier.","/auc/auction_console|sendpasswordtosupplier":"Do you want to give this supplier a new validation code and send it to him (by e-mail)?","/auc/auction_console|short_days":"d ","/auc/auction_console|short_hours":"h","/auc/auction_console|short_minutes":"m","/auc/auction_console|short_seconds":"s","/auc/auction_console|sup_blocked":"Supplier is blocked","/auc/auction_console|sup_last_seen":"Last seen:","/auc/auction_console|sup_never_seen":"Never seen","/auc/auction_console|sup_offline":"Supplier is offline","/auc/auction_console|sup_online":"Supplier is online","/auc/auction_console|unpause_lot":"Resume this lot","/bpm/process_duplicate|continue":"Continue","/bpm/process_duplicate|cancel":"Cancel","/bpm/process_duplicate|confirm_copy":"Do you really want to apply these changes ?","/bpm/process_duplicate|warning_replace":"Warning","/bpm/process_duplicate|message_separator":"","/bpm/process_manage|tab_control_not_sortable":"Use Sourcing projects configuration to define steps order","/rfp/request_duplicate|continue":"Continue","/rfp/request_duplicate|cancel":"Cancel","msg_no_current_simu":"","/rfp/rfp_item_browse_control|confirm_duplicate_item":"Do you really want to copy this item ?","/rfp/rfp_item_browse_control|confirm_duplicate_grid":"Do you really want to duplicate this grid ?","/rfp/rfp_item_browse_control|confirm_delete_grid_items":"Do you really want to delete all items of this grid ?","/rfp/rfp_item_browse_control|confirm_delete_grid_items_sub_grids":"(This will delete all associated items in the sub-grids)","/rfp/rfp_item_browse_control|confirm_delete_grid":"Do you really want to delete this grid ?","/rfp/rfp_item_browse_control|confirm_delete_sub_grids":"(This will delete all the sub-grids)","/rfp/rfp_item_browse_control|confirm_delete_field":"Do you really want to delete this column?","/rfp/rfp_item_browse_control|confirm_generate_excel_form":"Do you really want to pre-populate Excel RFQ form ?","/rfp/rfp_item_browse_control|invalid_number":"Invalid number","/rfp/rfp_item_browse_control|grid_choice":"Apply only on this grid","/rfp/rfp_item_browse_control|rfp_choice":"Apply on all grids of this RFQ","/rfp/rfp_item_browse_control|page_size_choice":"Number of results/pages","/rfp/rfp_item_browse_control|ok":"OK","/rfp/rfp_item_browse_control|cancel":"Cancel","/rfp/rfp_item_browse_control|rfp_item_view":"Item view","/rfp/rfp_item_browse_control|rfp_supplier_view":"Supplier view","/rfp/proposal_browse|confirm_duplicate":"Do you really want to duplicate this proposal","/rfp/proposal_browse|confirm_delete":"Delete ?","/rfp/proposal_browse|rfp_proposal_shortlist":"Do you really want to shortlist this proposal?","/rfp/proposal_browse|rfp_proposal_donotaward":"This proposal will be marked as \u0027Not Selected\u0027. Continue?","/rfp/proposal_browse|rfp_proposal_award":"Do you want to proceed with awarding the selected proposal?","/rfp/proposal_browse|rfp_proposal_remove_shortlist":"Do you really want to remove this proposal from the short list?","/rfp/proposal_browse|rfp_proposal_remove_donotaward":"This proposal will no longer be marked as \u0027Not Selected\u0027. Continue? ","/rfp/proposal_browse|rfp_proposal_remove_award":"Do you really want to cancel the award for this proposal?","non_catalog_item":"Non-catalog item","cxml_sso_missing_configuration":"Missing supplier configuration","/rfp/rfp_analyze_award_scen_edit_rule|scen_rule_foreach_validation_msg":"This For Each selection is incomplete. Please make a selection or remove it from the rule.","/rfp/rfp_analyze_award_scen_edit_rule|scen_rule_scope_validation_msg":"This Scope selection is incomplete. Either finish making the selection or remove it from the rule.","/rfp/rfp_analyze_award_scen_edit_rule|scen_rule_percent_limit_min_value":"Minimum must be between 0 and 100.","/rfp/rfp_analyze_award_scen_edit_rule|scen_rule_percent_limit_max_value":"Maximum must be between 0 and 100.","/rfp/rfp_analyze_award_scen_edit_rule|scen_rule_max_lessthan_min_value":"Maximum cannot be less than Minimum.","/rfp/rfp_analyze_award_scen_edit|scenedit_for_each":"for each","/rfp/rfp_analyze_award_scen_edit_rule|scen_rule_scope_row_text":"where","/rfp/rfp_analyze_award_scen_edit_rule|min_qty_awar_sup_text":"Min. quantity (units) for awarded suppliers","/rfp/rfp_analyze_award_scen_edit_rule|min_qty_awar_prop_text":"Min. quantity (units) for awarded proposals","/rfp/item_supplier_assignment_rule_manage|no_item_selected":"No item selected\n","/rfp/item_supplier_assignment_rule_manage|item_selected":"Item(s) selected","/ctr/contract_manage|supplier_modif_confirm":"If you change the supplier, all {0}\u0027s contacts will be removed from the contract to protect the privacy of {1}. Are you sure you want to change the supplier?","/ctr/contract_manage|supplier_modif_confirm_empty_field":"Current supplier contacts for {0} will be removed to protect the privacy of a new supplier. Are you sure you want to change the supplier?","/ctr/contract_item_browse|select_items_for_pm_event":"Please select at least one item","/qst/questionnaire_builder_browse|qst_builder_confirm_delete_question":"This action will permanently delete this question. ","/qst/questionnaire_builder_browse|qst_builder_confirm_delete_subsection":"This action will permanently delete this subsection and all attached questions.","/qst/questionnaire_builder_browse|qst_builder_confirm_delete_section":"This action will permanently delete this section and all attached questions.","/qst/questionnaire_builder_browse|qst_builder_confirm_dup_question":"This action will duplicate this question.","/qst/questionnaire_builder_browse|qst_builder_confirm_dup_subsection":"This action will duplicate this subsection and all attached questions.","/qst/questionnaire_builder_browse|qst_builder_confirm_dup_section":"This action will duplicate this section and all attached subsections and questions.","/qst/questionnaire_builder_browse|qst_builder_confirm_clear_questionnaire":"This action will permanently delete this questionnaire.","/qst/questionnaire_builder_browse|qst_builder_action_question_here":"+ Question Here","/qst/questionnaire_builder_browse|qst_builder_action_subsection_here":"+ Subsection Here","/qst/questionnaire_builder_browse|qst_builder_msg_find_question":"Find a question...","/qst/questionnaire_builder_browse|qst_builder_action_scored":"Scored","/qst/questionnaire_builder_browse|qst_builder_action_not_scored":"Not Scored","/qst/questionnaire_builder_browse|qst_generic_error_msg":"Error: Please try refreshing the page.","/sup/supplier_manage|scorecard_create_failed":"Unable to create/refresh a scorecard, please refresh and try again!","/sup/supplier_browse|scorecard_tooltip_failed":"Unable to show the scorecard tooltip!","/sup/supplier_browse|sup_bookmark_delete":"","/sup/supplier_browse|sup_bookmark_add":"","/sup/supplier_identity_extranet|site_created":"A new site has been created, click here to edit detailed information.","/sup/mass_mailing_recipient_browse|sup_mass_mailing_recipient_change_failed":"Failed to update the recipient selection!","/sup/mass_mailing_campaign_manage|sup_mass_mailing_needs_evaluation":"Recipients must be reevaluated","/sup/supplier_cluster_hierarchy_browse|cluster_parent_creation_impossible":"At least one supplier has a level Group and we cannot create a parent above it.\nPlease unselect all Group Suppliers to create a parent. The creation of the parent is canceled.","/buy/banking_information_manage|contradiction_iban_rib":"Contradiction between IBAN and RIB","/buy/banking_information_manage|error_all_rib_field_required":"RIB : all fields are required","/buy/banking_information_manage|error_all_aba_field_required":"ABA : all fields are required","/buy/banking_information_manage|error_all_iban_field_required":"IBAN : all fields are required","/pay/payment_dynamic_discounting_extranet|pay_dyn_disc_pay_date":"","/pay/payment_dynamic_discounting_extranet|pay_dyn_disc_pay_amount":"","/pay/payment_dynamic_discounting_extranet|pay_dyn_disc_pay_discount":"","/pay/payment_dynamic_discounting_extranet|pay_dyn_disc_chart_title":"","/pay/payment_dynamic_discounting_extranet|pay_dyn_disc_subtitle1":"","/pay/payment_dynamic_discounting_extranet|pay_dyn_disc_subtitle2":"","/pay/payment_dynamic_discounting_extranet|pay_dyn_disc_chart_legend":"","/eai/interface_manage|debug_console_unexpected_error":"An unexpected error has occured during the interface execution","/eai/interface_manage|debug_console_unexpected_error_logs":"An unexpected error has occured during the debug console execution","/eai/interface_manage|debug_console_timeout_error":"A timeout has occured during the debug console execution","/rfi/answer_control|mandatory":"Mandatory","/js/answer_script|confirm_change_template":"Do you want to copy the selected model?","/js/answer_script|default_grid_label":"Answer grid","/js/answer_script|proposal":"","/js/answer_script|g_close":"Close","/rfi/answer_control|questionnaire":"Questionnaire","/rfi/answer_control|questionnaires":"questionnaires","/rfi/answer_control|quotation_form":"the quotation form","/rfi/answer_control|cant_be_validated":"The following required questions must be answered before submitting","/rfi/answer_control|other_errors":"Outside {0}, some data have not been filled correctly","/rfi/answer_control|missing_values":"Column \u0022{0}\u0022 : {1} missing values","/rfi/answer_control|missing_value":"Column \u0022{0}\u0022 : {1} missing value","/rfi/answer_control|check_before_validation":"Checking the required fields before validate {0}","/js/qst_answer_script|default_grid_label":"Answer grid","/js/qst_answer_script|questionnaire":"Questionnaire","/js/qst_answer_script|questionnaires":"questionnaires","/js/qst_answer_script|quotation_form":"the quotation form","/js/qst_answer_script|proposal":"","/js/qst_answer_script|and":"and","/js/qst_answer_script|cant_be_validated":"The following required questions must be answered before submitting","/js/qst_answer_script|other_errors":"Outside {0}, some data have not been filled correctly","/js/qst_answer_script|missing_values":"Column \u0022{0}\u0022 : {1} missing values","/js/qst_answer_script|missing_value":"Column \u0022{0}\u0022 : {1} missing value","/js/qst_answer_script|check_before_validation":"Checking the required fields before validate {0}","/js/qst_answer_script|g_close":"Close","accessibility_remove_from_favorite_supplier":"Remove from favorites","accessibility_add_to_favorite_supplier":"Add to favorites","/ord/oitem_price_condition_browse|price_condition_cost":"This is an additional cost","/ord/oitem_price_condition_browse|price_condition_discount":"This is a discount","/ord/basket_light_manage|syncaddresswithlines":"Basket Ship To address is about to change. Do you want to apply this new address to all lines?","qty_amount_not_higher":"The Qty/ Amount can\u0027t be higher than {0}","results":"Record(s)","refresh_to_bind_values":"Refresh the page to get the value of the new field.","dropdown_value_cleared":"Values cleared","readonly_design_mode":"Read only state","open_context":"Open a context","audit_context_error":"You have not selected a configuration context","checkbox_selector_see_more":"See More","checkbox_selector_see_less":"See Less","accessibility_fill_mandatory_field":"Fields marked by an asterisk * are mandatory","accessibility_universal_search_results":"Result(s)","expected_date_format":"Expected date format:","dropdown_selected_values_link_js":"","dropdown_see_all":"See All","dropdown_delete_all_selected_values":"Delete All Selected Values","selector_single_clear_value_confirm":"Are you sure you want to clear the selected value?","selector_multiple_clear_value_confirm":"Are you sure you want to clear the selected value(s)?","fullscreen":"","g_close":"Close","loading":"Loading","tab_control_not_sortable":"Tabs can\u0027t sortable","searching...":"","next_search":"Next result","in_attachments":"in attachments","min_caracters":"Min . {0} characters.","no_result":"No result.","clear_universal_search":"","offline":"No Internet connection","mandatory":"Mandatory","g_edit":"Edit","g_delete":"Delete","g_download":"Download","field_sep":" : ","other_actions":"Other actions","edit_message":"Edit message","delete_message":"Delete message","selector_scroll_up":"Scroll up","selector_scroll_down":"Scroll down","selector_scroll_down_all":"Expand all","tooltip_exclude":"Tick the box to exclude the selection","ctl_readonly_empty_value":"NA","analysis_pivot_table":"Proposal analysis PivotTable","error_no_line_selected":"No rows selected","warning_unload":"Certain fields on this page have changed since your last save.","message_confirm":"Do you really perform this action?","dialog_confirm":"Confirm","confirm":"Confirm","cancel":"Cancel","close_frame":"Close frame","open_frame":"Open frame","error_popup_blocked":"The popup window has been blocked. Check your browser settings (usually an icon appears in the address bar).","g_back":"Go back to the previous page","browser_history":"Open the navigation history","aria_label_open_frame":"Open frame","aria_label_close_frame":"Close frame","aria_label_prev_nav":"","aria_label_hist_nav":"","prev":"Previous","next":"Next","yes":"Yes","no":"No","close":"Close","plus":"Plus","minus":"Minus","confirm_delete_row":"Do you really want to delete this row?","last_page":"Previous page","slider_page":"{0}/{1}","slider_page_vertical":"Page : {0}/{1} \u0026lt;br/\u0026gt;{2} Result(s)","confirm_apply_grid_action":"Warning, unsaved data will be lost ! Do you really want to continue ?","accessibility_uncheck_all":"Deselect all rows","accessibility_check_all":"Select all rows","global_state_saved":"The grid current state has successfully been saved as global state.","error_saving_global_state":"There has been an error when saving the grid global state.","dcc_tview_global_state_saved":"The table current state has successfully been saved as global state.","dcc_tview_error_saving_global_state":"There has been an error when saving the grid global state.","grid_row_pending_error":"There is at least one new row that needs to be validated","warning_before_grid_event":"Some records have been modified, by modifying the page without saving these modifications will be lost.","web_part_editor_save_waiting":"Saving...","webpart_editor_saved":"Successfully saved","remove_webpart":"Do you really want to remove this webpart?","webpart_mandatory":"Mandatory webpart","webpart_noconnected":"For non logged in users","title_color":"Title and color","modal_title":"Choose a presentation among the examples below","delete_layout":"Delete your page customization?","remove_settings_layout":"Re-initialize default customization for this page for all users","remove_custom_settings_layout":"Remove my custom layout settings.","webpart_see_all_link":"See all","webpart_see_results_0":"Go to page","webpart_see_results_1":"See 1 result","webpart_see_results_n":"See {0} results","g_results":"{0} Results","aria_link_for":"{0} for: {1}","request_failed_timed_out":"Failed to complete the request (timeout).","api_test_call_max_upload_size":"The total size of file to attach should be lower than 50Mb.","api_test_call_success":"The API test call has been executed successfully.","api_test_call_error":"The API test call has returned an error, please read the HTTP response field for furthermore information.","blog_panel_age_message_1":"Just now","blog_panel_age_message_20":"{0} seconds ago","blog_panel_age_message_40":"Half a minute ago","blog_panel_age_message_60":"Less than a minute ago","blog_panel_age_message_90":"One minute ago","blog_panel_age_message_3540":"{0} minutes ago","blog_panel_age_message_5400":"1 hour ago","blog_panel_age_message_86400":"{0} hours ago","blog_panel_age_message_129600":"1 day ago","blog_panel_age_message_604800":"{0} days ago","blog_panel_age_message_777600":"1 week ago","blog_panel_age_message_1555200":"2 weeks ago","blog_panel_age_message_2332800":"3 weeks ago","blog_panel_age_message_3110400":"4 weeks ago","blog_panel_add_reply":"Add a reply...","blog_panel_add_reply_btn":"Add a reply","blog_panel_add_comment":"Add a Message...","blog_panel_reply":"Reply","blog_chat_readonly_message":"You cannot edit/reply to this message","blog_panel":"Share","blog_panel_load_all_message":"Load all unread messages","blog_panel_see_more_message":"Load more messages","blog_panel_search_results_for":"Search results for","blog_panel_erase_search_filter":"Erase the search filter","blog_panel_show_all_replies":"Show all replies","blog_panel_count_replies":"{0} of {1} replies","blog_panel_msg_list_empty_chat":"No messages yet","blog_panel_msg_list_empty_conversation_internal":"No internal conversation yet","blog_panel_msg_list_empty_conversation_supplier":"No external conversation yet","blog_panel_msg_list_empty_conversation_supplier_extranet":"No conversation yet","blog_panel_start_conversation_button":"Start now","blog_panel_search":"Search in messages...","blog_panel_send_message":"Send message (Shift + Enter)","blog_panel_cant_send_empty_message":"You cannot send an empty message.","blog_panel_add_file":"Add an attachment","blog_panel_add_ping":"Mention a user. He will be notified of this message. You can also use the @ keyboard shortcut.","blog_panel_msg_editor_info_ping":"Users mentioned with @ will be notified of this message. One of those can be assigned to do a specific action described in the message.","blog_panel_msg_editor_info_assign":"The selected user will be responsible for achieving the action described in the message.","blog_panel_search_button":"Search Messages","blog_panel_search_button_close":"Clear Search Terms","blog_panel_save_changes":"Save","blog_panel_comment_required":"A message is required","blog_panel_contact_required":"At least 1 contact is required","blog_panel_message_shared":"Message is shared","blog_panel_unsubscribe":"Unsubscribe from the conversation","blog_panel_subscribe":"Subscribe to the conversation","blog_panel_attachments":"Attachments","blog_panel_subscribers":"Subscribers","blog_panel_unsubscribed_text":"You\u0027re unsubscribed from this blog. Please refresh the page!","blog_panel_show_less_replies":"See fewer replies","blog_panel_see_less_message":"Load fewer messages","blog_panel_hide_sidebar":"Hide Sidebar","blog_panel_show_sidebar":"Show Alerts/Messages/Notifications Sidebar","blog_panel_tooltip_unsubscribe":"Remove this discussion from your dashboard widget","blog_panel_tooltip_subscribe":"Add this discussion to your dashboard widget","blog_panel_auto_hide":"Auto-hide","blog_panel_keep_open":"Keep open","blog_panel_conversation":"Conversation","blog_panel_invite_contact":"","blog_panel_search_title":"Search","blog_panel_assign_to":"Assign to","blog_panel_conversation_filters":"Filters","blog_panel_conversation_filters_clear":"Clear filters","blog_panel_assigned_to_me":"Assigned to me","blog_panel_unread_messages":"With unread messages","blog_panel_assigned_to_me_todo":"","blog_panel_assigned_to_others":"Assigned to others","blog_panel_assigned_done":"Done","blog_panel_assigned_todo":"Todo","blog_panel_assigned_to":"Assigned to {0}","blog_panel_reassign_to":"Reassign to","blog_panel_reassigned_to_me":"Reassigned to me","blog_panel_reassigned_to":"Reassigned to {0}","blog_panel_mark_done":"Mark as done","blog_panel_mark_todo":"Mark as todo","blog_panel_done_by":"Done by {0}","blog_panel_done_by_me":"Done by me","blog_panel_cancelled_by":"","blog_panel_cancelled_by_me":"","blog_participants_internals":"","blog_participants_others":"","blog_participants_suppliers":"","blog_chat_log_unsubscribe_me_confirmation":"You\u0027re about to unsubscribe from the conversation. This blog will be removed from your message center. Are you sure?","blog_chat_log_add_participants":"{0} added {1} to the conversation","blog_chat_shared_with_supplier":"This conversation is shared with {0}","blog_chat_me":"Me","anomaly":"Alerts","notification":"Notifications","chat":"Messages","reconnecting":"Reconnecting...","disconnected":"Disconnected","too_many_tab":"Too many browser tabs opened.","connected_for_too_long":"SignalR connection too long","error_msg_not_send":"Error : The message could not be sent.","error_msg_not_modified":"Error : The message could not be modified.","error_msg_not_deleted":"Error : The message could not be deleted.","blog_panel_conversations":"Conversations","blog_panel_conversation_thread":"Conversation thread","blog_panel_internal_conversation_thread":"Internal conversation thread","blog_panel_supplier_conversation_thread":"Conversation with the supplier","blog_panel_supplier_conversation":"Supplier conversation","blog_panel_conversations_back_button":"Back to conversation list","blog_panel_participants_count":"{0} subscriber(s)","blog_panel_participants_count_internal_external":"{0} internal(s) | {1} external(s)","blog_panel_participants_title":"Subscribers","blog_panel_participants_internal_team_member":"Internal team member","blog_panel_participants_supplier_contact":"Supplier contact","blog_panel_attachments_select_all":"Select all","blog_panel_attachments_unselect_all":"Unselect all","blog_panel_attachments_download_selected":"Download selected attachment(s)","blog_panel_attachments_shared_by":"Shared by {0}","confirm_cancel_reply":"Are you sure you want to delete this reply?","confirm_cancel_edit":"Are you sure you want to cancel the edition of the message ?","blog_content_edited":"Content edited","blog_panel_remove_subscriber":"Remove the user","blog_panel_remove_subscriber_confirmation":"Are you sure you want to remove this user from the conversation subscriber\u0027s list?","blog_panel_ping_only_mode":"This view is limited to messages where you have been mentioned.","blog_panel_ping_only_mode_see_all":"This view is limited to messages where you have been mentioned. Click here to see the whole conversation.","/col/message_center|add_internals_btn":"Add internal users","/col/message_center|add_externals_btn":"Add supplier contacts","/col/message_center|add_subscribers_lbl":"Add new subscribers...","/col/message_center|lbl_my_unread_msg_count":"Unread messages","/col/message_center|lbl_my_undone_msg_count":"Remaining actions assigned to me","/col/message_center|lbl_others_undone_msg_count":"Remaining actions assigned to other users","blog_panel_conversations_archive_button":"Archive the conversation","blog_panel_conversations_unarchive_button":"Unarchive the conversation","notification_panel_empty_state":"Click on a notification to display it","/bas/anomaly_control|empty_state":"No alert to display","/bas/anomaly_control|msg_bar_alert_blocking":"Note that at least one blocking alert exists on this object. {0}.","/bas/anomaly_control|msg_bar_alert_warning":"Note that at least one warning exists on this object. {0}.","/bas/anomaly_control|msg_bar_alert_info":"Note that at least one information message exists on this object. {0}.","/bas/anomaly_control|msg_bar_here":"Click here to review it","design_undo":"Undo (Ctrl+Z)","design_undo_mac":"Undo (⌘+Z)","design_undo_style":"the last merge cell","design_undo_move":"the last move","design_style_undone":"Last cell merged undone","design_style_redone":"Last cell merged redone","design_move_undone":"Last change undone","design_move_redone":"Last change redone","design_redo":"Redo (Ctrl+Y)","design_redo_mac":"Redo (⌘+Y)","warning_design_zone":"Potential problem area","error_design_zone":"Not configurable area","value_added":"added to selection","value_removed":"removed from selected values","accessibility_exclude_from_selected_values":"Exclude from selected values","query_treeview_param_dialog_title":"Treeview parameters","query_advanced_param_dialog_title":"Advanced parameters","query_parameters":"Parameters","confirm_generate_sql":"The query will be replaced. Are you sure?","accessibility_begin_date":"((Begin date)","accessibility_end_date":"(End date)","accessibility_results":"results.","accessibility_autocompletion_help_msg":"Use up and down arrow to fetch them.","accessibility_tab_not_fixed":"Lock secondary menu","accessibility_tab_fixed":"Unlock secondary menu","today":"T","+1":"+1","+7":"+7","+14":"+14","+30":"+1M","+90":"+3M","select_date":"Select a date","range":"Invalid range","month":"Month","year":"Year","summary_error":"Some data have not been filled correctly","box_message_title":"Message","column":"Column","column_hide":"hidden","column_display":"masquée","checkall":"Check all","uncheck_all":"Uncheck all","treeview_selected_values":"selected value(s)","grid_page_size":"Grid page size :","nb_rows_greater_than_max":"Maximum number : {0}","reset_grid_parameters":"Reset to default parameters","global_grid_parameters":"Apply as global configuration","erase_global_grid_parameters":"Erase global grid parameters","scrolldoubledown":"Display all","scrolldoubleup":"Collapse","scrolldown":"Scroll down","scrollup":"Scroll up","/bas/homepage_manage|profile_has_homepage":"The following profiles already have an homepage:{0}Are you sure to replace the homepage for these profiles?","query_warning":"Warning !","address_state_not_found":"The state/province corresponding to the address hasn\u0027t been found, select it manually","center_map_to_marker":"Center map to marker\u0027s position","/bas/action_bar|wfl_message":"Reason","authoring_mode_title":"Create New Document Using...","authoring_compare_condition":"Please choose two versions","save_to_use":"Save page to use this option","modal_maximize":"Maximize","modal_restore":"Restore Down","/wfl/wfl_task_browse|wfl_mass_action_incompatible_warning":"{0} of the selected {1} rows will not be affected by the action \u0022{2}\u0022:","/wfl/wfl_task_browse|wfl_mass_action_incompatible_warning_all":"The selection is not compatible with the action \u0022{0}\u0022:","/wfl/wfl_task_browse|mass_validation":"Mass validation","/wfl/wfl_task_browse|mass_refusal":"Mass refusal","/wfl/wfl_task_browse|wfl_mass_action_mandatory_comment":"{0} of the selected {1} rows require a mandatory comment:","/wfl/wfl_task_browse|wfl_mass_action_mandatory_comment_all":"The selection requires a mandatory comment:","mandatory_comment":"Mandatory comment","/pdt/item_browse|popup_feature":"","score_precision":"Score precision :","create_transco":"Create transformation","success":"Checked","warning":"Warning","blocking":"","copied_to_clipboard":"Copied to clipboard","non_client_side_property":"The property has been saved but the field cannot be updated, the page needs to be refreshed.","btnreset":"Reset Field values","btnresetsnapshot":"Reset from standard","btnapplystdlayout":"Apply standard layout","btndeletesnapshot":"Delete page field settings","/des/page_field_manage|delete_field":"Delete","/des/page_field_manage|permanently_remove_field":"Permanently delete","/job/worker_browse|worker_stop":"Do you really want to stop process?","/job/worker_browse|worker_resume":"Start process?","move_control":"Move control","display_info":"Display info","get_parent_container":"Select parent container","cut_control":"Move control (Ctrl+X)","cut_control_mac":"Move control (⌘+X)","cut_parent_container_confirm":"This control cannot be moved. Do you want to move its parent container instead?","cancel_action":"Cancel action (Esc)","change_rowcol_span":"Change row/colspan","more_options":"Other actions","access_snp_features":"Access to snapshot features","delete_field":"Delete the field","reset_field_values":"Reset Field values","display_audit_trail":"Display audit trail","increase_rowspan":"Increase vertical span","decrease_rowspan":"Decrease vertical span","increase_colspan":"Increase horizontal span","decrease_colspan":"Decrease horizontal span","design_data":"Design Data","take_picture_conf":"Take a picture of the configuration","restore_configuration":"Restore configuration","confirm_import_snapshot_env":"Load configuration","created":"Created on","created_name":"Created by","other_env_design":"Design from another application","page_field_reset_settings":"Reset from Standard","page_field_merge_standard_settings":"Apply standard layout","page_field_delete_settings":"Delete page field settings","delete":"Delete","restore":"Restore","download":"Download","are_you_sure":"Are you sure ?","page":"Page","colfield":"Field","table":"Table","page_container":"Page container","find_db_field":"Find existing fields in the current table","search_watermark":"Search ...","add_control_into_container":"Add a control inside the {0} container","move_control_into_container":"Move control inside the {0} container","start_adding_new_controls":"Start adding new controls","stop_adding_new_controls":"Stop adding new controls","design_popup_new_control_title":"Try the new way for adding controls","design_popup_new_control_content":"Click here to activate or deactivate the \u0022addition of controls\u0022 mode","dm_field_orientation":"Fields orientation","field_orientation_horizontal":"Horizontal","field_orientation_vertical":"Vertical","move_control_new_row":"Add a new row","move_control_down":"Move column controls to the bottom","move_control_left":"Move controls to the left","move_control_up":"Move controls to the top","move_control_colspan_change":"Warning: this operation will change colspan of moved fields.\nAre you sure you want to paste the field ?","paste_field_confirm":"Confirm","design_primary_key":"Primary key","design_foreign_key":"Foreign key referencing another table","design_table_association":"Cross-reference with another table","design_table_association_multiple":"Cross-reference with multiple other tables","design_mode_options_title":"Design mode options","design_mode_highlight_proxy":"Highlight proxies","design_mode_highlight_container":"Highlight container borders","design_mode_display_hidden_controls":"Display hidden controls","design_mode_warning_detete_grouped_column":"Deleting the first column of a group removes all the grouped columns. Do you want to continue ?","dcc_displays":"Views management","dcc_edit":"Edit","dcc_duplicate":"Duplicate","dcc_delete":"Delete","dcc_add_view":"Add new view","dcc_add_display_title":"Choose a view to add...","dcc_choose_display_type":"View representation","dcc_table_display":"Table","dcc_grid_display":"Grid","dcc_view_name":"View name","dcc_view_name_watermark":"Name of the new view","dcc_view_icon":"View icon","dcc_view_icon_tooltip":"This field allows defining the CSS Class of the icon desired (ex: “fa-solid fa-deer\u0022)","dcc_add_display":"Add Selected View","dcc_copy_of_prefix":"Copy of","dcc_invalid_page_size":"Page size must be an number between 1 and 150","dcc_deletion_issue":"Issue with deletion of object","dcc_duplication_issue":"An issue occured while duplicating the DataCollectionControl. Please retry.","query_cancelling":"Canceling...","query_request_cancelling":"Canceling...","query_cancel":"Cancel Query","query_cancel_timeout":"The cancellation request is slow. Please retry in a few seconds.","query_admin_cancelled":"The query has been canceled by an administrator","query_async_error":"An error has occured while running the query. If the problem persists, please review your request or contact an administrator","query_running":"Query running","query_running_user":"This request is currently running. Please wait for it to finish or cancel it if necessary.","query_already_running":"Query already running","query_already_running_user":"This query is already running for your login. Please wait for it to finish or cancel it if necessary.","query_too_many_already_running":"Too many queries are currently executing on this server","query_too_many_already_running_for_user":"Too many queries are currently executing on this server for your login","query_wizard_modified":"Warning! The wizard has been modified. Please save the query and try again!","query_not_saved":"Please save the query and try again!","/que/query_data_control|warning_query_not_saved":"Warning! this execution will export the results of the query saved in the database, not the one on the screen. Please save it if you haven\u0027t yet","query_statement_error":"The execution of the SQL query failed.","query_top_will_be_added_warning":"We have injected a TOP in your query to limit the exported lines: choose OK to execute or Cancel to review the query. To get more results avoid the output format = template, pdf, word, excel.","browser_blocking_popups":"The browser has blocked the package commit functionality.\nTo be able to use it, please authorize popups in your browser settings.","errors_not_blocking":"Warning","infomsg":"Info","blocking_errors":"Blocking errors","save_ok":"Data has been saved","save_ko":"Save KO","reorder_error_missing_value":"The reorder operation failed because some records are missing an order value.","snpcommit_status_update_failed":"Update of contexts status failed","no_data":"No Data Matches the Criteria Entered","/js/pbi_pivot_table_script|sortaz":"Sort a-\u003eZ","/js/pbi_pivot_table_script|sortazperio":"Sort Old-\u003eNew","/js/pbi_pivot_table_script|sortza":"Sort Z-\u003ea","/js/pbi_pivot_table_script|sortzaperio":"Sort New-\u003eOld","/js/pbi_pivot_table_script|collapse_all":"Collapse all","/js/pbi_pivot_table_script|expand_all":"Expand all","/js/pbi_pivot_table_script|showtotal":"Total","/js/pbi_pivot_table_script|showother":"Others","/js/pbi_pivot_table_script|limit":"Limit","/js/pbi_pivot_table_script|top":"Top","/js/pbi_pivot_table_script|bottom":"Bottom","/js/pbi_pivot_table_script|count":"Count","/js/pbi_pivot_table_script|percent":"%","/pbi/measure_calculation_model_browse|second_parameter_mandatory":"This field is required","/pbi/pbi_view|pbi_url_too_long":"Total length of filters is too long : {length_filters}, maximum length is : {max_length}. Please use less filters to access detailed data.","/pbi/perio_control|pbi_perio_control_empty_field":"Selector is Empty","/pbi/perio_control|pbi_perio_control_start_equal_end":"Please select values so that the end date is different from the start date.","/pbi/filter_control|all_before_current_year":"All years before Current Year","/pbi/filter_control|current_year":"Current year","/pbi/filter_control|all_after_current_year":"All years after Current Year","/pbi/cube_process|cancel_cube_process_confirm":"Cancel cube processing?","/pbi/cube_process|cancel_cube_process_button_canceling_tooltip":"Cube processing is being canceled...","browser_no_pdf_viewer":"Your browser does not have any built-in PDF viewer, but you can download this file.","close_viewer":"Close the viewer","file_unknow_title":"Unknown filename","navigate_file":"Navigate to file {0}","navigate_prev_file":"Display the previous file","navigate_next_file":"Display the next file","pause_3d":"Pause animation","play_3d":"Animate object","reset_3d_state":"Reset the 3D state of the object","/fil/disk_db_file_browse|o_full":"bytes","/fil/disk_db_file_browse|ko":"kb","/fil/disk_db_file_browse|mo":"Mb","/col/blog_panel|blog_participants":"Participants","/col/blog_panel|blog_panel_invite_contact":"Invite","/col/blog_panel|blog_participants_internals":"Internal Team","/col/blog_panel|blog_participants_others":"Other Participants","/col/blog_panel|blog_participants_suppliers":"Supplier Contacts","/col/blog_panel|blog_participants_internals_extranet":"Client Contacts","/col/blog_panel|blog_participants_suppliers_extranet":"Your Contacts","/col/blog_panel|blog_subscribers_save":"Confirm","/col/blog_panel|blog_subscribers_cancel_save":"Cancel","/col/blog_panel|blog_alerts_add":"Add a new alert","/col/blog_panel|blog_alerts_add_warter_mark":"Add new alerts...","/col/blog_panel|blog_alerts_cancel_save":"Cancel","/col/blog_panel|blog_alerts_save":"Confirm","/col/blog_panel|blog_alerts_confirm_delete":"Are you sure you want to delete this alert?","design_mode_on":"Design Mode is on","cut_option_started":"Click on a highlighted area to move the selected control in it.","cut_option_cancelled":"Moving of control cancelled","plus_symbol_add_controls":"Move your mouse around the screen and click on an available area to start adding a new control.","control_added_successfully":"The control has been added. Note that a page refresh may be necessary to display its value or its final render.","control_moved_successfully":"The control has been moved successfully.","/js/ckeditor_script|add_keyword":"Add a merge field","/js/ckeditor_script|modify_keyword":"Edit merge field","/js/ckeditor_script|remove_keyword":"Remove merge field","/js/ckeditor_script|split_clause":"Split clause","/js/ckeditor_script|change_separator":"Change separator for multiple values","/js/ckeditor_script|add_repeater":"Add repeater","/js/ckeditor_script|modify_repeater":"Edit repeater","/js/ckeditor_script|remove_repeater":"Remove repeater","/js/ckeditor_script|cancel":"Cancel","/js/ckeditor_script|valid":"Validate","/js/ckeditor_script|valid_opened_clause_before_save":"Validation opened clause before save...","/js/ckeditor_script|confirm_insert_item":"Insert an empty clause between \u0022{0}\u0022 and \u0022{1}\u0022 ?","/js/ckeditor_script|end_of_document":"End of document","/js/ckeditor_script|begin_of_document":"Begin of document","/js/ckeditor_script|delete":"Delete","/js/ckeditor_script|lock_unlock":"Lock/Unlock","/js/ckeditor_script|comment":"Comment","/js/ckeditor_script|history":"history","/js/ckeditor_script|insert_empty_clause":"New Clause","/js/ckeditor_script|insert_template_clause":"Master Clause","/js/ckeditor_script|change_title":"Change title","/js/ckeditor_script|confirm_move_item":"Move item \u0022{0}\u0022 ?","/js/ckeditor_script|confirm_delete_item":"Delete item \u0022{0}\u0022 ?","/js/ckeditor_script|confirm_lock_item":"Lock item \u0022{0}\u0022 ?","/js/ckeditor_script|confirm_unlock_item":"Unlock item \u0022{0}\u0022 ?","/js/ckeditor_script|no_result":"No result.","/js/ckeditor_script|default_msg":"","/js/ckeditor_script|warning_replace":"Confirm replacement","/js/ckeditor_script|prev":"Previous","/js/ckeditor_script|next":"Next","/js/ckeditor_script|replace":"Replace","/js/ckeditor_script|restore":"Restore","/js/ckeditor_script|per":"By","/js/ckeditor_script|cls_lock_msg":"Replacement impossible : clause is locked","/js/ckeditor_script|tag_in_keyword_msg":"Replacement impossible : text in a merge field","/js/ckeditor_script|tag_in_repeater_msg":"Replacement impossible : text in a repeater","/js/ckeditor_script|confirm_change_template":"Do you want to change your template document? \\nAttention, clauses will be updated.","/js/ckeditor_script|save_to_use":"Save page to use this option","/usr/profil_auth|select_profil":"Please select a profile first.","/usr/util_ctrl|pw_constraint_valid":"Constraint met","/usr/util_ctrl|pw_constraint_invalid":"Constraint not met","/usr/util_ctrl|pw_constraint_unvalidatable":"Requires a save to be verified","confirm_link_del":"Do you really want to delete {0}?","page_links_context_menu_title":"Help on this page","tab_links_context_menu_title":"Help on this tab","category_singular":"Category","notification_singular":"Notification","/fil/download_public|download_error_try_again":"Your download could not be processed. Please try again later.","/fil/download_public|captcha_failed":"The captcha verification failed. Please try again later.","/fil/download_public|download_will_start":"Your download will start momentarily...","/fil/download_public|download_is_starting":"Your download is starting. Please close the window once it is finished.","/fil/download_public|checking_browser":"Checking your browser before starting the download...","/fil/download_public|solve_captcha":"Please solve the captcha to start the download.","recordsselectedinthetable":"records selected in the table","clearselection":"Clear selection","selectall":"Select all","dap_guide_player_welcome_title":"Welcome to {0} guide","dap_guide_player_welcome_desc":"I\u0027ll guide you to complete all the steps.","dap_guide_player_welcome_start":"Get Started","dap_guide_player_running_title":"Alert: Guide in Progress","dap_guide_player_running_desc":"The guide {0} is currently in progress. Are you sure you want to exit the current guide and switch to the new guide {1}?","dap_guide_player_exit":"Exit","dap_guide_player_exit_title":"Exit Guide","dap_guide_player_exit_desc":"Are you sure you want to exit guide?","dap_guide_player_skip_desc":"Don\u0027t remind me again about this guide.","dap_guide_player_congra_title":"Congratulations","dap_guide_player_congra_desc":"Congratulations! You successfully completed the {0} guide.","dap_guide_studio_not_editable_title":"Guide is not editable","dap_guide_studio_not_editable_desc":"This guide is published and cannot be edited. Unpublish the guide if you want to add or edit steps.","dap_guide_studio_unpublish":"Unpublish","dap_guide_player_reason_next":"You must mouseover or click where indicated.","dap_guide_player_reason_rule_empty":"You must provide a value.","dap_guide_player_reason_rule_equal":"You must select one of the allowed values.","dap_guide_player_complete":"Completed","dap_guide_player_progress_step":"step","dap_guide_player_progress_out_of":"out of","dap_guide_studio_plus_info":"To add a step, click the Plus button or simply press Enter","/ctn/alert_browse_part|alt_read_alert":"Marked alert as read","/ctn/alert_browse_part|alt_unread_alert":"Marked alert as unread","/ctn/alert_browse_part|alt_del_alert":"Archive this alert","/ctn/alert_browse_part|alt_restore_alert":"Restore this alert"},"_styleParameters":{"bas_action_bar_inside_footer":"0","bas_menu_position_beside_logo":"1","Bridge_HeaderTheme":"Colored","FilterAdvancedControl_DefaultFrameType":"Borderless","FilterControl_DefaultFrameType":"EveryBorderNoBackground","Frame_DefaultFrameType":"EveryBorderNoBackground","Frame_DefaultFrameTypeBrowse":"HeaderBorder","Frame_DefaultFrameTypeNoTitle":"Borderless","Frame_DefaultFrameTypeNoTitleBrowse":"Borderless","MenuControl_RenderType":"Block","palette_negative_color":"#dd3636","palette_positive_color":"#028823","palette_primary_color":"#1d3444","palette_secondary_color":"#003561","palette_warning_color":"#e2be69","PanelControl_PanelTheme":"Dark","pbi_analysis_chart_palette":"#2287C3,#464198,#697991,#44BBEA,#99A8BA,#B0E9F7,#9393C9,#C0CDD8,#0F6793,#2A2A72,#506180,#cc6100,#00C124,#e67e07,#1DDB38,#f4933b,#64E273,#f7ae72","pbi_cell_border_color":"#d5d7d8","pbi_cell_hover_background_color":"#eafdff","pbi_cell_hover_color":"#ffd6ff","pbi_cell_lvl_1_color":"#7fbbde","pbi_cell_lvl_2_color":"#b4d5e8","pbi_cell_lvl_3_color":"#d9ecf6","pbi_cell_lvl_4_color":"#e6f3f9","pbi_cell_total_color":"#f4fafd","pbi_compact_row_background_color":"#f0f7fb","sample_color_picker":"#b119e0","StyleTemplate_LayoutTheme":"Light"},"_params":{"bas_accessibility_enabled":"0","bas_ajax_postback_timeout":"3000000","bas_address_enable_us_statecode_in_zipcode":"0","bas_max_dropdown_items":"20","bas_selector_selected_background_color":null,"EnableSeleniumAttributes":null,"job_check_time_wp":null,"auc_nb_decimal":null,"auc_use_auction_password":"0","auc_refresh_period":"2","JsLogUnauthenticated":"false","bas_autosuggest_list_size":"10","IvaluaExtranetBaseUrl":"https://project.ivalua.com","col_schedule_exclude_end_date":"1","ctn_doc_show_title_prefix":"1","ReCaptchaV3PublicKey":null,"ReCaptchaEnterprisePublicKey":null,"CaptchaType":"Ivalua","fil_max_file_size":"150000"},"Highcharts":{"chartPalette":["#2287C3","#464198","#697991","#44BBEA","#99A8BA","#B0E9F7","#9393C9","#C0CDD8","#0F6793","#2A2A72","#506180","#cc6100","#00C124","#e67e07","#1DDB38","#f4933b","#64E273","#f7ae72"],"decimalSeparator":".","thousandsSeparator":",","minusAtTheEnd":false,"drillUpText":"\u003c Back"},"Lang":"en","LangList":["en","fr","de","it","pl","es","pt","zh","ja","ar"],"CKEditor":{"cacheControl":"-1266283458","Path":"/dist/third-party/ckeditor/","DisableNativeSpellChecker":"True"},"ClientIDSeparator":"_","IdSeparator":":","ImagePath":"/dist/image/","WwwRoot":"","ApplicationPath":"/","UrlPrefixClientCookieName":"UrlPrefixClientCookieNamebuyer_singtel","FieldSep":" : ","SelectorValueName":"IVSELECTORVALUES","User":{"LoginName":null,"ContactId":null,"ContactName":null,"Auth":[]},"DAVRoot":"https://singtel.ivalua.app:443//DAV/","CurrentCulture":{"Name":"en-US","TwoLetterISOLanguageName":"en","DateTimeFormat":{"DateFormatDatePicker":"dd/mm/yy","DatePattern":"dd/MM/yyyy","ShortDatePattern":null,"DateSeparatorPattern":"[-/. /]+","ShortTimePattern":"HH:mm","LongTimePattern":"HH:mm:ss","TimeSeparator":":","PMDesignator":"PM","DayFirstLetter":["S","M","T","W","T","F","S"],"DayNames":["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],"MonthNames":["January","February","March","April","May","June","July","August","September","October","November","December",""],"MonthAbrev":["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"],"FirstDayOfWeek":1,"AccessibilityShortDatePattern":"Expected date format: dd/mm/yyyy"},"NumberFormat":{"NumberDecimalSeparator":".","NumberGroupSeparator":","},"PhoneFormat":{"Length":"10","Capture":"/(\\d{3})(\\d{3})(\\d{4})/","Format":"$1-$2-$3"}},"Style":{"ParamValue":{}},"DecimalPrecision":2,"UserNumberFormat":{"NumberDecimalSeparator":".","NumberGroupSeparator":",","NumberRegExpDecimal":"^\\s*([-\\+]\\s?)?\\d{1,16}([\\s,]\\d*)*([\\.,\\.]\\d+)?\\s*$","NumberRegExpInteger":"^\\s*([-\\+])?(\\d+)([\\s |,]{1}\\d*)*\\s*$","NumberRegExpUDecimal":"^\\s*(\\d{1,16})([\\s |,]{1}\\d*)*([\\.]{1}(\\d{1,2}))?\\s*$","NumberRegExpUInteger":"^\\s*(\\d+)([\\s |,]{1}\\d*)*\\s*$","NumberRegExpMoney":"^\\s*([-\\+])?(\\d{1,16})([\\s |,]{1}\\d*)*([\\.]{1}(\\d{1,2}))?\\s*$","NumberNegativePattern":1,"NegativeSign":"-","PositiveSign":"+","CurrencyDecimalSeparator":".","CurrencyDecimalDigits":2},"UserDateFormat":{"DateFormatDatePicker":"dd/mm/yy","ShortDatePattern":"dd/MM/yyyy","DateSeparatorPattern":"[-/. /]+","ShortTimePattern":"HH:mm","LongTimePattern":"HH:mm:ss","TimeSeparator":":","PMDesignator":"PM","DayFirstLetter":["S","M","T","W","T","F","S"],"DayNames":["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],"MonthNames":["January","February","March","April","May","June","July","August","September","October","November","December",""],"MonthAbrev":["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec",""],"FirstDayOfWeek":1,"AccessibilityShortDatePattern":"Expected date format: dd/mm/yyyy","RegExpShortTime":"^\\s*(([0-9])?([:hH](([0-9])?|([0-5][0-9]))?)?|([0-1][0-9]|2[0-3])(([:hH])?(([0-9])?|([0-5][0-9]))?)?)?\\s*$","RegExpLongTime":"^\\s*(([0-9])?([:hH](([0-9])?([:mM](([0-9])?|([0-5][0-9]))?)?|([0-5][0-9])(([:mM])?(([0-9])?|([0-5][0-9]))?)?)?)?|([0-1][0-9]|2[0-3])(([:hH])?(([0-9])?([:mM](([0-9])?|([0-5][0-9]))?)?|([0-5][0-9])(([:mM])?(([0-9])?|([0-5][0-9]))?)?)?)?)?\\s*$","DatepickerOptions":{"isRTL":false},"ShortYearOptions":{"shortYearCutoff":"+29","minDate":"-70y","maxDate":"29y"},"ShortYearCutoff":29},"UserNameFormat":true,"EmailFormat":"/^(?!\\.)(?!.*\\.{2,})(?!.*\\.@)(?!.*@\\.)(?=([a-zA-Z0-9!#\\$%\u0026\u0027\\*\\+\\-\\/=\\?\\^_`\\.{|}~]|\\\\[@\\\\,\\[\\] \\\u0022]){1,64}@)(?=(.*?@))\\2(?!-)(?!.*-$)(?!.*\\.\\d+$)(?=[a-zA-Z0-9-\\.\\u00C0-\\u00FF]{1,255}$).*$/","FormsAuthentication":{"LoginUrl":"/page.aspx/en/usr/login"},"Navigation":[],"Int32":{"MinValue":-2147483648,"MaxValue":2147483647},"Int64":{"MinValue":-9223372036854775808n,"MaxValue":9223372036854775807n},"regExp":{"color":"/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/","money":"^\\s*([-\\+])?(\\d{1,16})([\\s |,]{1}\\d*)*([\\.]{1}(\\d{1,2}))?\\s*$","double":"^\\s*([-\\+]\\s?)?\\d{1,16}([\\s,]\\d*)*([\\.,\\.]\\d+)?\\s*$","email":"/^(?!\\.)(?!.*\\.{2,})(?!.*\\.@)(?!.*@\\.)(?=([a-zA-Z0-9!#\\$%\u0026\u0027\\*\\+\\-\\/=\\?\\^_`\\.{|}~]|\\\\[@\\\\,\\[\\] \\\u0022]){1,64}@)(?=(.*?@))\\2(?!-)(?!.*-$)(?!.*\\.\\d+$)(?=[a-zA-Z0-9-\\.\\u00C0-\\u00FF]{1,255}$).*$/","bit":"/^[0-1]{1}$/","integer":"^\\s*([-\\+])?(\\d+)([\\s |,]{1}\\d*)*\\s*$","phone":"/^([a-zA-Z0-9_ .+\\-()]*)$/","string":"/^([a-zA-Z0-9-àäâéèëêìïîòöôùüûÿÀÄÂÉÈËÊÌÏÎÒÖÔÙÜÛŸ@_ \\.\\/\\;]*)$/","udouble":"^\\s*(\\d{1,16})([\\s |,]{1}\\d*)*([\\.]{1}(\\d{1,2}))?\\s*$","uinteger":"^\\s*(\\d+)([\\s |,]{1}\\d*)*\\s*$","long":"^\\s*([-\\+])?(\\d+)([\\s |,]{1}\\d*)*\\s*$","ulong":"^\\s*([-\\+])?(\\d+)([\\s |,]{1}\\d*)*\\s*$","url":"/(http[s]?:\\/\\/)?([^\\s]+)/i"},"Prompts":{"empty":"{name} must have a value","emptyTranslatable":"{name} must have a value","checked":"{name} must be checked","email":"{name} must be a valid e-mail. Example: name@domain.com","url":"{name} must be a valid url","regexp":"{name} is not formatted correctly","integer":"{name} must be an integer","bigInteger":"{name} must be an integer","decimal":"{name} must be a decimal number","number":"{name} must be set to a number","is":"{name} must be \u0027{ruleValue}\u0027","isExactly":"{name} must be exactly \u0027{ruleValue}\u0027","not":"{name} cannot be set to \u0027{ruleValue}\u0027","notExactly":"{name} cannot be set to exactly \u0027{ruleValue}\u0027","contain":"{name} cannot contain \u0027{ruleValue}\u0027","containExactly":"{name} cannot contain exactly \u0027{ruleValue}\u0027","doesntContain":"{name} must contain  \u0027{ruleValue}\u0027","doesntContainExactly":"{name} must contain exactly \u0027{ruleValue}\u0027","minLength":"{name} must be at least {ruleValue} characters","length":"{name} must be at least {ruleValue} characters","exactLength":"{name} must be exactly {ruleValue} characters","maxLength":"{name} cannot be longer than {ruleValue} characters","match":"{name} must match {ruleValue} field","different":"{name} must have a different value than {ruleValue} field","creditCard":"{name} must be a valid credit card number","minCount":"{name} must have at least {ruleValue} choices","exactCount":"{name} must have exactly {ruleValue} choices","maxCount":"{name} must have {ruleValue} or less choices","bit":"{name} must be a bit (0 or 1)","color":"{name} must be a color (#rgb)","date":"{name} must be a valid date","dateTime":"{name} must be a valid date","shortDateTime":"{name} must be a valid date","double":"{name} must be a decimal with {scale} decimal digit(s) max.","emailList":"{name} must be an valid email list","long":"{name} must be a long integer","phone":"{name} must be a valid phone number","shortDate":"{name} must be a valid date","string":"{name} must be a string","uInteger":"{name} must be a positive integer","uBigInteger":"{name} must be a positive integer","uDouble":"{name} must be a positive decimal with {scale} decimal digit(s) max.","compareToValue":"{name} must be {compareOperator} {compareValue}","compareToControl":"{name} must be {compareOperator} {compareControl}","money":"{name} is typed as money, it must be a decimal with {scale} decimal digit(s) max.","code":"{name} must be a valid code"},"Compare":{"equal":"equal to","greaterThan":"greater than","greaterThanEqual":"greater than or equal to","lessThan":"less than","lessThanEqual":"less than or equal to","sameSignAndAbsLessThanEqual":"same sign and less than","notEqual":null},"HiddenColumns":["login_pass","reg_pass"],"javaScriptFiles":{"codeMirror":["/dist/third-party/codemirror/codemirror.js?v=20260722113154","/dist/third-party/codemirror/codemirror-autorefresh.js?v=20260722113154","/dist/third-party/codemirror/hint/show-hint.js?v=20260722113154","/dist/third-party/codemirror/hint/sql-hint.js?v=20260722113154","/dist/third-party/codemirror/hint/sql.js?v=20260722113154","/dist/js/codemirror-configuration_script.min.js?v=20260722113148","/dist/js/code_mirror_script.min.js?v=20260722113148"],"ckeditor":["/dist/third-party/ckeditor/ckeditor.js?v=20260722113154","/dist/js/ckeditor-configuration_script.min.js?v=20260722113148","/dist/js/ckeditor_script.min.js?v=20260722113148"],"ckeditor5":["/dist/third-party/ckeditor5/ckeditor5.js?v=20260722113154"],"jstree":["/dist/third-party/jstree/jstree.min.js?v=20260722113154","/dist/js/treeview_script.min.js?v=20260722113148"],"minicolors":["/dist/third-party/jquery-plugins/jquery.minicolors.min.js?v=20260722113154"],"datepickerArabic":["/dist/third-party/jquery-plugins/jquery.datepicker-ar.js?v=20260722113154"],"highcharts":["/dist/third-party/highcharts/highcharts_script.min.js?v=20260722113154","/dist/third-party/highcharts/highcharts-more_script.min.js?v=20260722113154","/dist/third-party/highcharts/highcharts-modules-map_script.min.js?v=20260722113154","/dist/third-party/highcharts/highcharts-modules-data_script.min.js?v=20260722113154","/dist/third-party/highcharts/highcharts-modules-exporting_script.min.js?v=20260722113154","/dist/third-party/highcharts/highcharts-modules-treemap_script.min.js?v=20260722113154","/dist/third-party/highcharts/highcharts-modules-drilldown_script.min.js?v=20260722113154","/dist/third-party/highcharts/highcharts-modules-annotations_script.min.js?v=20260722113154","/dist/third-party/highcharts/highcharts-modules-solid-gauge_script.min.js?v=20260722113154","/dist/third-party/highcharts/highcharts-modules-histogram-bellcurve_script.min.js?v=20260722113154","/dist/third-party/highcharts/highcharts-modules-funnel_script.min.js?v=20260722113154","/dist/third-party/highcharts/highcharts-modules-heatmap_script.min.js?v=20260722113154","/dist/js/highcharts-configuration_script.min.js?v=20260722113148","/dist/js/analysis_tile_script.min.js?v=20260722113148"],"semanticSlider":["/dist/third-party/semantic-slider/semantic-slider.min.js?v=20260722113154"],"swiper":["/dist/third-party/swiper/swiper-bundle.min.js?v=20260722113154"],"quicklinksMenu":["/dist/js/quicklinks_menu_script.min.js?v=20260722113148"]},"styleFiles":{"minicolors":["/dist/third-party/jquery-plugins/jquery.minicolors.css?v=20260722113154"],"swiper":["/dist/third-party/swiper/swiper-bundle.min.css?v=20260722113154"]},"hasConfigurationContext":false,"isDesignExpert":false,"snpContextCheckExclusionEnable":true,"mandatory":"\u003cspan class=\u0022required-field\u0022\u003e*\u003c/span\u003e","defaultIcons":{"delete":"icon fa-trash-alt regular"},"ButtonDefaultClass":"btn btn_color_darkblue","UserGuidePortalUrl":"https://project.ivalua.com/page/ctn/doc/help_178/en/index-en.html?contextId=","isProductEnvironment":false});
+		  ivScope = extend(ivScope, {
+			  Extend: extend,
+			  UrlCurrent: {
+				  Path: (location.protocol + "//" + location.hostname + (location.port.length > 0 && location.port != 80 ? (":" + location.port) : "") + initPageInfos(ivScope).WwwRoot)
+			  },
+			  infos : initPageInfos(ivScope),
+			  GetText: function () {
+					var
+						textCode = arguments[0].toLowerCase(),
+						infos = initPageInfos(ivScope),			
+						showCodeIfEmpty = (typeof arguments[1] === 'boolean' ? arguments[1] : true),
+						localTextCode = '/' + infos.Module + '/' + infos.Page + '|' + textCode;
+
+					// local text
+					if (this._texts[localTextCode]) {
+						return this._texts[localTextCode].toString().format(Array.prototype.slice.call(arguments, typeof arguments[1] === 'boolean' ? 2 : 1));
+					}
+					// global text
+					else if (this._texts[textCode]) {
+								  return this._texts[textCode].toString().format(Array.prototype.slice.call(arguments, typeof arguments[1] === 'boolean' ? 2 : 1));
+					}
+					else if (showCodeIfEmpty) {
+								  return textCode;
+							  }
+				  return '';
+			  },
+			  getTextByOS: function (textCode, showCodeIfEmpty) {
+				  // TODO : enhance with other needs to come
+				  if (isMac()) textCode += '_mac';
+				  return ivScope.GetText(textCode, showCodeIfEmpty);
+			  },
+			  getCurrentModalId:function () {
+					  //find the current frame within the parent window
+					  if(window.parent && window.parent.frames && window.parent.document
+						  && window.parent.document.getElementsByTagName) {
+						  var iframes = window.parent.document.querySelectorAll('iframe[id*="-VIEW"],iframe[name*="-VIEW"]');
+						  for (var i = 0; i < iframes.length; i++) {
+						  var id = iframes[i].id || iframes[i].name || i;
+						  if (window.parent.frames[id]
+							  && (window.parent.frames[id] == window
+								  //chrome fix
+								  || (window.parent.frames[id].contentWindow && window.parent.frames[id].contentWindow == window))) {
+							  return id;
+						  }
+					  }
+				  }
+				  return null;
+			  },
+
+  			  getFrame: function (document, frameID) {
+				  let container = document.getElementById(frameID);
+				  if (container) {
+					  return container;
+				  }
+				  else {
+					  // QST case : find the IFRAME into another IFRAME
+					  const frames = document.querySelectorAll('iframe');
+					  let i = 0;
+					  do {
+						  container = ivScope.getFrame(frames[i].contentDocument, frameID);
+						  i++;
+					  }
+					  while (i < frames.length && !container);
+					  return container;
+				  }
+			  },
+
+			  getParent: function() {
+					const fuid = ivScope.Querystring('fuid');
+					if(fuid) {
+						const iframeParent = ivScope.getFrame(window.parent.document, fuid);
+						if (iframeParent) {
+							var iframeCurrentId = ivScope.getCurrentModalId();
+							if (iframeCurrentId && iframeParent.contentWindow && iframeParent.contentWindow.document) {
+								var body = iframeParent.contentWindow.document.body;
+								if (body) {
+								var hdnModalId = body.querySelector("#_hdnModalId");
+									if (hdnModalId && hdnModalId.length > 0) {
+										hdnModalId.value(iframeCurrentId);
+									}
+								}
+							}
+							return iframeParent.contentWindow;
+						}
+					}
+					else if (ivScope.infos.Mode == "modal.aspx") {
+						if (window.parent && window.parent.frames && window.parent.document && window.parent.document.getElementsByTagName) {
+							var iframeCurrentId = ivScope.getCurrentModalId();
+							var iframes = window.parent.document.querySelectorAll('iframe[id*="-VIEW"],iframe[name*="-VIEW"]');
+							for (var i = 0; i < iframes.length; i++) {
+								if (iframes[i].contentWindow && iframes[i].contentDocument && typeof (iframes[i].contentWindow.document) != "unknown") {
+									var body = iframes[i].contentWindow.document.body;
+									if (body) {
+										var hdnModalId = body.querySelector("#_hdnModalId");
+										if (hdnModalId && hdnModalId.value == iframeCurrentId) {
+											return iframes[i].contentWindow;
+										}
+									}
+								}
+							}
+						}
+					}
+
+					if (ivScope.infos.Mode == "popup.aspx" && window.opener)
+					{
+						try {
+							if (window.opener.location.href)
+								return window.opener;
+						}
+						catch(ex){}
+					}
+					return window.parent;
+				},
+
+				getUpperDocument: function (upperWindow) {
+					if (upperWindow) {
+						try {
+							return upperWindow.document;
+						}
+						catch (ex) {
+							return null;
+						}
+					}
+					else {
+						return null;
+					}
+			  },
+	GetStyleParameter: function () {
+		var styleParameterCode = arguments[0];
+		if (this._styleParameters[styleParameterCode])
+			return this._styleParameters[styleParameterCode].toString().format(Array.prototype.slice.call(arguments, 1)).toString();
+		return '';
+	},
+	BareUrl: function () {
+		return this.UrlBuilder.call(this, 'BareUrl', arguments);
+	},
+	PageUrl: function () {
+		return this.UrlBuilder.call(this, 'PageUrl', arguments);
+	},
+	AjaxUrl: function () {
+		return this.UrlBuilder.call(this, 'AjaxUrl', arguments);
+	},
+	//TODO:design
+	DialogUrl: function () {
+		return this.UrlBuilder.call(this, 'DialogUrl', arguments);
+	},
+	UnitTestUrl: function () {
+		return this.UrlBuilder.call(this, 'UnitTestUrl', arguments);
+	},
+	ModalUrl: function () {
+		return this.UrlBuilder.call(this, 'ModalUrl', arguments);
+	},
+	PopupUrl: function () {
+		return this.UrlBuilder.call(this, 'PopupUrl', arguments);
+	},
+	IframeUrl: function () {
+		return this.UrlBuilder.call(this, 'IframeUrl', arguments);
+	},
+	UrlBuilder: function () {
+		var mode = arguments[0];
+		var urlArg = arguments[1];
+
+		var pageMode = null;
+		switch (mode) {
+			case 'BareUrl': pageMode = 'bare.aspx'; break;
+			case 'AjaxUrl': pageMode = 'ajax.aspx'; break;
+			case 'DialogUrl': pageMode = 'dialog.aspx'; break;
+			case 'UnitTestUrl': pageMode = 'test.aspx'; break;
+			case 'ModalUrl': pageMode = 'modal.aspx'; break;
+			case 'PopupUrl': pageMode = 'popup.aspx'; break;
+			case 'IframeUrl': pageMode = 'iframe.aspx'; break;
+			default: pageMode = 'page.aspx'; break;
+		}
+
+		var returnUrl;
+		if (urlArg.length === 1 && typeof urlArg[0] === 'string') {
+			var url = urlArg[0];
+			if (url.substring(0, 1) !== '/') {
+				url = '/' + url;
+			}
+					  returnUrl = initPageInfos(ivScope).WwwRoot
+						  + '/' + pageMode
+						  + '/'
+						  + initPageInfos(ivScope).Lang + url;
+		}
+		else {
+			var module = urlArg[0];
+			var page = urlArg[1];
+			var pathInfo = urlArg[2] || [];
+			var queryString = urlArg[3] || '';
+
+					  returnUrl = initPageInfos(ivScope).WwwRoot
+						  + '/' + pageMode
+						  + '/' + initPageInfos(ivScope).Lang
+						  + '/' + module + '/' + page;
+
+			if (pathInfo && pathInfo.length > 0) {
+				returnUrl += '/' + pathInfo.join('/');
+			}
+
+			if (queryString) {
+				returnUrl += '?' + queryString;
+			}
+		}
+		return returnUrl;
+	},
+	IsDesignMode: function () {
+		return this.Querystring.call(this, 'fields_setting') === 'true';
+	},
+	Querystring: function () {
+		var key = arguments[0];
+		var url = arguments[1];
+
+		if (!url)
+			url = window.location.href;
+		key = key.replace(/[\[\]]/g, "\\$&");
+		var regex = new RegExp("[?&]" + key + "(=([^&#]*)|&|#|$)"),
+			results = regex.exec(url);
+		if (!results)
+			return null;
+		if (!results[2])
+			return '';
+		return decodeURIComponent(results[2].replace(/\+/g, " "));
+	},
+	GetVar: function () {
+		var paramCode = arguments[0];
+		var defaultValue = null;
+
+		if (arguments && arguments.length > 1)
+			defaultValue = arguments[1];
+
+		if (this._params[paramCode])
+			return this._params[paramCode];
+		else
+			return defaultValue;
+	},
+	GetCurrentUrl: function () {
+		var url = '/' + Module + '/' + Page + '/' + PathInfo.join('/') + '?' + QueryString;
+		return url;
+	}
+	  });
+
+		  if (ivScope.infos.Mode == "mobile.aspx") {
+			  var removeVersion = function (url) {
+				  var regex = /\?v=.*/;
+				  return url.replace(regex, '');
+			  };
+			  for (var property in ivScope.javaScriptFiles) {
+				  ivScope.javaScriptFiles[property] = ivScope.javaScriptFiles[property].map(function (s) { return removeVersion(s); });
+			  }
+			  for (var property in ivScope.styleFiles) {
+				  ivScope.styleFiles[property] = ivScope.styleFiles[property].map(function (s) { return removeVersion(s); });
+			  }
+		  }
+
+		  return ivScope;
+	  }(ivScope));
+
+//global vars
+NS4 = (document.layers) ? true : false;
+var BrowseIE = (document.all ? true: false);
+var __designControlsMetaData={};
+	  var WwwRoot = ivScope.WwwRoot;
+	  var PathInfo = ivScope.infos.PathInfo;
+	  var QueryStringSplit = ivScope.infos.QueryStringSplit;
+	  var QueryString = ivScope.infos.QueryString;
+	  var Querystring = ivScope.infos.Querystring;
+	  var Mode = ivScope.infos.Mode;
+	  var Lang = ivScope.infos.Lang;
+	  var Module = ivScope.infos.Module;
+	  var Page = ivScope.infos.Page;
+var theForm = null;
+var IsAuthenticated = true;
+var __ivCtrl = {}; //all ivalua controls instances OBSOLETE
+var __ivMenu = {}; // all contextual Menus OBSOLETE
+var __EVENTTARGET = null;
+var __EVENTARGUMENT = null;
+var form = null;
+var allowSubmit = true;
+var txt_page = [];
+var __checkChangesOnUnload = false;
+
+var _referrerStack = null;
+var $lastfocus=null;
+var currentAutoFocusId = null;
+var __formDataInitial = null;
+
+var popupModeBridge = "popup.aspx";
+	  var popupMode = (ivScope.infos.Mode == popupModeBridge || ivScope.infos.Mode == "modal.aspx");
+var popupQueryStringFlag = "";
+	  var modalMode = (ivScope.infos.Mode == "modal.aspx");
+	  var mobileMode = (ivScope.infos.Mode == "mobile.aspx");
+var activeGrid;
+var colContextMenu;
+
+var indexEnter = 0;
+
+window.htmlEncodeJQ = function (value) { return $('<div/>').text(value).html(); }
+window.htmlDecodeJQ = function (value) { return $('<div/>').html(value).text(); }
+	  var upperWindow = ivScope.getParent();
+	  var upperDocument = ivScope.getUpperDocument(upperWindow);
+
+
+	  

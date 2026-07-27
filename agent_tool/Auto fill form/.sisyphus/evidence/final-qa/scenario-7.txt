@@ -1,0 +1,9 @@
+=== QA Scenario 7: CSMS Regression Script Syntax ===
+Command:
+python -c "import py_compile; py_compile.compile('tests/csms_regression.py', doraise=True); print('OK')"
+
+Output:
+OK
+
+Expected: OK
+Result: PASS

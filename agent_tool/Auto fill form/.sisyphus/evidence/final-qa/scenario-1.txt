@@ -1,0 +1,11 @@
+=== QA Scenario 1: Workflow Discovery ===
+Command:
+python -c "import sys; sys.path.insert(0, '.'); from workflow_manager import WorkflowManager; wm = WorkflowManager(); print(len(wm.list_workflows()))"
+
+Output:
+Skipping 'schema': workflow.json not found
+Workflows found: 2
+[{'name': 'csms_create_proposal', 'display_name': 'CSMS Create Proposal Group'}, {'name': 'gracubuy_create_gr', 'display_name': 'GR-Acubuy Create Goods Receipt'}]
+
+Expected: 2
+Result: PASS

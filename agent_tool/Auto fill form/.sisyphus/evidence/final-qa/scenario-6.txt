@@ -1,0 +1,9 @@
+=== QA Scenario 6: WorkflowEngine Instantiation ===
+Command:
+python -c "import sys; sys.path.insert(0, '.'); from workflow_engine import WorkflowEngine; print('OK')"
+
+Output:
+OK
+
+Expected: OK (no error, just import check)
+Result: PASS

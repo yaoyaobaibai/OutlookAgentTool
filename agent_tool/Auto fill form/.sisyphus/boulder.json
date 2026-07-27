@@ -1,0 +1,76 @@
+{
+  "active_plan": "C:\\Users\\p1325970\\AILearn\\采购\\自动填充网页表单信息\\.sisyphus\\plans\\workflow-architecture-refactor.md",
+  "started_at": "2026-07-23T11:35:19.022Z",
+  "session_ids": [
+    "ses_071667975ffeTvkEqEfFA4D08N"
+  ],
+  "session_origins": {
+    "ses_071667975ffeTvkEqEfFA4D08N": "direct"
+  },
+  "plan_name": "workflow-architecture-refactor",
+  "agent": "atlas",
+  "task_sessions": {
+    "todo:0": {
+      "task_key": "todo:0",
+      "task_label": "0",
+      "task_title": "**创建 CSMS 行为回归验证脚本（Pre-task）**",
+      "session_id": "ses_0713cdffcffeiB7NpEfd6nSg1W",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-07-23T11:41:31.198Z"
+    },
+    "todo:1": {
+      "task_key": "todo:1",
+      "task_label": "1",
+      "task_title": "**项目结构重组**",
+      "session_id": "ses_07134e4d2ffeF3SNzFiQfAvzRn",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-07-23T11:47:46.359Z"
+    },
+    "todo:2": {
+      "task_key": "todo:2",
+      "task_label": "2",
+      "task_title": "**Workflow JSON Schema 定义 + 验证器**",
+      "session_id": "ses_071306227ffeMBEw46W6yiT9aZ",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-07-23T11:54:08.030Z"
+    },
+    "todo:5": {
+      "task_key": "todo:5",
+      "task_label": "5",
+      "task_title": "**InputHandler + SelectHandler + CheckboxHandler**",
+      "session_id": "ses_0712a537bffeQ2CPDvA4qlL4QY",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-07-23T11:58:45.840Z"
+    },
+    "todo:10": {
+      "task_key": "todo:10",
+      "task_label": "10",
+      "task_title": "**WorkflowEngine（导航 + 字段遍历 + 事件 + 重试）**",
+      "session_id": "ses_0712527b3ffeUdp6o52KdRXsyr",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-07-23T12:04:49.766Z"
+    },
+    "todo:11": {
+      "task_key": "todo:11",
+      "task_label": "11",
+      "task_title": "**GUI 重构 + 工作流选择器**",
+      "session_id": "ses_07121b566ffed5YhYDkFcWpag6",
+      "agent": "Sisyphus-Junior",
+      "category": "visual-engineering",
+      "updated_at": "2026-07-23T12:11:16.061Z"
+    },
+    "final-wave:f1": {
+      "task_key": "final-wave:f1",
+      "task_label": "F1",
+      "task_title": "**Plan Compliance Audit** — `oracle`",
+      "session_id": "ses_071081766ffef7A4CaqWpbC371",
+      "agent": "oracle",
+      "updated_at": "2026-07-23T12:38:51.678Z"
+    }
+  }
+}

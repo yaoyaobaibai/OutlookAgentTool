@@ -1,0 +1,53 @@
+{
+  "$schema": "../../workflows/schema/workflow-schema.json",
+  "workflow_name": "GR-Acubuy Login",
+  "version": "1.0.0",
+  "description": "Singtel iValua Acubuy 采购平台登录。打开登录页面，输入用户名和密码，点击 Login 按钮。",
+  "status": "active",
+  
+  "browser": {
+    "channel": "chrome"
+  },
+  
+  "login": {
+    "url": "",
+    "enabled": true,
+    "fallback_selectors": {
+      "username": [
+        "#body_x_txtLogin",
+        "input[name='body:x:txtLogin']",
+        "input[type='text'][autocomplete='username']"
+      ],
+      "password": [
+        "#body_x_txtPass",
+        "input[name='body:x:txtPass']",
+        "input[type='password']"
+      ],
+      "submit": [
+        "#body_x_btnLogin",
+        "button[id='body_x_btnLogin']",
+        "button:has-text('Login')"
+      ]
+    }
+  },
+  
+  "navigation": [
+    {
+      "action": "goto",
+      "url": "",
+      "wait_until": "networkidle"
+    },
+    {
+      "action": "wait_selector",
+      "selector": "#body_x_txtLogin",
+      "timeout": 15000
+    }
+  ],
+  
+  "fields": {},
+  
+  "post_fill": {
+    "action": "manual_review",
+    "message": "登录完成。请检查页面是否已成功登录。"
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "$schema": "../../workflows/schema/workflow-schema.json",
+  "workflow_name": "CSMS Create Proposal Group",
+  "version": "1.3.1",
+  "description": "自动填充 NCS CSMS 系统的 Create Proposal Group 表单。包含 Proposal # CRM 数据加载、Date of Award、Priming Project Manager 弹窗搜索、下拉框选择等功能。",
+  "status": "active",
+
+  "browser": {
+    "channel": "chrome"
+  },
+
+  "login": {
+    "url": "https://csmstest.ncs.com.sg/UAT/",
+    "enabled": true,
+    "fallback_selectors": {
+      "username": [
+        "input[name='username']",
+        "input[name='userName']",
+        "input[id='username']",
+        "input[type='text']"
+      ],
+      "password": [
+        "input[name='password']",
+        "input[name='passwd']",
+        "input[id='password']",
+        "input[type='password']"
+      ],
+      "submit": [
+        "input[type='submit']",
+        "button[type='submit']",
+        "button:has-text('Login')",
+        "button:has-text('Sign In')",
+        "input[value='Login']",
+        "input[value='Sign In']"
+      ]
+    }
+  },
+
+  "navigation": [
+    {
+      "action": "goto",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "wait_until": "networkidle"
+    },
+    {
+      "action": "wait_selector",
+      "selector": "#ctl00_ContentPlaceHolder1_txtProposalNo",
+      "timeout": 15000
+    }
+  ],
+
+  "fields": {
+    "Proposal #": {
+      "selector": "#ctl00_ContentPlaceHolder1_txtProposalNo",
+      "type": "input",
+      "required": true,
+      "post_fill": {
+        "action": "click_and_wait",
+        "click_selector": "#ctl00_ContentPlaceHolder1_btnInfo",
+        "wait_selector": "#ctl00_ContentPlaceHolder1_upgProject"
+      }
+    },
+    "Cust Ref. No": {
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "type": "input",
+      "required": true
+    },
+    "Proposal/Contract Value": {
+      "selector": "#ctl00_ContentPlaceHolder1_txtContractValue",
+      "type": "input",
+      "required": true
+    },
+    "Selling Price Currency Code": {
+      "selector": "#ctl00_ContentPlaceHolder1_ddlSelPriceCurrCode",
+      "type": "select",
+      "required": true,
+      "handler_config": {
+        "trigger_postback": true,
+        "trigger_change_event": true,
+        "value_type": "value",
+        "wait_after_ms": 1500
+      }
+    },
+    "Date of Award": {
+      "selector": "#ctl00_ContentPlaceHolder1_dtDateofAward_txtDate",
+      "type": "datepicker",
+      "required": true,
+      "handler_config": {
+        "date_format": "MM/DD/YYYY"
+      }
+    },
+    "Priming Project Manager": {
+      "selector": "#ctl00_ContentPlaceHolder1_ucEmpSearch_txtUserName",
+      "type": "popup_search",
+      "required": false,
+      "handler_config": {
+        "trigger_selector": "#ctl00_ContentPlaceHolder1_ucEmpSearch_txtUserName",
+        "popup_timeout_ms": 10000,
+        "steps": [
+          { "action": "fill", "selector": "#txtOAID" },
+          { "action": "click", "selector": "input[type='submit'][value*='Search']" },
+          { "action": "wait", "timeout_ms": 2000 },
+          { "action": "click", "selector": "table tr:nth-child(2)" },
+          { "action": "click", "selector": "input[type='submit'][value*='Select']" }
+        ]
+      }
+    }
+  },
+
+  "post_fill": {
+    "action": "manual_review",
+    "message": "请检查所有信息后手动点击 Create 按钮",
+    "click_selector": "#ctl00_ContentPlaceHolder1_btnInsert"
+  }
+}

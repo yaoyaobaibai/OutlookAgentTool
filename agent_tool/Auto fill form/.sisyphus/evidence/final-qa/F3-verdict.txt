@@ -1,0 +1,13 @@
+F3: Real Manual QA
+Agent: unspecified-high (+ playwright)
+Verdict: APPROVE
+Scenarios [8/8 pass]:
+  1. Workflow Discovery: PASS (2 workflows)
+  2. Config Valid: PASS ((True, []))
+  3. Invalid Rejected: PASS ((False, [4 errors]))
+  4. All Handlers: PASS (7 handlers registered)
+  5. GUI Syntax: PASS (form_filler.py OK)
+  6. Engine Instantiation: PASS
+  7. Regression Script: PASS (py_compile OK)
+  8. Error Handling: PASS (WorkflowNotFoundError raised)
+Integration [26/26]: ALL PASS

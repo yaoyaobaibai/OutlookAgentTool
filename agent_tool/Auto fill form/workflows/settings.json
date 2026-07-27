@@ -1,0 +1,17 @@
+{
+  "current_workflow": "gracubuy_login",
+  "workflow_list": [
+    {
+      "name": "csms_create_proposal",
+      "display_name": "CSMS Create Proposal Group"
+    },
+    {
+      "name": "gracubuy_create_gr",
+      "display_name": "GR-Acubuy Create Goods Receipt"
+    },
+    {
+      "name": "gracubuy_login",
+      "display_name": "GR-Acubuy Login"
+    }
+  ]
+}

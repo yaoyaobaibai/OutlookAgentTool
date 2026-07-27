@@ -1,0 +1,13 @@
+=== QA Scenario 8: Error Handling - Missing Workflow ===
+Command:
+python -c "import sys; sys.path.insert(0, '.'); from workflow_manager import WorkflowManager, WorkflowNotFoundError; wm=WorkflowManager(); wm.load_workflow('nonexistent')" 2>&1
+
+Output:
+Skipping 'schema': workflow.json not found
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    ...
+workflow_manager.WorkflowNotFoundError: Workflow 'nonexistent' not found at: ...
+
+Expected: WorkflowNotFoundError raised
+Result: PASS

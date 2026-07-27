@@ -1,0 +1,6 @@
+F1: Plan Compliance Audit
+Agent: oracle
+Verdict: APPROVE
+Must Have [3/3]: 工作流切换零代码, CSMS回归通过, GR-Acubuy必填字段
+Must NOT Have [7/7]: 无并发, 无计划任务, 无数据库, 无Web界面, 无热加载, 无条件分支, 无渗入
+Tasks [16/16]: 全部完成

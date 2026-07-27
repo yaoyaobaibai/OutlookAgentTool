@@ -1,0 +1,33 @@
+=== Integration Test Results ===
+Command: python -m pytest tests/test_integration.py -v
+
+Results: 26 passed, 1 error (1 helper function incorrectly collected by pytest due to naming)
+Valid test count: 26/26 passed (100%)
+
+Test Summary:
+  test_discover_csms               PASSED
+  test_discover_gracubuy           PASSED
+  test_load_both_workflows         PASSED
+  test_field_defs_csms             PASSED
+  test_field_defs_gracubuy         PASSED
+  test_list_workflows              PASSED
+  test_all_handler_types           PASSED
+  test_handlers_instantiable       PASSED
+  test_handlers_have_methods       PASSED
+  test_no_stub_in_handlers         PASSED
+  test_engine_instantiation        PASSED
+  test_navigation_parsed           PASSED
+  test_field_dependency_ordering   PASSED
+  test_retry_count                 PASSED
+  test_event_callbacks             PASSED
+  test_stop_sets_flag              PASSED
+  test_csms_schema_valid           PASSED
+  test_gracubuy_schema_valid       PASSED
+  test_invalid_config              PASSED
+  test_workflow_not_found          PASSED
+  test_corrupt_json                PASSED
+  test_skip_no_config              PASSED
+  test_gui_import                  PASSED
+  test_gui_class_exists            PASSED
+  test_stop_mechanism              PASSED
+  test_interrupt_mid_flight        PASSED

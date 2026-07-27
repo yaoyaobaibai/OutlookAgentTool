@@ -1,0 +1,6 @@
+Task 2 Verification: PASSED
+- Valid workflow validated successfully
+- Invalid workflow rejected with 3 errors
+- Schema uses draft-07 with $defs, additionalProperties:false
+- CLI validate_workflow.py supports --schema flag
+- Exit codes: 0 (valid), 1 (invalid), 2 (not found)
