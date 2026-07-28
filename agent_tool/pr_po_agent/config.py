@@ -2,13 +2,14 @@
 """PR/PO Agent - 配置文件"""
 
 # 版本
-VERSION = "1.3.0-preview"
+VERSION = "1.3.5-dev"
 
 # 应用标题
 APP_TITLE = "PR/PO 助手"
 
 # 主窗口尺寸
 DEFAULT_WINDOW_SIZE = "900x600"
+PDF_MERGE_TOOL_PATH = ""
 
 # 字体配置
 DEFAULT_FONT = ("Microsoft YaHei", 10)
@@ -29,6 +30,16 @@ STATS_LABELS = {
     "processing": "处理中",
     "completed": "已完成",
 }
+
+ATTACHMENT_CATEGORIES = (
+    "Proposal Document",
+    "Contract",
+    "Supporting Document",
+    "Technical Specification",
+    "Financial Document",
+    "Other",
+)
+EXCEL_ATTACH_COLUMNS = ("Attach_Category", "Attach_Path", "Attach_Description")
 
 # 状态显示
 STATUS_DISPLAY = {
@@ -70,6 +81,26 @@ UI_TEXT = {
     "save_settings": "保存设置",
     "cancel": "取消",
     "hint_dialog_title": "提示",
+
+    # -- Mail Agent button labels (Chinese) --
+    "mail_start_btn": "开始监听",
+    "mail_stop_btn": "关闭监听",
+    "view_log_btn": "查看日志",
+    "open_log_folder_btn": "打开日志目录",
+
+    # -- Mail Agent action feedback messages --
+    "action_already_running": "Mail Agent 已在运行中",
+    "action_start_success": "Mail Agent 已启动",
+    "action_start_failed": "Mail Agent 启动失败: {error}",
+    "action_stop_success": "Mail Agent 已停止",
+
+    # -- UI event log entries --
+    "log_entry_click_start": "User clicked [开始监听]",
+    "log_entry_click_stop": "User clicked [关闭监听]",
+
+    # -- Tray menu log entries --
+    "tray_view_log": "查看日志",
+    "tray_open_log_folder": "打开日志目录",
 }
 
 # 设置对话框四个选项卡
@@ -79,6 +110,18 @@ SETTINGS_TABS = {
     "sharepoint": "SharePoint",
     "ai": "AI 配置",
 }
+
+# 主窗口 6 个 Tab 配置 (v1.3.2+: GR-Acubuy 启用, 其他 5 Tab 显示 v1.5.0+ 启用)
+MAIN_WINDOW_TABS = [
+    # (key, label_chinese, enabled, future_version_msg)
+    ("gr_acubuy",    "GR-Acubuy",   True,  None),
+    ("tools",        "工具",        True,  None),    # NEW
+    ("vendor_in",    "供应商入库",   False, "v1.5.0+"),
+    ("pr_po_consume", "PR-PO 消耗",  False, "v1.5.0+"),
+    ("po_resale",    "PO 转售",      False, "v1.5.0+"),
+    ("contract",     "合同",         False, "v1.5.0+"),
+    ("gr_sap",       "GR-SAP",       False, "v1.5.0+"),
+]
 
 # 设置字段
 SETTINGS_FIELDS = {
@@ -103,6 +146,91 @@ SETTINGS_FIELDS = {
         ("API 端点:", "ai_endpoint"),
         ("API 密钥:", "ai_api_key"),
     ],
+}
+
+# GR-Acubuy Tab UI 文案 (v1.3.2+)
+GR_ACUBUY_UI_TEXT = {
+    "today_overview_title":     "今日概览",
+    "form_section_title":       "GR 表单",
+    "attachments_section_title": "附件",
+    "action_section_title":     "操作",
+    "status_section_title":     "状态",
+    "gr_add_attachment_btn":    "添加附件",
+    "gr_save_draft_btn":        "保存草稿",
+    "gr_status_disconnected":   "未连接 Acubuy",
+    "gr_status_placeholder":    "等待 Acubuy 客户端连接...",
+    "gr_no_attachments":        "(暂无附件)",
+    "disabled_tab_msg":         "此功能计划在 {version} 启用",
+    "stub_action_msg":          "功能开发中 (v1.3.2 UI 骨架)",
+    # === Form field labels (Excel column names) ===
+    "gr_purchase_order_label":   "采购订单 (Purchase Order):",
+    "gr_delivery_note_label":    "送货单 (Delivery Note):",
+    "gr_internal_comment_label": "内部备注 (Internal Comment):",
+    "gr_quantity_received_label": "收货数量 (Quantity Received):",
+    "gr_requestor_label":        "申请人 (Requestor):",
+    "gr_approver_2_label":       "审批人 (Approver 2, Min Band E):",
+    # === form_data keys (snake_case for AcubuyTaskInput) ===
+    "gr_form_key_purchase_order":   "purchase_order",
+    "gr_form_key_delivery_note":    "delivery_note",
+    "gr_form_key_internal_comment": "internal_comment",
+    "gr_form_key_quantity_received": "quantity_received",
+    "gr_form_key_requestor":        "requestor",
+    "gr_form_key_approver_2":       "approver_2",
+    # === Generate Excel button label (NEW) ===
+    "gr_generate_excel_btn":     "生成 Excel",
+    # === v1.3.2 feedback (T2: precise, persistent, truthful) ===
+    "gr_status_in_progress":     "正在生成 Excel…",
+    "gr_success_title":          "Excel 生成成功",
+    "gr_success_body":           "Excel 已生成：\n{path}\n\n仅生成 Excel，未提交到 Acubuy。",
+    "gr_failure_title":          "Excel 生成失败",
+    "gr_failure_status":         "生成失败：请查看弹窗详情",
+    "gr_success_status_prefix":  "生成成功：",
+    "gr_auto_fetch_btn":         "从邮件/附件导入",
+    "gr_auto_fetch_stub_msg":    "从邮件/附件自动获取 GR 表单信息（功能开发中）。",
+    # === Attachment management (v1.3.3+) ===
+    "gr_remove_attachment_btn":     "删除附件",
+    "gr_merge_pdfs_btn":           "合并 PDF",
+    "gr_attachment_category_label": "分类 (Category):",
+    "gr_attachment_file_label":     "文件 (File):",
+    "gr_attachment_desc_label":     "备注 (Description):",
+    "gr_attachment_dialog_title":   "添加附件",
+    "gr_no_pdf_selected_for_merge": "请先选中 ≥2 个 PDF 文件",
+    "gr_file_copy_failed_warning":  "以下附件复制失败，请手动放到同目录:\n{paths}\n\nPO 号: {po}\n预期目录: {dir}",
+    # === Tools Tab UI text (v1.3.4+) ===
+    "tools_tab_title":      "工具",
+    "tools_outlook_btn":    "启动 OutlookAgent",
+    "tools_pdfmerge_btn":   "启动 PDFMergeTool",
+    "tools_formfiller_btn": "启动 FormFiller",
+    "tools_status_found":   "✓ 已就绪",
+    "tools_status_missing": "✗ 未找到",
+    "tools_launch_failed":  "{name} 未找到:\n{path}\n\n请把它放到 PRPOAgent.exe 同目录后重试。",
+    # === Auto-fetch regex patterns (v1.3.5+) ===
+    "gr_autofetch_po_patterns":        r"(?:PO|P\.O\.|Purchase Order|订单号|采购订单)[\s#:_-]*([A-Za-z0-9\-]{4,})",
+    "gr_autofetch_dn_patterns":        r"(?:DN|D\.N\.|Delivery Note|送货单)[\s#:_-]*([A-Za-z0-9\-]{4,})",
+    "gr_autofetch_qty_patterns":       r"(?:Qty|Quantity|数量|收货数量)[\s#:_-]*(\d+)",
+    "gr_autofetch_requestor_patterns": r"(?:Requestor|申请人|请购人)[\s#:_-]+(\S+)",
+    "gr_autofetch_approver_patterns":  r"(?:Approver|审批人)[\s#:_-]+(\S+)",
+    # === Auto-fetch common UI text (v1.3.5+) ===
+    "gr_autofetch_dialog_title":        "导入邮件/附件",
+    "gr_autofetch_file_types":          [("All supported", "*.msg *.pdf *.txt *.xlsx"), ("Email files (.msg)", "*.msg"), ("PDF files (.pdf)", "*.pdf"), ("Text files (.txt)", "*.txt"), ("Excel files (.xlsx)", "*.xlsx")],
+    "gr_autofetch_extracting":          "正在提取文件内容...",
+    "gr_autofetch_result_dialog_title": "提取结果",
+    "gr_autofetch_result_body":         "从 {filename} 提取到以下字段:\n\n{fields}\n\n是否填入表单？",
+    "gr_autofetch_no_match":            "未从文件中提取到任何字段。请检查文件内容，或手动填写。",
+    "gr_autofetch_unsupported_type":    "不支持的文件类型: {ext}\n\n支持的类型: .msg / .pdf / .txt / .xlsx",
+    "gr_autofetch_extract_failed":      "文件读取失败:\n{error}\n\n请尝试其他文件。",
+    "gr_autofetch_apply":               "填入表单",
+    "gr_autofetch_cancel":              "取消",
+    # === Auto-fetch Excel scope dialog (v1.3.5+) ===
+    "gr_autofetch_xlsx_scope_title":    "Excel 扫描范围",
+    "gr_autofetch_xlsx_scope_body":     "选择如何扫描所选 Excel 文件:",
+    "gr_autofetch_xlsx_scope_all":      "扫描所有 sheet + 所有非空单元格 (推荐)",
+    "gr_autofetch_xlsx_scope_custom":   "指定区域 (sheet 名 + 行范围 + 列范围)",
+    "gr_autofetch_xlsx_sheet_label":    "Sheet 名 (留空 = 第一个 sheet):",
+    "gr_autofetch_xlsx_rows_label":     "行范围 (如 1-50):",
+    "gr_autofetch_xlsx_cols_label":     "列范围 (如 A-F):",
+    "gr_autofetch_xlsx_proceed":        "开始扫描",
+    "gr_autofetch_xlsx_invalid_range":  "范围格式无效: {detail}\n\n示例: 行 '1-50'、列 'A-F'",
 }
 
 # 确认弹窗

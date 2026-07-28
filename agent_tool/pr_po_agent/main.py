@@ -15,6 +15,8 @@ import io
 import os
 import sys
 import tempfile
+import time
+import atexit
 import tkinter as tk
 
 # === Force UTF-8 stdout to avoid cp1252 crash on Windows ===
@@ -33,11 +35,51 @@ else:
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # === Single-instance guard ===
+# Bug fix 2026-07-14: previous version never deleted the lock file,
+# causing subsequent launches to silently os._exit(0). Now:
+# 1. Delete stale lock files (older than 60s) before checking
+# 2. Register atexit handler to clean up on normal exit
 _lock_path = os.path.join(tempfile.gettempdir(), "PRPOAgent.single.lock")
+_lock_max_age_seconds = 60
+
+
+def _is_lock_stale(path, max_age_seconds):
+    """Return True if lock file is older than max_age_seconds (stale from prior crash)."""
+    try:
+        age = time.time() - os.path.getmtime(path)
+        return age > max_age_seconds
+    except OSError:
+        return False
+
+
+def _release_lock():
+    try:
+        os.unlink(_lock_path)
+    except OSError:
+        pass
+
+
+    # Try to create the lock file. If it already exists, check if it is stale.
+_lock_fd = None
 try:
     _lock_fd = os.open(_lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+except FileExistsError:
+    # Lock exists. Is it stale?
+    if _is_lock_stale(_lock_path, _lock_max_age_seconds):
+        # Stale lock from a previous crash/kill. Remove and retry.
+        try:
+            os.unlink(_lock_path)
+            _lock_fd = os.open(_lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except Exception:
+            os._exit(0)
+    else:
+        # Fresh lock - another instance is likely running
+        os._exit(0)
 except Exception:
     os._exit(0)
+
+# Register cleanup on normal exit (covers window close, Ctrl+C, normal sys.exit)
+atexit.register(_release_lock)
 
 from config import APP_TITLE
 

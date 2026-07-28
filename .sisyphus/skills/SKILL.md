@@ -120,15 +120,29 @@ excel.ActivePrinter = original_printer  # 恢复
 
 ---
 
-## 附录：完整文档索引
+## 知识地图
 
-| 内容 | 位置 |
-|------|------|
-| 否决方案（24 条） | SKILL-extended.md §二 |
-| 错误速查表（33 行） | SKILL-extended.md §三 |
-| Agent 行为规则（完整 10 条） | SKILL-extended.md §四 |
-| 经验教训（按版本） | SKILL-extended.md §五 |
-| 项目结构 / 构建 / 验证清单 / 日志位置 | SKILL-extended.md 附录 |
+> **外部知识**用 MCP 工具按需查：context7（库文档）、grep_app（GitHub 代码）、websearch（技术文章）。
+> **内部知识**按以下指引查找。
+
+| 我要找... | 去哪里 |
+|-----------|--------|
+| 这个方案能不能用（是否被否决过） | `Read SKILL-extended.md` §二 |
+| 这个报错怎么修 | `Read SKILL-extended.md` §三 |
+| 构建发布流程 / build.bat 参数 | `Read SKILL-extended.md` 附录 |
+| 某个版本做了什么修复 | `.sisyphus/memory_N.md`（N=版本号） |
+| 当前任务上下文 | `.sisyphus/drafts/handoff-v{VERSION}.md`（最新版本） |
+| 写新的 handoff | 参考 `.sisyphus/drafts/handoff_template.md` |
+| 诊断/验证脚本 | `scripts/verify_build.py`（一键验证）、`check_exe_size.py` 等 |
+| 完整 Agent 行为规则 | `Read SKILL-extended.md` §四 |
+| 历史经验教训 | `Read SKILL-extended.md` §五 |
+| 项目结构 / 验证清单 / 日志位置 | `Read SKILL-extended.md` 附录 |
+| 如何提交 PR | `Read docs/pr-process.md` |
+| PR 模板 / 检查清单 | `Read .github/PULL_REQUEST_TEMPLATE.md` |
+| 贡献指南 / 环境搭建 | `Read CONTRIBUTING.md` |
+| CI 流程 / 自动检查项 | `Read .github/workflows/ci.yml` |
+| Bug 报告 / 功能请求模板 | `Read .github/ISSUE_TEMPLATE/bug_report.md` 或 `feature_request.md` |
+| 代码所有者（谁审核什么） | `Read .github/CODEOWNERS` |
 
 ---
 

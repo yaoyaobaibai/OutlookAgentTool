@@ -35,11 +35,23 @@ def _project_root():
 def _import_outlook_monitor():
     """Import OutlookMonitor from outlook_agent.
 
-    outlook_monitor.py does `from config import load_config`. When
-    pr_po_agent/ is on sys.path, its config.py shadows outlook_agent's.
-    Workaround: clear cached config, remove pr_po_agent from sys.path,
-    prepend outlook_agent/, then import via full package path.
+    Works in three modes:
+    1. PyInstaller frozen mode: use dotted import 'outlook_agent.outlook_monitor'
+       (PyInstaller loads via import hooks; the agent_tool.* prefix doesn't work)
+    2. Source mode (preferred): pre-imported class passed via outlook_monitor_class
+    3. Source mode (fallback): sys.path manipulation to resolve
+       'agent_tool.outlook_agent.outlook_monitor' from project root
     """
+    # PyInstaller frozen mode: use dotted import via PyInstaller's import hooks
+    if getattr(sys, "frozen", False):
+        try:
+            from outlook_agent.outlook_monitor import OutlookMonitor
+            return OutlookMonitor
+        except ImportError as e:
+            logger.warning("PyInstaller mode: failed to import outlook_agent.outlook_monitor: %s", e)
+            return None
+
+    # Source mode: original logic (sys.path manipulation)
     project_root = _project_root()
     outlook_agent_dir = os.path.abspath(os.path.join(project_root, "agent_tool", "outlook_agent"))
     pr_po_agent_dir = os.path.abspath(os.path.join(project_root, "agent_tool", "pr_po_agent"))
@@ -69,7 +81,6 @@ def _import_outlook_monitor():
             sys.modules["config"] = cached_config
     return OutlookMonitor
 
-
 def _resolve_path(template):
     return os.path.expandvars(os.path.expanduser(template))
 
@@ -78,6 +89,7 @@ class MailAgent:
     """Main Mail Agent class."""
 
     def __init__(self, rules_path, outlook_monitor_class=None):
+        logger.info("MailAgent.__init__ START, rules_path=%s", rules_path)
         self.rules_path = rules_path
         # Optional pre-imported OutlookMonitor class. If None, monitor
         # will try to import it on first connect (works in source mode).
@@ -87,18 +99,85 @@ class MailAgent:
         self._stop_event = threading.Event()
         self._thread = None
         self._processed_ids = set()
+
+        logger.info("MailAgent.__init__ step 1: resolve processed_ids_path")
         self._processed_ids_path = os.path.join(
             _resolve_path("%USERPROFILE%/PRPOAgent"), "processed.json"
         )
+
+        logger.info("MailAgent.__init__ step 2: _load_processed_ids()")
+        t0 = time.time()
         self._load_processed_ids()
+        logger.info("MailAgent.__init__ step 2 done (%.2fs)", time.time() - t0)
+
+        logger.info("MailAgent.__init__ step 3: init _rules_data")
         self._rules_data = {"rules": [], "settings": {}}
+
+        logger.info("MailAgent.__init__ step 4: _load_rules()")
+        t0 = time.time()
         self._load_rules()
+        logger.info("MailAgent.__init__ step 4 done (%.2fs)", time.time() - t0)
+
+        logger.info("MailAgent.__init__ step 5: _outlook = None")
         self._outlook = None
+        logger.info("MailAgent.__init__ END")
 
     def _load_rules(self):
-        from agents.mail_agent.rules_engine import load_rules
-        self._rules_data = load_rules(self.rules_path)
-        return self._rules_data
+        """Load rules with 5-second watchdog to prevent hangs.
+
+        The hang in EXE mode is at MailAgent.__init__ step 4 (per handoff).
+        The watchdog ensures any future hang fails LOUDLY with TimeoutError
+        instead of waiting for the 30s UI watchdog.
+        """
+        def _load_rules_inner():
+            # T1 diagnostic instrumentation (kept intact)
+            t_start = time.time()
+            logger.info(
+                "_load_rules sub-step A: about to import, rules_path=%s exists=%s frozen=%s",
+                self.rules_path,
+                os.path.exists(self.rules_path),
+                getattr(sys, "_MEIPASS", "n/a"),
+            )
+            from agents.mail_agent.rules_engine import load_rules
+            logger.info(
+                "_load_rules sub-step A done (%.0fms), sub-step B: about to call load_rules",
+                (time.time() - t_start) * 1000,
+            )
+            t0 = time.time()
+            self._rules_data = load_rules(self.rules_path)
+            logger.info(
+                "_load_rules sub-step B done (%.0fms), %d rules loaded",
+                (time.time() - t0) * 1000,
+                len(self._rules_data.get("rules", [])),
+            )
+            return self._rules_data
+
+        # 5-second watchdog (NOT signal.alarm -- Windows incompatible per SKILL.md)
+        done_event = threading.Event()
+        result = {"value": None, "exception": None}
+
+        def _target():
+            try:
+                result["value"] = _load_rules_inner()
+            except Exception as e:
+                result["exception"] = e
+            finally:
+                done_event.set()
+
+        t = threading.Thread(target=_target, daemon=True, name="LoadRulesWatchdog")
+        t.start()
+        if not done_event.wait(timeout=5.0):
+            logger.error(
+                "_load_rules TIMEOUT after 5s (rules_path=%s, frozen=%s)",
+                self.rules_path,
+                getattr(sys, "frozen", False),
+            )
+            raise TimeoutError(
+                "_load_rules timed out after 5s (rules_path=%s)" % self.rules_path
+            )
+        if result["exception"] is not None:
+            raise result["exception"]
+        return result["value"]
 
     def _load_processed_ids(self):
         try:
