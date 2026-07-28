@@ -17,6 +17,7 @@ import os
 import threading
 import logging
 
+from logging_setup import setup_logging, get_log_path
 from workflow_manager import WorkflowManager, WorkflowNotFoundError
 from workflow_engine import WorkflowEngine
 from playwright.sync_api import sync_playwright
@@ -190,6 +191,10 @@ class FormFillerApp:
         self.root = tk.Tk()
         self.root.title("表单自动填充工具 - 多工作流")
         self.root.geometry("1100x850")
+
+        # Setup centralized logging
+        logger, log_path = setup_logging()
+        logger.info("FormFiller app initializing")
 
         # Workflow management
         self.workflow_manager = WorkflowManager()
@@ -446,6 +451,7 @@ class FormFillerApp:
 
     def _on_workflow_changed(self, event=None):
         """Handle workflow selection change — update all UI elements."""
+        logger.info("User changed workflow selection")
         workflows = self.workflow_manager.list_workflows()
         idx = self.workflow_combo.current()
         if idx < 0 or idx >= len(workflows):
@@ -519,6 +525,7 @@ class FormFillerApp:
             ))
 
     def _add_attachment(self):
+        logger.info("User clicked [Add attachment]")
         dialog = AttachmentDialog(self.root, "添加附件")
         if dialog.result:
             self.attachment_manager.add_attachment(
@@ -529,6 +536,7 @@ class FormFillerApp:
             self._load_attachments_to_ui()
 
     def _edit_attachment(self):
+        logger.info("User clicked [Edit attachment]")
         selection = self.attachment_tree.selection()
         if not selection:
             messagebox.showwarning("提示", "请先选择要编辑的附件")
@@ -554,6 +562,7 @@ class FormFillerApp:
             self._load_attachments_to_ui()
 
     def _delete_attachment(self):
+        logger.info("User clicked [Delete attachment]")
         selection = self.attachment_tree.selection()
         if not selection:
             messagebox.showwarning("提示", "请先选择要删除的附件")
@@ -691,6 +700,7 @@ class FormFillerApp:
 
     def _start_execution(self):
         """Start the workflow execution in a background thread."""
+        logger.info("User clicked [Start workflow]")
         if self.is_running:
             messagebox.showwarning("提示", "工作流正在运行中")
             return
@@ -794,6 +804,7 @@ class FormFillerApp:
 
     def _stop_execution(self):
         """Request the engine to stop after the current field."""
+        logger.info("User clicked [Stop workflow]")
         if self.engine and self.is_running:
             self._log("\n[i] 已请求停止 — 将在当前字段处理后停止...\n")
             self.engine.stop()
