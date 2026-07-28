@@ -1,0 +1,113 @@
+{
+  "$schema": "../../workflows/schema/workflow-schema.json",
+  "workflow_name": "GR-Acubuy Create Goods Receipt",
+  "version": "1.0.0",
+  "description": "Singtel iValua 平台 Acubuy 采购收货单 (Goods Receipt) 创建。需要 AutoCompleteHandler 支持 iValua 的 SelectorControl 组件。",
+  "status": "draft",
+
+  "browser": {
+    "channel": "chrome"
+  },
+
+  "login": {
+    "url": "https://singtel.ivalua.app/",
+    "enabled": false,
+    "fallback_selectors": {
+      "username": ["input[name='username']", "input[type='text']"],
+      "password": ["input[name='password']", "input[type='password']"],
+      "submit": ["input[type='submit']", "button[type='submit']"]
+    }
+  },
+
+  "navigation": [
+    {
+      "action": "goto",
+      "url": "https://singtel.ivalua.app/page.aspx/en/ord/delivery_manage?Create",
+      "wait_until": "networkidle"
+    },
+    {
+      "action": "wait_selector",
+      "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_txtCode",
+      "timeout": 20000
+    }
+  ],
+
+  "fields": {
+    "Name": {
+      "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_txtLabel",
+      "type": "input",
+      "required": false
+    },
+    "Delivery Note": {
+      "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_txtCode",
+      "type": "input",
+      "required": true
+    },
+    "Supplier": {
+      "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selSupplier",
+      "type": "autocomplete",
+      "required": false,
+      "handler_config": {
+        "search_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selSupplier_search",
+        "wait_time": 1500
+      }
+    },
+    "Order": {
+      "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder",
+      "type": "autocomplete",
+      "required": false,
+      "depends_on": "Supplier",
+      "handler_config": {
+        "search_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder_search",
+        "wait_time": 2000
+      }
+    },
+    "Movement Type": {
+      "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selector_single_delivery_20240813130131934",
+      "type": "autocomplete",
+      "required": false,
+      "handler_config": {
+        "search_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selector_single_delivery_20240813130131934_search",
+        "wait_time": 1000
+      }
+    },
+    "Document Date": {
+      "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_datetime_delivery_20240821154312162",
+      "type": "datepicker",
+      "required": false,
+      "handler_config": {
+        "date_format": "MM/DD/YYYY"
+      }
+    },
+    "Document Header Text": {
+      "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_udt_label_delivery_20240821161130552",
+      "type": "input",
+      "required": false
+    },
+    "Internal Comment": {
+      "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_udt_desc_delivery_20240807223748988",
+      "type": "input",
+      "required": true
+    },
+    "External Comment": {
+      "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_udt_desc_delivery_20240807223952422",
+      "type": "input",
+      "required": false
+    },
+    "Approver 2 (Min Band E)": {
+      "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selector_single_delivery_20240816105603081",
+      "type": "autocomplete",
+      "required": true,
+      "handler_config": {
+        "search_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selector_single_delivery_20240816105603081_search",
+        "wait_time": 1500
+      }
+    }
+  },
+
+  "post_fill": {
+    "action": "manual_review",
+    "message": "请检查所有信息后手动点击 Save 按钮",
+    "click_selector": "#proxyActionBar_x__cmdSave"
+  }
+}

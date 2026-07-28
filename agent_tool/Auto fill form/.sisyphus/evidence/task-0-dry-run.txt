@@ -1,0 +1,11 @@
+Dry-Run Output:
+============================================================
+  CSMS Create Proposal Group - Regression Tests
+============================================================
+
+  Environment check FAILED:
+  Could not connect to https://csmstest.ncs.com.sg/UAT/.
+  All tests will be skipped.
+
+Results: 0 passed, 0 failed, 8 skipped
+============================================================

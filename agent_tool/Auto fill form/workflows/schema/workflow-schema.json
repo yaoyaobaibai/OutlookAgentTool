@@ -1,0 +1,418 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/workflow-schema.json",
+  "title": "FormFiller Workflow Configuration",
+  "description": "JSON Schema defining the structure of a FormFiller workflow configuration file.",
+  "type": "object",
+  "required": ["workflow_name", "version", "fields"],
+  "additionalProperties": false,
+
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Pointer to this schema file."
+    },
+    "workflow_name": {
+      "type": "string",
+      "description": "Display name of the workflow.",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the workflow config.",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of what this workflow does."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "draft", "deprecated"],
+      "description": "Current status of the workflow."
+    },
+    "browser": {
+      "type": "object",
+      "description": "Browser configuration for the workflow.",
+      "additionalProperties": false,
+      "properties": {
+        "channel": {
+          "type": "string",
+          "enum": ["chrome", "msedge", "chromium"],
+          "description": "Browser channel to launch."
+        },
+        "executable_path": {
+          "type": "string",
+          "description": "Optional path to the browser executable."
+        }
+      },
+      "required": ["channel"]
+    },
+    "login": {
+      "type": "object",
+      "description": "Login configuration for the target site.",
+      "additionalProperties": false,
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "URL of the login page."
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to perform automated login."
+        },
+        "fallback_selectors": {
+          "type": "object",
+          "description": "Alternative selectors if primary ones fail.",
+          "additionalProperties": false,
+          "properties": {
+            "username": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Array of CSS selectors for the username field."
+            },
+            "password": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Array of CSS selectors for the password field."
+            },
+            "submit": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Array of CSS selectors for the submit button."
+            }
+          }
+        }
+      },
+      "required": ["url"]
+    },
+    "navigation": {
+      "type": "array",
+      "description": "Ordered list of navigation steps to reach the target form.",
+      "items": {
+        "$ref": "#/$defs/navigation_step"
+      }
+    },
+    "fields": {
+      "type": "object",
+      "description": "Map of field names to their configuration.",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/field_config"
+      },
+      "minProperties": 0
+    },
+    "handlers": {
+      "type": "object",
+      "description": "Workflow-level special handler configurations.",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/handler_config"
+      }
+    },
+    "attachment": {
+      "type": "object",
+      "description": "Attachment handling configuration.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether attachment handling is enabled."
+        },
+        "scroll_selector": {
+          "type": "string",
+          "description": "Selector for an element to scroll to for attachment section."
+        },
+        "category_selectors": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Selectors for attachment category dropdowns or buttons."
+        },
+        "file_selectors": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Selectors for file upload inputs."
+        },
+        "description_selectors": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Selectors for attachment description fields."
+        }
+      }
+    },
+    "post_fill": {
+      "type": "object",
+      "description": "Actions to perform after all fields have been filled.",
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": ["manual_review", "click_button"],
+          "description": "What to do after filling all fields."
+        },
+        "message": {
+          "type": "string",
+          "description": "Message to display to the user."
+        },
+        "click_selector": {
+          "type": "string",
+          "description": "CSS selector of the button to click (for click_button action)."
+        },
+        "wait_selector": {
+          "type": "string",
+          "description": "CSS selector to wait for after clicking."
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "navigation_step": {
+      "type": "object",
+      "description": "A single step in the navigation sequence.",
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": ["goto", "click", "wait_selector", "wait_time", "evaluate"],
+          "description": "Type of navigation action."
+        },
+        "url": {
+          "type": "string",
+          "description": "URL for 'goto' action."
+        },
+        "selector": {
+          "type": "string",
+          "description": "CSS selector for 'click', 'wait_selector', or 'evaluate' actions."
+        },
+        "wait_until": {
+          "type": "string",
+          "enum": ["load", "domcontentloaded", "networkidle", "commit"],
+          "description": "When to consider navigation complete (for 'goto' action)."
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 10000,
+          "description": "Timeout in milliseconds for the action."
+        },
+        "optional": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, failure does not halt the workflow."
+        }
+      },
+      "required": ["action"],
+      "allOf": [
+        {
+          "if": {
+            "properties": { "action": { "const": "goto" } }
+          },
+          "then": {
+            "required": ["url"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "action": { "enum": ["click", "wait_selector"] } }
+          },
+          "then": {
+            "required": ["selector"]
+          }
+        }
+      ]
+    },
+
+    "field_config": {
+      "type": "object",
+      "description": "Configuration for a single form field.",
+      "additionalProperties": false,
+      "properties": {
+        "selector": {
+          "type": "string",
+          "description": "CSS selector for the form field element."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["input", "select", "autocomplete", "datepicker", "popup_search", "file_upload", "checkbox"],
+          "description": "Type of form field interaction."
+        },
+        "required": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether this field is required."
+        },
+        "default_value": {
+          "type": "string",
+          "description": "Default value to fill if no data is provided."
+        },
+        "handler_config": {
+          "$ref": "#/$defs/handler_config"
+        },
+        "post_fill": {
+          "$ref": "#/$defs/post_fill_action"
+        },
+        "depends_on": {
+          "type": "string",
+          "description": "Name of another field that must be filled before this one."
+        }
+      },
+      "required": ["selector", "type"]
+    },
+
+    "handler_config": {
+      "type": "object",
+      "description": "Special handler configuration for complex field types.",
+      "additionalProperties": false,
+      "properties": {
+        "trigger_selector": {
+          "type": "string",
+          "description": "Selector to trigger the handler (e.g., click to open popup)."
+        },
+        "search_selector": {
+          "type": "string",
+          "description": "Selector for search input inside a popup or dropdown."
+        },
+        "search_value": {
+          "type": "string",
+          "description": "Value to enter into the search field."
+        },
+        "result_selector": {
+          "type": "string",
+          "description": "Selector for search results to click."
+        },
+        "wait_selector": {
+          "type": "string",
+          "description": "Selector to wait for after the handler action."
+        },
+        "wait_time": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Time in milliseconds to wait after the handler action."
+        },
+        "iframe_selector": {
+          "type": "string",
+          "description": "Selector for iframe context if the field is inside an iframe."
+        },
+        "close_selector": {
+          "type": "string",
+          "description": "Selector to close a popup or modal after selection."
+        },
+        "multi_select": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether multiple selections are allowed."
+        },
+        "date_format": {
+          "type": "string",
+          "description": "Date format string for datepicker fields."
+        },
+        "value_map": {
+          "type": "object",
+          "description": "Map of data values to actual UI values.",
+          "propertyNames": { "type": "string" },
+          "additionalProperties": { "type": "string" }
+        },
+        "delay_between_chars": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 50,
+          "description": "Delay in ms between keystrokes when typing."
+        },
+        "popup_timeout_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 10000,
+          "description": "Timeout in ms for popup to appear."
+        },
+        "steps": {
+          "type": "array",
+          "description": "Ordered list of steps for multi-step popup handlers.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "type": "string",
+                "enum": ["fill", "click", "wait", "select", "evaluate"],
+                "description": "Action type for this step."
+              },
+              "selector": {
+                "type": "string",
+                "description": "CSS selector for fill/click actions."
+              },
+              "value": {
+                "type": "string",
+                "description": "Value for fill/select actions (supports $ref for field values)."
+              },
+              "timeout_ms": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Wait time in ms for wait actions."
+              }
+            },
+            "required": ["action"]
+          }
+        },
+        "trigger_postback": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to trigger a postback after selection."
+        },
+        "trigger_change_event": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to dispatch a change event after selection."
+        },
+        "value_type": {
+          "type": "string",
+          "enum": ["value", "label", "index"],
+          "default": "value",
+          "description": "How to match select options."
+        },
+        "wait_after_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 500,
+          "description": "Time in ms to wait after handler completes."
+        }
+      }
+    },
+
+    "post_fill_action": {
+      "type": "object",
+      "description": "Action to perform after filling a specific field.",
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "type": "string",
+          "description": "Type of post-fill action."
+        },
+        "click_selector": {
+          "type": "string",
+          "description": "Selector to click after filling the field."
+        },
+        "wait_selector": {
+          "type": "string",
+          "description": "Selector to wait for after filling."
+        },
+        "wait_time": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Time in milliseconds to wait after filling."
+        },
+        "evaluate_script": {
+          "type": "string",
+          "description": "JavaScript code to evaluate after filling."
+        }
+      }
+    }
+  }
+}

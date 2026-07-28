@@ -1,0 +1,10 @@
+=== QA Scenario 4: All 7 Handlers Registered ===
+Command:
+python -c "import sys; sys.path.insert(0, '.'); from handlers import list_handler_types; t=list_handler_types(); print(len(t)); print(t)"
+
+Output:
+Handler count: 7
+['input', 'select', 'checkbox', 'autocomplete', 'datepicker', 'popup_search', 'file_upload']
+
+Expected: 7 handlers: ['input', 'select', 'checkbox', 'autocomplete', 'datepicker', 'popup_search', 'file_upload']
+Result: PASS

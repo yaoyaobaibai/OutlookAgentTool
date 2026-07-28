@@ -1,0 +1,8 @@
+QA Scenario: Invalid Workflow Error Handling
+Tool: Bash
+Preconditions: None
+Command: py -c "from workflow_manager import WorkflowManager, WorkflowNotFoundError; wm = WorkflowManager(); wm.load_workflow('nonexistent_workflow')" 2>&1
+
+Expected: Raises WorkflowNotFoundError
+Actual: WorkflowNotFoundError raised — "Workflow 'nonexistent_workflow' not found at: ..."
+Result: PASS

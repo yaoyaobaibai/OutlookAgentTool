@@ -1,0 +1,3 @@
+Syntax Check: PASSED
+Dry-Run: 8 skipped, 0 failed, 0 passed (network unreachable - expected)
+File: tests/csms_regression.py (559 lines)

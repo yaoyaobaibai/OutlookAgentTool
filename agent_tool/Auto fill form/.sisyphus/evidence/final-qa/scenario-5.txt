@@ -1,0 +1,9 @@
+=== QA Scenario 5: GUI Syntax Check ===
+Command:
+python -c "import ast; ast.parse(open('form_filler.py', 'r', encoding='utf-8-sig').read()); print('OK')"
+
+Output:
+OK
+
+Expected: OK
+Result: PASS

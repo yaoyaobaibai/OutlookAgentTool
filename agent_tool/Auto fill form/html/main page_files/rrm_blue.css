@@ -1,0 +1,409 @@
+A.green:link
+{
+	background-color: #66dd66;
+	color: Black;
+	font-weight: bold;
+}
+
+A.green:hover
+{
+	background-color: #66DD66;
+	color: Black;
+	font-weight: bold;	
+}
+
+A.green:visited
+{
+	background-color: #66DD66;
+	color: Black;
+	font-weight: bold;	
+}
+
+TD.green
+{
+	width: 35px;
+	background-color: #66DD66;
+	color: black;	
+	font-weight: bold;	
+	text-align: center;	
+}
+
+TD.greenheader
+{
+	background-color: #32cd32; /* LimeGreen */
+	color: black;	
+	font-weight: bold;	
+	text-align: center;
+}
+
+TD.greenlegend
+{
+	background-color: #32cd32; /* LimeGreen */
+	color: black;	
+	font-weight: bold;	
+	text-align: center;
+	width: 74px;	
+}
+
+TD.blueheader
+{
+	background-color: blue; /* blue */
+	color: black;	
+	font-weight: bold;	
+	text-align: center;
+}
+
+TD.grayheader
+{
+	background-color: gray; /* gray */
+	color: black;	
+	font-weight: bold;	
+	text-align: center;
+}
+
+TR.greenheader
+{
+	background-color: #32cd32; /* LimeGreen */
+	color: black;	
+	font-weight: bold;	
+	text-align: center;
+}
+
+
+A.amber:link
+{
+	background-color: #DDEE88;
+	color: black;
+	font-weight: bold;	
+}
+
+A.amber:hover
+{
+	background-color: #DDEE88;
+	color: black;
+	font-weight: bold;	
+}
+
+A.amber:visited
+{
+	background-color: #DDEE88;
+	color: black;
+	font-weight: bold;	
+}
+
+TD.amber
+{
+	width: 35px;		
+	background-color: #DDEE88;
+	color: black;	
+	font-weight: bold;	
+	text-align: center;		
+}
+
+TD.amberheader
+{
+	background-color: Yellow;  /* #ffa500; Orange */
+	color: black;	
+	font-weight: bold;
+	text-align: center;		
+}
+
+TD.amberlegend
+{
+	background-color: #ffa500; /* Orange */
+	color: black;	
+	font-weight: bold;
+	text-align: center;		
+	width: 74px;		
+}
+
+TR.amberheader
+{
+	background-color: #ffa500; /* Orange */
+	color: black;	
+	font-weight: bold;
+	text-align: center;		
+}
+
+TD.blueheader
+{
+	background-color: blue; /* PowderBlue */
+	color: black;	
+	font-weight: bold;
+	text-align: center;		
+}
+
+TD.bluelegend
+{
+	background-color: blue; /* PowderBlue */
+	color: black;	
+	font-weight: bold;
+	text-align: center;		
+	width: 74px;		
+}
+
+TR.blueheader
+{
+	background-color: blue; /* PowderBlue */
+	color: black;	
+	font-weight: bold;
+	text-align: center;		
+}
+
+TD.grayheader
+{
+	background-color: gray;
+	color: black;	
+	font-weight: bold;
+	text-align: center;		
+}
+
+TD.graylegend
+{
+	background-color: gray;
+	color: black;	
+	font-weight: bold;
+	text-align: center;		
+	width: 74px;		
+}
+
+TR.grayheader
+{
+	background-color: gray;
+	color: black;	
+	font-weight: bold;
+	text-align: center;		
+}
+
+
+A.red:link
+{
+	background-color: #DD9999;
+	color: black;
+	font-weight: bold;	
+}
+
+A.red:hover
+{
+	background-color: #DD9999;
+	color: black;
+	font-weight: bold;	
+}
+
+A.red:visited
+{
+	background-color: #DD9999;
+	color: black;
+	font-weight: bold;	
+}
+
+TD.red
+{
+	width: 35px;		
+	background-color: #DD9999;
+	color: black;	
+	font-weight: bold;	
+	text-align: center;		
+}
+
+TD.redheader
+{
+	background-color: red;	/* ffc0cb original: #DD9999 #dc143c; */ /* Crismon */
+	color: black;	
+	font-weight: bold;	
+	text-align: center;	
+}
+
+TD.redlegend
+{
+	background-color: #dc143c; /* Crismon */
+	color: black;	
+	font-weight: bold;	
+	text-align: center;	
+	width: 74px;			
+}
+
+
+TR.redheader
+{
+	background-color: #dc143c; /* Crismon */
+	color: black;	
+	font-weight: bold;	
+	text-align: center;	
+}
+
+/*
+TD.fushaheader
+{
+	background-color: lightpink; 
+	color: black;
+	font-weight: bold;
+	text-align: center;
+}
+
+
+TR.fushaheader
+{
+	background-color: lightpink; 
+	color: black;	
+	font-weight: bold;	
+	text-align: center;	
+}
+
+TD.darkgreenheader
+{
+	background-color: orchid; 
+	color: black;
+	font-weight: bold;
+	text-align: center;
+}
+
+TR.darkgreenheader
+{
+	background-color: deeppink; 
+	color: black;	
+	font-weight: bold;	
+	text-align: center;	
+}
+*/
+
+A.provision:link
+{
+	background-color: #DD99DD;
+	color: black;
+	font-weight: bold;	
+}
+
+A.provision:hover
+{
+	background-color: #DD99DD;
+	color: black;
+	font-weight: bold;	
+}
+
+A.provision:visited
+{
+	background-color: #DD99DD;
+	color: black;
+	font-weight: bold;	
+}
+
+TD.provision
+{
+	width: 35px;
+	background-color: #DD99DD;
+	color: black;	
+	font-weight: bold;	
+	text-align: center;		
+}
+
+TD.provisionheader
+{
+	background-color: #DD99DD;
+	color: black;	
+	font-weight: bold;	
+	text-align: center;	
+}
+
+TD.provisionlegend
+{
+	background-color: #DD99DD;
+	color: black;	
+	font-weight: bold;	
+	text-align: center;	
+	width: 74px;
+}
+
+A.nobidbl:link
+{
+	background-color: linen;
+	color: black;
+	font-weight: bold;
+}
+
+A.nobidbl:hover
+{
+	background-color: linen;
+	color: black;
+	font-weight: bold;	
+}
+
+A.nobidbl:visited
+{
+	background-color: linen;
+	color: black;
+	font-weight: bold;	
+}
+
+TD.nobidbl
+{
+	width: 35px;		
+	background-color: linen;
+	color: black;	
+	font-weight: bold;	
+	text-align: center;		
+}
+
+TD.nobidblheader
+{
+	background-color: linen;
+	color: black;	
+	font-weight: bold;
+	text-align: center;		
+}
+
+TD.nobidbllegend
+{
+	background-color: linen;
+	color: black;	
+	font-weight: bold;
+	text-align: center;		
+	width: 74px;
+}
+
+A.total:link
+{
+	background-color: white;
+	color: black;
+	font-weight: bold;
+}
+
+A.total:hover
+{
+	background-color: white;
+	color: black;
+	font-weight: bold;	
+}
+
+A.total:visited
+{
+	background-color: white;
+	color: black;
+	font-weight: bold;	
+}
+
+TD.total
+{
+	width: 35px;	
+	background-color: white;
+	color: black;	
+	font-weight: bold;	
+	text-align: center;		
+}
+
+TD.totalheader
+{
+	background-color: white;
+	color: black;	
+	font-weight: bold;	
+	text-align: center;	
+}
+
+TD.totallegend
+{
+	background-color: white;
+	color: black;	
+	font-weight: bold;	
+	text-align: center;	
+	width: 74px;	
+}
