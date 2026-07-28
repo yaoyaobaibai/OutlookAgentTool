@@ -1,0 +1,14 @@
+{
+  "recorded_at": "2026-07-27T20:50:36.231306",
+  "total_events": 1,
+  "session_tag": "",
+  "events": [
+    {
+      "ts": 1.376,
+      "time": "20:50:35.181",
+      "type": "page_loaded",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/cosolidate_cs.aspx?pgid=PG00011891",
+      "title": "Cost Sheet Mgmt System"
+    }
+  ]
+}

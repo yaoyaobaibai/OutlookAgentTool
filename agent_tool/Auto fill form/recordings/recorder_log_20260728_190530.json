@@ -1,0 +1,673 @@
+{
+  "recorded_at": "2026-07-28T19:05:30.576367",
+  "total_events": 76,
+  "session_tag": "",
+  "events": [
+    {
+      "ts": 8.524,
+      "time": "18:56:02.561",
+      "type": "page_loaded",
+      "url": "https://ncsgpt.ncsi.com.cn/",
+      "title": "NCSgpt"
+    },
+    {
+      "ts": 493.535,
+      "time": "19:04:07.572",
+      "type": "page_loaded",
+      "url": "https://csmstest.ncs.com.sg/UAT/login.aspx",
+      "status": 200
+    },
+    {
+      "ts": 493.581,
+      "time": "19:04:07.618",
+      "type": "navigate",
+      "url": "https://csmstest.ncs.com.sg/UAT/login.aspx"
+    },
+    {
+      "ts": 493.957,
+      "time": "19:04:07.994",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_TextBox1"
+    },
+    {
+      "ts": 494.504,
+      "time": "19:04:08.541",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_TextBox1",
+      "old_value": "",
+      "value": "zuying"
+    },
+    {
+      "ts": 494.508,
+      "time": "19:04:08.544",
+      "type": "password",
+      "selector": "#ctl00_ContentPlaceHolder1_TextBox2",
+      "old_value": "",
+      "value": "password123"
+    },
+    {
+      "ts": 497.487,
+      "time": "19:04:11.524",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_TextBox1"
+    },
+    {
+      "ts": 497.493,
+      "time": "19:04:11.529",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_Button1"
+    },
+    {
+      "ts": 497.58,
+      "time": "19:04:11.617",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_Button1",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_Button1\",\"name\":\"ctl00$ContentPlaceHolder1$Button1\",\"type\":\"submit\",\"class\":\"aspButton01\",\"value\":\"Submit\"}",
+      "x": 932,
+      "y": 301,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 497.588,
+      "time": "19:04:11.625",
+      "type": "form_submit",
+      "selector": "#aspnetForm",
+      "attrs": "{\"id\":\"aspnetForm\"}"
+    },
+    {
+      "ts": 497.627,
+      "time": "19:04:11.664",
+      "type": "postback",
+      "url": "https://csmstest.ncs.com.sg/UAT/login.aspx",
+      "method": "POST",
+      "post_data": "__LASTFOCUS=&__ctl00_IcamMenu_C1WebMenu1_SSF=&__ctl00_IcamMenu_C1WebMenu1_SSIF=&__ctl00_ContentPlaceHolder1_Menu1_C1WebMenu1_SSF=&__ctl00_ContentPlaceHolder1_Menu1_C1WebMenu1_SSIF=&__EVENTTARGET=&__EVENTARGUMENT=&__VIEWSTATE=%2FwEPDwUKMTcxMDc1NzYzMg9kFgJmD2QWAgIDD2QWDAIFDw8WAh4EVGV4dGVkZAIJDw8WAh4HVmlzaWJsZWhkFgICAQ88KwAIAgA8KwAKAAEUKwARZBQrAAIFDUMxV2ViTWVudUl0ZW08KwAHAQA8KwAHAQYUKwAAFCsAAgUNQzFXZWJNZW51SXRlbRQrAAc8KwAHAQYUKwAAFCsAAjwrAAoBCRQrAAtkFCsAAgUNQzFXZWJNZW51SXRlbTwrAAcBADwrAAcBBhQrAAAUK",
+      "resource_type": "Document"
+    },
+    {
+      "ts": 500.746,
+      "time": "19:04:14.783",
+      "type": "page_loaded",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/CS/Outstanding_DSO.aspx?proposaltype=O",
+      "status": 200
+    },
+    {
+      "ts": 500.784,
+      "time": "19:04:14.821",
+      "type": "navigate",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/CS/Outstanding_DSO.aspx?proposaltype=O"
+    },
+    {
+      "ts": 502.972,
+      "time": "19:04:17.008",
+      "type": "click",
+      "selector": "#ctl00_IcamMenu_C1WebMenu1_int_i2_g0_i1_txt",
+      "text": "Create Proposal Group",
+      "tag": "td",
+      "attrs": "{\"id\":\"ctl00_IcamMenu_C1WebMenu1_int_i2_g0_i1_txt\"}",
+      "x": 324,
+      "y": 97,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 503.999,
+      "time": "19:04:18.035",
+      "type": "page_loaded",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "status": 200
+    },
+    {
+      "ts": 504.005,
+      "time": "19:04:18.042",
+      "type": "navigate",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx"
+    },
+    {
+      "ts": 504.7,
+      "time": "19:04:18.736",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_txtProposalNo"
+    },
+    {
+      "ts": 504.796,
+      "time": "19:04:18.833",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_txtProposalNo",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_txtProposalNo\",\"name\":\"ctl00$ContentPlaceHolder1$txtProposalNo\",\"type\":\"text\",\"class\":\"aspTextBox01\"}",
+      "x": 232,
+      "y": 149,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 505.516,
+      "time": "19:04:19.553",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtProposalNo",
+      "old_value": "",
+      "value": "OPP-047585"
+    },
+    {
+      "ts": 507.718,
+      "time": "19:04:21.755",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_txtProposalNo"
+    },
+    {
+      "ts": 507.72,
+      "time": "19:04:21.756",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_btnInfo"
+    },
+    {
+      "ts": 507.797,
+      "time": "19:04:21.834",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_btnInfo",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_btnInfo\",\"name\":\"ctl00$ContentPlaceHolder1$btnInfo\",\"type\":\"submit\",\"class\":\"aspButton01\",\"value\":\"Get CRM Info\"}",
+      "x": 480,
+      "y": 153,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 507.798,
+      "time": "19:04:21.835",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_btnInfo"
+    },
+    {
+      "ts": 507.825,
+      "time": "19:04:21.862",
+      "type": "postback",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "method": "POST",
+      "post_data": "__EVENTTARGET=ctl00%24ContentPlaceHolder1%24btnInfo&__EVENTARGUMENT=&ctl00_ContentPlaceHolder1_ToolkitScriptManager1_HiddenField=&__ctl00_IcamMenu_C1WebMenu1_SSF=&__ctl00_IcamMenu_C1WebMenu1_SSIF=&__LASTFOCUS=&__VIEWSTATE=%2FwEPDwULLTE5MDM0NTI5MTIPFgIeE1ZhbGlkYXRlUmVxdWVzdE1vZGUCARYCZg9kFgICAw9kFgwCBQ8PFgIeBFRleHQFC0xpbiBadSBZaW5nZGQCCQ8PFgIeB1Zpc2libGVoZBYCAgEPPCsACAIAPCsACgABFCsAEWQUKwACBQ1DMVdlYk1lbnVJdGVtPCsABwEAPCsABwEGFCsAABQrAAIFDUMxV2ViTWVudUl0ZW0UKwAHPCsABwEGFCsAABQrAAI8KwAKAQkUKwALZBQr",
+      "resource_type": "Document"
+    },
+    {
+      "ts": 508.623,
+      "time": "19:04:22.660",
+      "type": "page_loaded",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "status": 200
+    },
+    {
+      "ts": 511.156,
+      "time": "19:04:25.193",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity"
+    },
+    {
+      "ts": 511.234,
+      "time": "19:04:25.271",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_txtCity\",\"name\":\"ctl00$ContentPlaceHolder1$txtCity\",\"type\":\"text\",\"class\":\"aspTextBox01\"}",
+      "x": 694,
+      "y": 301,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 511.973,
+      "time": "19:04:26.009",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity",
+      "old_value": "",
+      "value": "Hong Kong"
+    },
+    {
+      "ts": 512.758,
+      "time": "19:04:26.795",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity"
+    },
+    {
+      "ts": 512.759,
+      "time": "19:04:26.795",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo"
+    },
+    {
+      "ts": 512.833,
+      "time": "19:04:26.869",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_txtCustRefNo\",\"name\":\"ctl00$ContentPlaceHolder1$txtCustRefNo\",\"type\":\"text\",\"class\":\"aspTextBox01\"}",
+      "x": 664,
+      "y": 387,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 513.751,
+      "time": "19:04:27.788",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "old_value": "",
+      "value": "Auto Test 4"
+    },
+    {
+      "ts": 515.256,
+      "time": "19:04:29.292",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_txtCustRefNo\",\"name\":\"ctl00$ContentPlaceHolder1$txtCustRefNo\",\"type\":\"text\",\"class\":\"aspTextBox01\"}",
+      "x": 707,
+      "y": 392,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 515.708,
+      "time": "19:04:29.745",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "old_value": "Auto Test 4",
+      "value": "Auto Test 5"
+    },
+    {
+      "ts": 516.978,
+      "time": "19:04:31.015",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo"
+    },
+    {
+      "ts": 516.979,
+      "time": "19:04:31.016",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_txtContractValue"
+    },
+    {
+      "ts": 517.077,
+      "time": "19:04:31.114",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_txtContractValue",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_txtContractValue\",\"name\":\"ctl00_ContentPlaceHolder1_txtContractValue\",\"type\":\"text\",\"value\":\"0.00\"}",
+      "x": 310,
+      "y": 436,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 520.201,
+      "time": "19:04:34.238",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_txtContractValue"
+    },
+    {
+      "ts": 520.289,
+      "time": "19:04:34.325",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_tbDetails > tbody > tr > td > table.tableDefault",
+      "text": "*Proposal #\n                                \n                                \n                      ",
+      "tag": "table",
+      "attrs": "{\"class\":\"tableDefault\"}",
+      "x": 420,
+      "y": 452,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 522.164,
+      "time": "19:04:36.201",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_ddlSelPriceCurrCode"
+    },
+    {
+      "ts": 522.297,
+      "time": "19:04:36.333",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_ddlSelPriceCurrCode",
+      "text": "AED\n\t\t\t\tAUD\n\t\t\t\tBHD\n\t\t\t\tBND\n\t\t\t\tEUR\n\t\t\t\tHKD\n\t\t\t\tINR\n\t\t\t\tKRW\n\t\t\t\tLKR\n\t\t\t\tMYR\n\t\t\t\tPHP\n\t\t\t\tQAR\n\t\t\t\tRMB\n",
+      "tag": "select",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_ddlSelPriceCurrCode\",\"name\":\"ctl00$ContentPlaceHolder1$ddlSelPriceCurrCode\",\"class\":\"aspDropDownList01\"}",
+      "x": 248,
+      "y": 463,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 525.667,
+      "time": "19:04:39.704",
+      "type": "select",
+      "selector": "#ctl00_ContentPlaceHolder1_ddlSelPriceCurrCode",
+      "value": "6",
+      "selected_text": "HKD"
+    },
+    {
+      "ts": 525.673,
+      "time": "19:04:39.709",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_ddlSelPriceCurrCode",
+      "text": "AED\n\t\t\t\tAUD\n\t\t\t\tBHD\n\t\t\t\tBND\n\t\t\t\tEUR\n\t\t\t\tHKD\n\t\t\t\tINR\n\t\t\t\tKRW\n\t\t\t\tLKR\n\t\t\t\tMYR\n\t\t\t\tPHP\n\t\t\t\tQAR\n\t\t\t\tRMB\n",
+      "tag": "select",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_ddlSelPriceCurrCode\",\"name\":\"ctl00$ContentPlaceHolder1$ddlSelPriceCurrCode\",\"class\":\"aspDropDownList01\"}",
+      "x": 213,
+      "y": 457,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 525.684,
+      "time": "19:04:39.720",
+      "type": "postback",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "method": "POST",
+      "post_data": "ctl00%24ContentPlaceHolder1%24ToolkitScriptManager1=ctl00%24ContentPlaceHolder1%24upnlProject%7Cctl00%24ContentPlaceHolder1%24ddlSelPriceCurrCode&__EVENTTARGET=ctl00%24ContentPlaceHolder1%24ddlSelPriceCurrCode&__EVENTARGUMENT=&ctl00_ContentPlaceHolder1_ToolkitScriptManager1_HiddenField=&__ctl00_IcamMenu_C1WebMenu1_SSF=&__ctl00_IcamMenu_C1WebMenu1_SSIF=&__LASTFOCUS=&ctl00_ContentPlaceHolder1_wgAttachment_scroll=0%2C0&__VIEWSTATE=%2FwEPDwULLTE5MDM0NTI5MTIPFgIeE1ZhbGlkYXRlUmVxdWVzdE1vZGUCARYCZg9kFg",
+      "resource_type": "XHR"
+    },
+    {
+      "ts": 526.22,
+      "time": "19:04:40.257",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_ddlSelPriceCurrCode"
+    },
+    {
+      "ts": 527.927,
+      "time": "19:04:41.963",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_dtDateofAward_btnCall"
+    },
+    {
+      "ts": 528.008,
+      "time": "19:04:42.044",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_dtDateofAward_btnCall",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_dtDateofAward_btnCall\",\"name\":\"ctl00$ContentPlaceHolder1$dtDateofAward$btnCall\",\"type\":\"submit\",\"class\":\"aspButton01\",\"value\":\" \"}",
+      "x": 364,
+      "y": 422,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 536.149,
+      "time": "19:04:50.185",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_dtDateofAward_btnCall"
+    },
+    {
+      "ts": 536.244,
+      "time": "19:04:50.281",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_ucEmpSearch_imgUserName",
+      "text": "",
+      "tag": "img",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_ucEmpSearch_imgUserName\"}",
+      "x": 872,
+      "y": 313,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 551.348,
+      "time": "19:05:05.385",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_ddlCategory1"
+    },
+    {
+      "ts": 551.459,
+      "time": "19:05:05.495",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_ddlCategory1",
+      "text": "(DSO) Lease Agreement\t\t(DSO) NCS Quotation signed by Customer\t\t(DSO) PO issued by Customer\t\t(DSO) Ve",
+      "tag": "select",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_wgAttachment_footer_ddlCategory1\",\"name\":\"ctl00$ContentPlaceHolder1$wgAttachment$footer$ddlCategory1\",\"class\":\"aspDropDownList01\"}",
+      "x": 139,
+      "y": 255,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 552.705,
+      "time": "19:05:06.742",
+      "type": "select",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_ddlCategory1",
+      "value": "PCA",
+      "selected_text": "(Project) Customer Award"
+    },
+    {
+      "ts": 552.71,
+      "time": "19:05:06.747",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_ddlCategory1",
+      "text": "(DSO) Lease Agreement\t\t(DSO) NCS Quotation signed by Customer\t\t(DSO) PO issued by Customer\t\t(DSO) Ve",
+      "tag": "select",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_wgAttachment_footer_ddlCategory1\",\"name\":\"ctl00$ContentPlaceHolder1$wgAttachment$footer$ddlCategory1\",\"class\":\"aspDropDownList01\"}",
+      "x": 95,
+      "y": 245,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 553.315,
+      "time": "19:05:07.352",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_ddlCategory1"
+    },
+    {
+      "ts": 553.321,
+      "time": "19:05:07.357",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_fileUpload0"
+    },
+    {
+      "ts": 553.407,
+      "time": "19:05:07.443",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_fileUpload0",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_wgAttachment_footer_fileUpload0\",\"name\":\"ctl00$ContentPlaceHolder1$wgAttachment$footer$fileUpload0\",\"type\":\"file\"}",
+      "x": 250,
+      "y": 255,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 563.498,
+      "time": "19:05:17.535",
+      "type": "file",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_fileUpload0",
+      "old_value": "",
+      "value": "C:\\fakepath\\Empty Word.docx"
+    },
+    {
+      "ts": 563.523,
+      "time": "19:05:17.559",
+      "type": "file_input",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_fileUpload0",
+      "files": "Empty Word.docx"
+    },
+    {
+      "ts": 563.837,
+      "time": "19:05:17.873",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_fileUpload0"
+    },
+    {
+      "ts": 563.84,
+      "time": "19:05:17.877",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_txtEditDescription0"
+    },
+    {
+      "ts": 563.918,
+      "time": "19:05:17.955",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_txtEditDescription0",
+      "text": "",
+      "tag": "textarea",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_wgAttachment_footer_txtEditDescription0\",\"name\":\"ctl00$ContentPlaceHolder1$wgAttachment$footer$txtEditDescription0\",\"class\":\"aspTextBox01\"}",
+      "x": 538,
+      "y": 253,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 564.07,
+      "time": "19:05:18.107",
+      "type": "textarea",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_txtEditDescription0",
+      "old_value": "",
+      "value": "t"
+    },
+    {
+      "ts": 564.26,
+      "time": "19:05:18.296",
+      "type": "textarea",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_txtEditDescription0",
+      "old_value": "t",
+      "value": "te"
+    },
+    {
+      "ts": 564.398,
+      "time": "19:05:18.435",
+      "type": "textarea",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_txtEditDescription0",
+      "old_value": "te",
+      "value": "tes"
+    },
+    {
+      "ts": 564.56,
+      "time": "19:05:18.597",
+      "type": "textarea",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_txtEditDescription0",
+      "old_value": "tes",
+      "value": "test"
+    },
+    {
+      "ts": 565.878,
+      "time": "19:05:19.915",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_txtEditDescription0"
+    },
+    {
+      "ts": 565.956,
+      "time": "19:05:19.993",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_maindiv",
+      "text": "Category\tAttachment\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tDescription\tUploaded By\tUploaded Date\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t",
+      "tag": "div",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_wgAttachment_maindiv\"}",
+      "x": 347,
+      "y": 446,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 567.654,
+      "time": "19:05:21.690",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_lnkAdd",
+      "text": "Add",
+      "tag": "a",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_wgAttachment_footer_lnkAdd\",\"href\":\"javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions(\\\"ctl00$ContentPlaceHolder1$wgAttachment$footer$lnkAdd\\\", \\\"\\\", true, \\\"\\\", \\\"\\\", false, true))\"}",
+      "x": 54,
+      "y": 234,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 567.705,
+      "time": "19:05:21.742",
+      "type": "postback",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "method": "POST",
+      "post_data": "",
+      "resource_type": "Document"
+    },
+    {
+      "ts": 568.337,
+      "time": "19:05:22.373",
+      "type": "page_loaded",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "status": 200
+    },
+    {
+      "ts": 570.162,
+      "time": "19:05:24.199",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_btnInsert"
+    },
+    {
+      "ts": 570.242,
+      "time": "19:05:24.279",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_btnInsert",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_btnInsert\",\"name\":\"ctl00$ContentPlaceHolder1$btnInsert\",\"type\":\"submit\",\"class\":\"aspButton01\",\"value\":\"Create\"}",
+      "x": 91,
+      "y": 504,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 570.242,
+      "time": "19:05:24.279",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_btnInsert"
+    },
+    {
+      "ts": 570.25,
+      "time": "19:05:24.286",
+      "type": "postback",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "method": "POST",
+      "post_data": "ctl00%24ContentPlaceHolder1%24ToolkitScriptManager1=ctl00%24ContentPlaceHolder1%24upnlProject%7Cctl00%24ContentPlaceHolder1%24btnInsert&__EVENTTARGET=ctl00%24ContentPlaceHolder1%24btnInsert&__EVENTARGUMENT=&ctl00_ContentPlaceHolder1_ToolkitScriptManager1_HiddenField=&__ctl00_IcamMenu_C1WebMenu1_SSF=&__ctl00_IcamMenu_C1WebMenu1_SSIF=&__LASTFOCUS=&ctl00_ContentPlaceHolder1_wgAttachment_scroll=0%2C0&__VIEWSTATE=%2FwEPDwULLTE5MDM0NTI5MTIPFgIeE1ZhbGlkYXRlUmVxdWVzdE1vZGUCARYCZg9kFgICAw8WAh4HZW5jdHlwZQ",
+      "resource_type": "XHR"
+    },
+    {
+      "ts": 573.285,
+      "time": "19:05:27.322",
+      "type": "page_loaded",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/cosolidate_cs.aspx?pgid=PG00011895",
+      "status": 200
+    },
+    {
+      "ts": 573.298,
+      "time": "19:05:27.335",
+      "type": "navigate",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/cosolidate_cs.aspx?pgid=PG00011895"
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "recorded_at": "2026-07-28T17:53:53.181119",
+  "total_events": 18,
+  "session_tag": "",
+  "events": [
+    {
+      "ts": 5.851,
+      "time": "17:51:33.713",
+      "type": "page_loaded",
+      "url": "https://ncsgpt.ncsi.com.cn/",
+      "title": "NCSgpt"
+    },
+    {
+      "ts": 22.354,
+      "time": "17:51:50.216",
+      "type": "page_loaded",
+      "url": "https://csmstest.ncs.com.sg/UAT/login.aspx",
+      "status": 200
+    },
+    {
+      "ts": 22.371,
+      "time": "17:51:50.233",
+      "type": "navigate",
+      "url": "https://csmstest.ncs.com.sg/UAT/login.aspx"
+    },
+    {
+      "ts": 36.172,
+      "time": "17:52:04.033",
+      "type": "Document",
+      "url": "https://csmstest.ncs.com.sg/UAT/login.aspx",
+      "method": "POST",
+      "post_data": "__LASTFOCUS=&__ctl00_IcamMenu_C1WebMenu1_SSF=&__ctl00_IcamMenu_C1WebMenu1_SSIF=&__ctl00_ContentPlaceHolder1_Menu1_C1WebMenu1_SSF=&__ctl00_ContentPlaceHolder1_Menu1_C1WebMenu1_SSIF=&__EVENTTARGET=&__EVENTARGUMENT=&__VIEWSTATE=%2FwEPDwUKMTcxMDc1NzYzMg9kFgJmD2QWAgIDD2QWDAIFDw8WAh4EVGV4dGVkZAIJDw8WAh4HVmlzaWJsZWhkFgICAQ88KwAIAgA8KwAKAAEUKwARZBQrAAIFDUMxV2ViTWVudUl0ZW08KwAHAQA8KwAHAQYUKwAAFCsAAgUNQzFXZWJNZW51SXRlbRQrAAc8KwAHAQYUKwAAFCsAAjwrAAoBCRQrAAtkFCsAAgUNQzFXZWJNZW51SXRlbTwrAAcBADwrAAcBBhQrAAAUK"
+    },
+    {
+      "ts": 38.738,
+      "time": "17:52:06.600",
+      "type": "page_loaded",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/CS/Outstanding_DSO.aspx?proposaltype=O",
+      "status": 200
+    },
+    {
+      "ts": 38.752,
+      "time": "17:52:06.613",
+      "type": "navigate",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/CS/Outstanding_DSO.aspx?proposaltype=O"
+    },
+    {
+      "ts": 42.868,
+      "time": "17:52:10.730",
+      "type": "page_loaded",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/proposal_groups.aspx",
+      "status": 200
+    },
+    {
+      "ts": 42.88,
+      "time": "17:52:10.742",
+      "type": "navigate",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/proposal_groups.aspx"
+    },
+    {
+      "ts": 46.445,
+      "time": "17:52:14.307",
+      "type": "page_loaded",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "status": 200
+    },
+    {
+      "ts": 46.464,
+      "time": "17:52:14.326",
+      "type": "navigate",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx"
+    },
+    {
+      "ts": 53.406,
+      "time": "17:52:21.268",
+      "type": "Document",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "method": "POST",
+      "post_data": "__EVENTTARGET=ctl00%24ContentPlaceHolder1%24btnInfo&__EVENTARGUMENT=&ctl00_ContentPlaceHolder1_ToolkitScriptManager1_HiddenField=&__ctl00_IcamMenu_C1WebMenu1_SSF=&__ctl00_IcamMenu_C1WebMenu1_SSIF=&__LASTFOCUS=&__VIEWSTATE=%2FwEPDwULLTE5MDM0NTI5MTIPFgIeE1ZhbGlkYXRlUmVxdWVzdE1vZGUCARYCZg9kFgICAw9kFgwCBQ8PFgIeBFRleHQFC0xpbiBadSBZaW5nZGQCCQ8PFgIeB1Zpc2libGVoZBYCAgEPPCsACAIAPCsACgABFCsAEWQUKwACBQ1DMVdlYk1lbnVJdGVtPCsABwEAPCsABwEGFCsAABQrAAIFDUMxV2ViTWVudUl0ZW0UKwAHPCsABwEGFCsAABQrAAI8KwAKAQkUKwALZBQr"
+    },
+    {
+      "ts": 54.28,
+      "time": "17:52:22.141",
+      "type": "page_loaded",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "status": 200
+    },
+    {
+      "ts": 72.722,
+      "time": "17:52:40.584",
+      "type": "XHR",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "method": "POST",
+      "post_data": "ctl00%24ContentPlaceHolder1%24ToolkitScriptManager1=ctl00%24ContentPlaceHolder1%24upnlProject%7Cctl00%24ContentPlaceHolder1%24ddlSelPriceCurrCode&__EVENTTARGET=ctl00%24ContentPlaceHolder1%24ddlSelPriceCurrCode&__EVENTARGUMENT=&ctl00_ContentPlaceHolder1_ToolkitScriptManager1_HiddenField=&__ctl00_IcamMenu_C1WebMenu1_SSF=&__ctl00_IcamMenu_C1WebMenu1_SSIF=&__LASTFOCUS=&ctl00_ContentPlaceHolder1_wgAttachment_scroll=0%2C0&__VIEWSTATE=%2FwEPDwULLTE5MDM0NTI5MTIPFgIeE1ZhbGlkYXRlUmVxdWVzdE1vZGUCARYCZg9kFg"
+    },
+    {
+      "ts": 125.724,
+      "time": "17:53:33.586",
+      "type": "Document",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "method": "POST",
+      "post_data": ""
+    },
+    {
+      "ts": 126.451,
+      "time": "17:53:34.313",
+      "type": "page_loaded",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "status": 200
+    },
+    {
+      "ts": 134.157,
+      "time": "17:53:42.019",
+      "type": "XHR",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "method": "POST",
+      "post_data": "ctl00%24ContentPlaceHolder1%24ToolkitScriptManager1=ctl00%24ContentPlaceHolder1%24upnlProject%7Cctl00%24ContentPlaceHolder1%24btnInsert&__EVENTTARGET=ctl00%24ContentPlaceHolder1%24btnInsert&__EVENTARGUMENT=&ctl00_ContentPlaceHolder1_ToolkitScriptManager1_HiddenField=&__ctl00_IcamMenu_C1WebMenu1_SSF=&__ctl00_IcamMenu_C1WebMenu1_SSIF=&__LASTFOCUS=&ctl00_ContentPlaceHolder1_wgAttachment_scroll=0%2C0&__VIEWSTATE=%2FwEPDwULLTE5MDM0NTI5MTIPFgIeE1ZhbGlkYXRlUmVxdWVzdE1vZGUCARYCZg9kFgICAw8WAh4HZW5jdHlwZQ"
+    },
+    {
+      "ts": 137.637,
+      "time": "17:53:45.499",
+      "type": "page_loaded",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/cosolidate_cs.aspx?pgid=PG00011893",
+      "status": 200
+    },
+    {
+      "ts": 137.65,
+      "time": "17:53:45.512",
+      "type": "navigate",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/cosolidate_cs.aspx?pgid=PG00011893"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+['blur', 'click', 'file', 'file_input', 'focus', 'form_submit', 'navigate', 'page_loaded', 'password', 'postback', 'select', 'text', 'textarea']
