@@ -46,7 +46,7 @@
     "Supplier": {
       "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selSupplier",
       "type": "autocomplete",
-      "required": true,
+      "required": false,
       "handler_config": {
         "search_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selSupplier_search",
         "wait_time": 1500
@@ -55,7 +55,7 @@
     "Order": {
       "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder",
       "type": "autocomplete",
-      "required": true,
+      "required": false,
       "depends_on": "Supplier",
       "handler_config": {
         "search_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder_search",
@@ -65,7 +65,7 @@
     "Movement Type": {
       "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selector_single_delivery_20240813130131934",
       "type": "autocomplete",
-      "required": true,
+      "required": false,
       "handler_config": {
         "search_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selector_single_delivery_20240813130131934_search",
         "wait_time": 1000
@@ -74,7 +74,7 @@
     "Document Date": {
       "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_datetime_delivery_20240821154312162",
       "type": "datepicker",
-      "required": true,
+      "required": false,
       "handler_config": {
         "date_format": "MM/DD/YYYY"
       }

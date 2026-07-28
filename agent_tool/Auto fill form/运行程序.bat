@@ -8,7 +8,7 @@ echo 正在启动程序...
 echo.
 
 cd /d "%~dp0"
-python form_filler.py
+& "C:\Users\p1325970\AppData\Local\Python\bin\python.exe" form_filler.py
 
 if errorlevel 1 (
     echo.

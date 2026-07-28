@@ -712,11 +712,6 @@ class FormFillerApp:
         if url:
             if "login" in config and config["login"]:
                 config["login"]["url"] = url
-            if "navigation" in config and config["navigation"]:
-                for step in config["navigation"]:
-                    if step.get("action") == "goto":
-                        step["url"] = url
-
         # Check if the workflow has fields (login-only workflows may have none)
         fields = self.workflow_manager.get_field_definitions()
         if not fields:
