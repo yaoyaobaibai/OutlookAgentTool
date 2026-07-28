@@ -717,6 +717,272 @@ class GrAcubuyTab:
             messagebox.showerror("Acubuy", f"Generate Excel failed: {e}")
             logger.error("Generate Excel failed: %s", e, exc_info=True)
 
+    # ── Auto-fetch (v1.3.5 T2) ──────────────────────────────────────────────
+
     def _on_auto_fetch(self):
-        """Stub: future functionality to import GR form data from email/attachments."""
-        messagebox.showinfo("Acubuy", GR_ACUBUY_UI_TEXT["gr_auto_fetch_stub_msg"])
+        """Import GR form data from email/attachments (.msg/.pdf/.txt/.xlsx)."""
+        file_types = [(ft[0], ft[1]) for ft in GR_ACUBUY_UI_TEXT["gr_autofetch_file_types"]]
+        path = filedialog.askopenfilename(
+            title=GR_ACUBUY_UI_TEXT["gr_autofetch_dialog_title"],
+            filetypes=file_types,
+        )
+        if not path:
+            return
+
+        ext = os.path.splitext(path)[1].lower()
+        filename = os.path.basename(path)
+
+        # Excel: ask scope first
+        if ext == ".xlsx":
+            scope = self._ask_excel_scope(path)
+            if scope is None:
+                return  # user cancelled
+
+        try:
+            if ext == ".xlsx":
+                text = self._extract_text_from_xlsx(path, scope)
+            else:
+                text = self._extract_text_from_file(path)
+        except Exception as e:
+            logger.error("Auto-fetch extract failed: %s", e, exc_info=True)
+            messagebox.showerror(
+                "Acubuy",
+                GR_ACUBUY_UI_TEXT["gr_autofetch_extract_failed"].format(error=str(e)),
+            )
+            return
+
+        self._set_status(GR_ACUBUY_UI_TEXT["gr_autofetch_extracting"], "blue")
+        extracted = self._extract_fields_from_text(text)
+
+        if not extracted:
+            messagebox.showinfo("Acubuy", GR_ACUBUY_UI_TEXT["gr_autofetch_no_match"])
+            self._set_status("", "black")
+            return
+
+        # Show result dialog
+        field_lines = "\n".join(f"  {k}: {v}" for k, v in extracted.items())
+        confirmed = messagebox.askyesno(
+            GR_ACUBUY_UI_TEXT["gr_autofetch_result_dialog_title"],
+            GR_ACUBUY_UI_TEXT["gr_autofetch_result_body"].format(
+                filename=filename, fields=field_lines,
+            ),
+        )
+        if confirmed:
+            self._apply_extracted_fields(extracted)
+        self._set_status("", "black")
+
+    # ── Auto-fetch helpers ─────────────────────────────────────────────────
+
+    def _extract_text_from_file(self, path: str) -> str:
+        """Extract plain text from .msg / .pdf / .txt file."""
+        ext = os.path.splitext(path)[1].lower()
+        if ext == ".msg":
+            import extract_msg
+            msg = extract_msg.open(path)
+            try:
+                parts = []
+                if msg.subject:
+                    parts.append(f"Subject: {msg.subject}")
+                if msg.body:
+                    parts.append(msg.body)
+                if msg.htmlBody:
+                    parts.append(re.sub(r"<[^>]+>", " ", msg.htmlBody.decode("utf-8", errors="replace")))
+                return "\n".join(parts)
+            finally:
+                msg.close()
+        elif ext == ".pdf":
+            try:
+                import pdfplumber
+            except ImportError:
+                raise RuntimeError("pdfplumber not installed. Run: pip install pdfplumber")
+            text_parts = []
+            with pdfplumber.open(path) as pdf:
+                for page in pdf.pages:
+                    t = page.extract_text() or ""
+                    text_parts.append(t)
+            return "\n".join(text_parts)
+        elif ext == ".txt":
+            with open(path, "r", encoding="utf-8", errors="replace") as f:
+                return f.read()
+        else:
+            raise ValueError(GR_ACUBUY_UI_TEXT["gr_autofetch_unsupported_type"].format(ext=ext))
+
+    def _extract_text_from_xlsx(self, path: str, scope: dict) -> str:
+        """Extract text from .xlsx file using the user-specified scope."""
+        from openpyxl import load_workbook
+        wb = load_workbook(path, read_only=True, data_only=True)
+        try:
+            text_parts = []
+            if scope["mode"] == "all":
+                for sheet_name in wb.sheetnames:
+                    ws = wb[sheet_name]
+                    for row in ws.iter_rows(values_only=True):
+                        for cell in row:
+                            if cell is not None:
+                                text_parts.append(str(cell))
+            else:
+                sheet_name = scope["sheet"]
+                if sheet_name not in wb.sheetnames:
+                    raise ValueError(
+                        GR_ACUBUY_UI_TEXT["gr_autofetch_unsupported_type"].format(ext="xlsx")
+                    )
+                ws = wb[sheet_name]
+                r_start, r_end = scope["rows"]
+                c_start, c_end = scope["cols"]
+                for row in ws.iter_rows(
+                    min_row=r_start, max_row=r_end, values_only=True,
+                ):
+                    for col_idx, cell in enumerate(row, start=1):
+                        if c_start <= col_idx <= c_end and cell is not None:
+                            text_parts.append(str(cell))
+            return " ".join(text_parts)
+        finally:
+            wb.close()
+
+    def _extract_fields_from_text(self, text: str) -> dict:
+        """Apply regex patterns to extract GR fields. Returns dict of {display_label: value}."""
+        extracted = {}
+        patterns = {
+            "PO (订单号)":       GR_ACUBUY_UI_TEXT["gr_autofetch_po_patterns"],
+            "DN (送货单)":       GR_ACUBUY_UI_TEXT["gr_autofetch_dn_patterns"],
+            "Qty (数量)":        GR_ACUBUY_UI_TEXT["gr_autofetch_qty_patterns"],
+            "Requestor (申请人)": GR_ACUBUY_UI_TEXT["gr_autofetch_requestor_patterns"],
+            "Approver (审批人)":  GR_ACUBUY_UI_TEXT["gr_autofetch_approver_patterns"],
+        }
+        for label, pattern in patterns.items():
+            m = re.search(pattern, text, re.IGNORECASE)
+            if m:
+                extracted[label] = m.group(1).strip()
+        return extracted
+
+    def _ask_excel_scope(self, path: str):
+        """Ask user how to scan an Excel file via Toplevel dialog. Returns scope dict or None."""
+        from openpyxl import load_workbook
+        dialog = tk.Toplevel(self.frame)
+        dialog.title(GR_ACUBUY_UI_TEXT["gr_autofetch_xlsx_scope_title"])
+        dialog.transient(self.frame.winfo_toplevel())
+        dialog.grab_set()
+
+        wb = load_workbook(path, read_only=True, data_only=True)
+        sheet_names = list(wb.sheetnames)
+        wb.close()
+
+        result = {"cancelled": True}
+
+        ttk.Label(
+            dialog, text=GR_ACUBUY_UI_TEXT["gr_autofetch_xlsx_scope_body"],
+        ).pack(padx=20, pady=(15, 10))
+
+        mode_var = tk.StringVar(value="all")
+        ttk.Radiobutton(
+            dialog, text=GR_ACUBUY_UI_TEXT["gr_autofetch_xlsx_scope_all"],
+            variable=mode_var, value="all",
+        ).pack(anchor="w", padx=20)
+        ttk.Radiobutton(
+            dialog, text=GR_ACUBUY_UI_TEXT["gr_autofetch_xlsx_scope_custom"],
+            variable=mode_var, value="custom",
+        ).pack(anchor="w", padx=20, pady=(0, 10))
+
+        custom_frame = ttk.Frame(dialog)
+        custom_frame.pack(fill="x", padx=20, pady=5)
+        ttk.Label(
+            custom_frame, text=GR_ACUBUY_UI_TEXT["gr_autofetch_xlsx_sheet_label"],
+        ).grid(row=0, column=0, sticky="w")
+        sheet_var = tk.StringVar()
+        sheet_combo = ttk.Combobox(
+            custom_frame, textvariable=sheet_var, values=sheet_names, width=25,
+        )
+        sheet_combo.grid(row=0, column=1, padx=5, sticky="ew")
+        if sheet_names:
+            sheet_combo.set(sheet_names[0])
+
+        ttk.Label(
+            custom_frame, text=GR_ACUBUY_UI_TEXT["gr_autofetch_xlsx_rows_label"],
+        ).grid(row=1, column=0, sticky="w", pady=5)
+        rows_var = tk.StringVar(value="1-100")
+        ttk.Entry(custom_frame, textvariable=rows_var, width=27).grid(
+            row=1, column=1, padx=5, pady=5, sticky="ew",
+        )
+
+        ttk.Label(
+            custom_frame, text=GR_ACUBUY_UI_TEXT["gr_autofetch_xlsx_cols_label"],
+        ).grid(row=2, column=0, sticky="w", pady=5)
+        cols_var = tk.StringVar(value="A-Z")
+        ttk.Entry(custom_frame, textvariable=cols_var, width=27).grid(
+            row=2, column=1, padx=5, pady=5, sticky="ew",
+        )
+        custom_frame.columnconfigure(1, weight=1)
+
+        def on_ok():
+            mode = mode_var.get()
+            if mode == "all":
+                result.clear()
+                result["mode"] = "all"
+            else:
+                try:
+                    rows_str = rows_var.get().strip()
+                    cols_str = cols_var.get().strip()
+                    if "-" not in rows_str or "-" not in cols_str:
+                        raise ValueError("missing '-'")
+                    r_start, r_end = (int(x.strip()) for x in rows_str.split("-", 1))
+                    c_start_str, c_end_str = cols_str.split("-", 1)
+
+                    def _col_to_idx(letter: str) -> int:
+                        n = 0
+                        for ch in letter.strip().upper():
+                            n = n * 26 + (ord(ch) - ord("A") + 1)
+                        return n
+
+                    c_start = _col_to_idx(c_start_str)
+                    c_end = _col_to_idx(c_end_str)
+                    if r_start < 1 or r_end < r_start or c_start < 1 or c_end < c_start:
+                        raise ValueError("out of range")
+                    result.clear()
+                    result["mode"] = "custom"
+                    result["sheet"] = sheet_var.get().strip() or sheet_names[0]
+                    result["rows"] = (r_start, r_end)
+                    result["cols"] = (c_start, c_end)
+                except Exception as e:
+                    messagebox.showerror(
+                        "Acubuy",
+                        GR_ACUBUY_UI_TEXT["gr_autofetch_xlsx_invalid_range"].format(
+                            detail=str(e),
+                        ),
+                        parent=dialog,
+                    )
+                    return
+            dialog.destroy()
+
+        def on_cancel():
+            dialog.destroy()
+
+        btn_frame = ttk.Frame(dialog)
+        btn_frame.pack(pady=15)
+        ttk.Button(
+            btn_frame, text=GR_ACUBUY_UI_TEXT["gr_autofetch_apply"], command=on_ok,
+        ).pack(side="left", padx=5)
+        ttk.Button(
+            btn_frame, text=GR_ACUBUY_UI_TEXT["gr_autofetch_cancel"], command=on_cancel,
+        ).pack(side="left", padx=5)
+
+        dialog.wait_window()
+        return None if result.get("cancelled") else result
+
+    def _apply_extracted_fields(self, extracted: dict):
+        """Fill form fields with extracted values + highlight auto-filled ones."""
+        field_map = [
+            ("PO (订单号)",            self._purchase_order_entry),
+            ("DN (送货单)",            self._delivery_note_entry),
+            ("Qty (数量)",             self._quantity_received_spin),
+            ("Requestor (申请人)",      self._requestor_entry),
+            ("Approver (审批人)",       self._approver_2_entry),
+        ]
+        for label, widget in field_map:
+            if label in extracted:
+                value = extracted[label]
+                widget.delete(0, tk.END)
+                widget.insert(0, value)
+                try:
+                    widget.config(background="#FFFACD")
+                except tk.TclError:
+                    pass  # Spinbox may not support background

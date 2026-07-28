@@ -2,7 +2,7 @@
 """PR/PO Agent - 配置文件"""
 
 # 版本
-VERSION = "1.3.4-dev"
+VERSION = "1.3.5-dev"
 
 # 应用标题
 APP_TITLE = "PR/PO 助手"
@@ -204,6 +204,33 @@ GR_ACUBUY_UI_TEXT = {
     "tools_status_found":   "✓ 已就绪",
     "tools_status_missing": "✗ 未找到",
     "tools_launch_failed":  "{name} 未找到:\n{path}\n\n请把它放到 PRPOAgent.exe 同目录后重试。",
+    # === Auto-fetch regex patterns (v1.3.5+) ===
+    "gr_autofetch_po_patterns":        r"(?:PO|P\.O\.|Purchase Order|订单号|采购订单)[\s#:_-]*([A-Za-z0-9\-]{4,})",
+    "gr_autofetch_dn_patterns":        r"(?:DN|D\.N\.|Delivery Note|送货单)[\s#:_-]*([A-Za-z0-9\-]{4,})",
+    "gr_autofetch_qty_patterns":       r"(?:Qty|Quantity|数量|收货数量)[\s#:_-]*(\d+)",
+    "gr_autofetch_requestor_patterns": r"(?:Requestor|申请人|请购人)[\s#:_-]+(\S+)",
+    "gr_autofetch_approver_patterns":  r"(?:Approver|审批人)[\s#:_-]+(\S+)",
+    # === Auto-fetch common UI text (v1.3.5+) ===
+    "gr_autofetch_dialog_title":        "导入邮件/附件",
+    "gr_autofetch_file_types":          [("All supported", "*.msg *.pdf *.txt *.xlsx"), ("Email files (.msg)", "*.msg"), ("PDF files (.pdf)", "*.pdf"), ("Text files (.txt)", "*.txt"), ("Excel files (.xlsx)", "*.xlsx")],
+    "gr_autofetch_extracting":          "正在提取文件内容...",
+    "gr_autofetch_result_dialog_title": "提取结果",
+    "gr_autofetch_result_body":         "从 {filename} 提取到以下字段:\n\n{fields}\n\n是否填入表单？",
+    "gr_autofetch_no_match":            "未从文件中提取到任何字段。请检查文件内容，或手动填写。",
+    "gr_autofetch_unsupported_type":    "不支持的文件类型: {ext}\n\n支持的类型: .msg / .pdf / .txt / .xlsx",
+    "gr_autofetch_extract_failed":      "文件读取失败:\n{error}\n\n请尝试其他文件。",
+    "gr_autofetch_apply":               "填入表单",
+    "gr_autofetch_cancel":              "取消",
+    # === Auto-fetch Excel scope dialog (v1.3.5+) ===
+    "gr_autofetch_xlsx_scope_title":    "Excel 扫描范围",
+    "gr_autofetch_xlsx_scope_body":     "选择如何扫描所选 Excel 文件:",
+    "gr_autofetch_xlsx_scope_all":      "扫描所有 sheet + 所有非空单元格 (推荐)",
+    "gr_autofetch_xlsx_scope_custom":   "指定区域 (sheet 名 + 行范围 + 列范围)",
+    "gr_autofetch_xlsx_sheet_label":    "Sheet 名 (留空 = 第一个 sheet):",
+    "gr_autofetch_xlsx_rows_label":     "行范围 (如 1-50):",
+    "gr_autofetch_xlsx_cols_label":     "列范围 (如 A-F):",
+    "gr_autofetch_xlsx_proceed":        "开始扫描",
+    "gr_autofetch_xlsx_invalid_range":  "范围格式无效: {detail}\n\n示例: 行 '1-50'、列 'A-F'",
 }
 
 # 确认弹窗
