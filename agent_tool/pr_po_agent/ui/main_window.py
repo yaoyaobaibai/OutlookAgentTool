@@ -25,7 +25,11 @@ from config import (
     PRIORITY_DISPLAY,
     EXAMPLE_TASKS,
     UI_TEXT,
+    MAIN_WINDOW_TABS,
+    GR_ACUBUY_UI_TEXT,
 )
+from ui.gr_tab import GrAcubuyTab
+from ui.tools_tab import ToolsTab
 
 # Module-level logger for UI events (separate from mail_agent.log)
 _ui_logger = None
@@ -118,11 +122,15 @@ class MainWindow:
         # Mail Agent controller (may be None in tests)
         self.mail_controller = mail_controller
 
-        self._build_stats_panel()
-        self._build_task_list()
-        self._build_bottom_buttons()
-        self._build_status_bar()
-        self._build_mail_status_bar()
+        # === Use grid layout for proper space distribution ===
+        # Row 0 = notebook (expand, takes all extra space)
+        # Row 1 = bottom container (fixed minimum height for buttons)
+        self.root.grid_rowconfigure(0, weight=1)
+        self.root.grid_rowconfigure(1, minsize=110, weight=0)
+        self.root.grid_columnconfigure(0, weight=1)
+
+        self._build_notebook()
+        self._build_bottom_container()  # NEW: single container for all 3 bottom bars
 
         # Start polling mail agent status
         if self.mail_controller is not None:
@@ -132,89 +140,45 @@ class MainWindow:
             self._set_mail_status(False)
 
     # ------------------------------------------------------------------
-    # Stats panel
+    # Main notebook (6 tabs: 1 enabled + 5 disabled)
     # ------------------------------------------------------------------
 
-    def _build_stats_panel(self):
-        panel = ttk.Frame(self.root, padding=(10, 10, 10, 5))
-        panel.pack(fill="x")
+    def _build_notebook(self):
+        """Build the 6-tab notebook. Only GR-Acubuy is enabled in v1.3.2."""
+        notebook = ttk.Notebook(self.root)
+        notebook.grid(row=0, column=0, sticky="nsew", padx=10, pady=(10, 5))
 
-        cards_data = [
-            ("pending", STATS["pending"]),
-            ("processing", STATS["processing"]),
-            ("completed", STATS["completed"]),
-        ]
-
-        for idx, (key, value) in enumerate(cards_data):
-            card = ttk.LabelFrame(panel, text=STATS_LABELS[key], padding=(15, 10))
-            card.grid(row=0, column=idx, padx=(0, 10), sticky="nsew")
-
-            num_label = ttk.Label(
-                card,
-                text=str(value),
-                font=TITLE_FONT,
-                anchor="center",
-            )
-            num_label.pack(fill="x")
-
-        # Equal column weights so cards align neatly
-        for col in range(3):
-            panel.columnconfigure(col, weight=1, uniform="stat")
-
-    # ------------------------------------------------------------------
-    # Task list
-    # ------------------------------------------------------------------
-
-    def _build_task_list(self):
-        list_frame = ttk.LabelFrame(
-            self.root, text=UI_TEXT["task_list_title"], padding=(10, 5)
-        )
-        list_frame.pack(fill="both", expand=True, padx=10, pady=(5, 10))
-
-        columns = ("id", "title", "status", "priority")
-        self.tree = ttk.Treeview(
-            list_frame,
-            columns=columns,
-            show="headings",
-            selectmode="browse",
-        )
-
-        # Column headings in Chinese
-        self.tree.heading("id", text="ID")
-        self.tree.heading("title", text="标题")
-        self.tree.heading("status", text="状态")
-        self.tree.heading("priority", text="优先级")
-
-        self.tree.column("id", width=70, anchor="center")
-        self.tree.column("title", width=380)
-        self.tree.column("status", width=110, anchor="center")
-        self.tree.column("priority", width=80, anchor="center")
-
-        # Populate with example tasks (status/priority shown in Chinese)
-        for task in EXAMPLE_TASKS:
-            self.tree.insert(
-                "",
-                "end",
-                values=(
-                    task["id"],
-                    task["title"],
-                    STATUS_DISPLAY[task["status"]],
-                    PRIORITY_DISPLAY[task["priority"]],
-                ),
-            )
-
-        scroll = ttk.Scrollbar(list_frame, orient="vertical", command=self.tree.yview)
-        self.tree.configure(yscrollcommand=scroll.set)
-        scroll.pack(side="right", fill="y")
-        self.tree.pack(side="left", fill="both", expand=True)
+        for idx, (key, label, enabled, future_version) in enumerate(MAIN_WINDOW_TABS):
+            if key == "tools":
+                # Tools tab: external launchers + utilities
+                tools_tab = ToolsTab(notebook)
+                notebook.add(tools_tab.frame, text=label)
+            elif enabled:
+                # GR-Acubuy tab: real functional stub
+                gr_tab = GrAcubuyTab(notebook)
+                notebook.add(gr_tab.frame, text=label)
+            else:
+                # Disabled tab: centered placeholder label
+                tab_frame = ttk.Frame(notebook, padding=(20, 30))
+                notebook.add(tab_frame, text=label)
+                msg = GR_ACUBUY_UI_TEXT["disabled_tab_msg"].format(version=future_version)
+                ttk.Label(
+                    tab_frame,
+                    text=msg,
+                    font=DEFAULT_FONT,
+                    foreground="gray",
+                ).pack(expand=True)
+                notebook.tab(idx, state="disabled")
 
     # ------------------------------------------------------------------
     # Bottom buttons
     # ------------------------------------------------------------------
 
-    def _build_bottom_buttons(self):
-        btn_frame = ttk.Frame(self.root, padding=(10, 5))
-        btn_frame.pack(fill="x", padx=10, pady=(0, 5))
+    def _build_bottom_buttons(self, parent=None):
+        if parent is None:
+            parent = self.root
+        btn_frame = ttk.Frame(parent, padding=(10, 5))
+        btn_frame.pack(fill="x", pady=(2, 0))
 
         # Only "Settings" button remains here.
         # Mail Agent Start/Stop controls are in the mail status bar below.
@@ -232,15 +196,33 @@ class MainWindow:
     # Status bar
     # ------------------------------------------------------------------
 
-    def _build_status_bar(self):
-        bar = ttk.Frame(self.root, relief="sunken")
-        bar.pack(fill="x", side="bottom")
+    def _build_status_bar(self, parent=None):
+        """Build status bar: left status label + 3 service indicators (right)."""
+        if parent is None:
+            parent = self.root
+        bar = ttk.Frame(parent, relief="sunken")
+        bar.pack(fill="x", pady=(2, 0))
+
+        # Left: general status label (kept from previous version)
         status_label = ttk.Label(
             bar,
             text=UI_TEXT["status_bar_default"],
             padding=(10, 3),
         )
         status_label.pack(side="left", fill="x", expand=True)
+
+        # Right: 3 service indicators (Mail + Acubuy + SharePoint)
+        # Mail status is updated by _set_mail_status() via _svc_mail_label
+        self._svc_mail_label = ttk.Label(bar, text="Mail: --", padding=(5, 3))
+        self._svc_mail_label.pack(side="right")
+        self._svc_acubuy_label = ttk.Label(
+            bar, text="Acubuy: \u672a\u8fde\u63a5", foreground="gray", padding=(5, 3)
+        )
+        self._svc_acubuy_label.pack(side="right")
+        self._svc_sharepoint_label = ttk.Label(
+            bar, text="SharePoint: \u672a\u8fde\u63a5", foreground="gray", padding=(5, 3)
+        )
+        self._svc_sharepoint_label.pack(side="right")
 
     # ------------------------------------------------------------------
     # Event handlers
@@ -256,17 +238,33 @@ class MainWindow:
         )
 
     # ------------------------------------------------------------------
-    # Public API
+    # Bottom container (consolidated row for all 3 bottom bars)
     # ------------------------------------------------------------------
 
+    def _build_bottom_container(self):
+        """Consolidated bottom container with 3 sub-rows (pack inside)."""
+        container = ttk.Frame(self.root)
+        container.grid(row=1, column=0, sticky="ew", padx=10, pady=(0, 5))
+
+        # Sub-row 1: Mail controls (buttons) — most important, give it room
+        self._build_mail_status_bar(container)
+
+        # Sub-row 2: Service indicators status bar
+        self._build_status_bar(container)
+
+        # Sub-row 3: Settings button row
+        self._build_bottom_buttons(container)
+
     # ------------------------------------------------------------------
-    # Mail agent status bar (bottom row)
+    # Public API + Mail agent status bar
     # ------------------------------------------------------------------
 
-    def _build_mail_status_bar(self):
+    def _build_mail_status_bar(self, parent=None):
         """Build Mail Agent controls (status text + buttons)."""
-        self._mail_status_frame = ttk.Frame(self.root, padding=(10, 5))
-        self._mail_status_frame.pack(fill="x", side="bottom")
+        if parent is None:
+            parent = self.root
+        self._mail_status_frame = ttk.Frame(parent, padding=(10, 5))
+        self._mail_status_frame.pack(fill="x")
 
         # Mail Agent status label
         self._mail_status_label = ttk.Label(
@@ -531,12 +529,22 @@ class MainWindow:
     def _set_mail_status(self, is_running):
         if is_running:
             self._mail_status_label.config(text="Mail Agent: running")
+            self._svc_mail_label.config(text="Mail: running", foreground="green")
             self._mail_start_btn.state(["disabled"])
             self._mail_stop_btn.state(["!disabled"])
         else:
             self._mail_status_label.config(text="Mail Agent: stopped")
+            self._svc_mail_label.config(text="Mail: stopped", foreground="orange")
             self._mail_start_btn.state(["!disabled"])
             self._mail_stop_btn.state(["disabled"])
+
+    def _set_acubuy_status(self, status_text, color="gray"):
+        """Update Acubuy service indicator (Phase 2 will call this)."""
+        self._svc_acubuy_label.config(text="Acubuy: " + status_text, foreground=color)
+
+    def _set_sharepoint_status(self, status_text, color="gray"):
+        """Update SharePoint service indicator (Phase 2 will call this)."""
+        self._svc_sharepoint_label.config(text="SharePoint: " + status_text, foreground=color)
 
     def _refresh_mail_status(self):
         """Poll the controller every 2 seconds and update the status row."""
