@@ -3,3 +3,8 @@ __pycache__/
 *.pyc
 *.pyo
 *.spec
+
+# FormFiller production recordings — contain real PO numbers, vendor names, amounts. NEVER commit.
+agent_tool/Auto fill form/recordings/*.json
+agent_tool/Auto fill form/recordings/*.json.bak
+agent_tool/Auto fill form/workflows/*_prod_*.json

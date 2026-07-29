@@ -35,6 +35,69 @@ _PASSWORD_PATTERNS = [
 ]
 
 
+def _selector_to_var_name(selector: str, fallback_counter: int) -> str:
+    """Extract a human-readable var name from a CSS selector.
+    
+    Tries (in order):
+    1. id attribute: '#fooBar' or 'input#fooBar' -> 'fooBar'
+    2. name attribute: "input[name='poNumber']" -> 'poNumber'
+    3. last class: 'div.poNumber' -> 'poNumber'
+    4. last segment after ':' or '#': 'cssfinder:bar' -> 'bar'
+    5. fallback: 'field_N' (counter)
+    
+    Returns: lowercase, underscore-separated identifier
+    """
+    # Try id="..." or #id patterns
+    m = re.search(r'(?:#|\bid=[\'"])([A-Za-z][A-Za-z0-9_]*)', selector)
+    if m:
+        return _sanitize_var_name(m.group(1))
+    
+    # Try name="..." or name='...'
+    m = re.search(r'\bname=[\'"]([A-Za-z][A-Za-z0-9_\-]*)[\'"]', selector)
+    if m:
+        return _sanitize_var_name(m.group(1))
+    
+    # Try last class: 'div.poNumber' or '.poNumber'
+    m = re.search(r'\.([A-Za-z][A-Za-z0-9_\-]*)\s*(?::|$|\s)', selector + " ")
+    if m:
+        return _sanitize_var_name(m.group(1))
+    
+    # Try last segment after a separator
+    parts = re.split(r'[:#.\s>]+', selector)
+    parts = [p for p in parts if p and not p.startswith('[') and p not in ('input', 'select', 'textarea', 'button', 'form', 'div', 'span')]
+    if parts:
+        return _sanitize_var_name(parts[-1])
+    
+    return f"field_{fallback_counter}"
+
+
+def _sanitize_var_name(name: str) -> str:
+    """Convert to valid identifier: lowercase, underscores, alphanumeric only."""
+    name = re.sub(r'[^A-Za-z0-9_]', '_', name)
+    name = re.sub(r'_+', '_', name).strip('_')
+    return name.lower() or 'field'
+
+
+def _infer_type(value: str) -> str:
+    """Infer the type of a value from its pattern."""
+    if not value:
+        return "string"
+    # Number (int or float)
+    if re.fullmatch(r'-?\d+', value):
+        return "number"
+    if re.fullmatch(r'-?\d+\.\d+', value):
+        return "float"
+    # Email
+    if re.fullmatch(r'[^@]+@[^@]+\.[^@]+', value):
+        return "email"
+    # Date (YYYY-MM-DD or similar)
+    if re.fullmatch(r'\d{4}-\d{2}-\d{2}', value):
+        return "date"
+    if re.fullmatch(r'\d{2}/\d{2}/\d{4}', value):
+        return "date"
+    return "string"
+
+
 def _is_password_event(event: dict) -> bool:
     """Check if an event is a password field event. Returns True if so."""
     if event.get("type") == "password":
@@ -90,10 +153,16 @@ def _consolidate_text_events(events: list) -> list:
     return result
 
 
-def convert_recording_to_workflow(input_path: str, output_path: str) -> dict:
+def convert_recording_to_workflow(
+    input_path: str,
+    output_path: str,
+    parameterize: bool = True,
+) -> dict:
     """Convert a recorder JSON file to a workflow.json file.
     
-    Returns the workflow dict (also written to output_path).
+    If parameterize=True (default), all fill values are replaced with
+    {{var_name}} placeholders. Use --no-parameterize to keep raw values
+    (NOT recommended for production recordings).
     """
     with open(input_path, "r", encoding="utf-8") as f:
         recording = json.load(f)
@@ -109,8 +178,12 @@ def convert_recording_to_workflow(input_path: str, output_path: str) -> dict:
     # Step 2: Consolidate text events
     consolidated = _consolidate_text_events(filtered_events)
     
-    # Step 3: Map to workflow steps
+    # Step 3: Map to workflow steps (with parameterization)
     steps = []
+    seen_selectors = {}  # selector -> var_name
+    fallback_counter = 0
+    parameters = {}  # var_name -> {"type": ..., "selector": ...}
+    
     for ev in consolidated:
         ev_type = ev.get("type")
         if ev_type == "navigate":
@@ -121,10 +194,32 @@ def convert_recording_to_workflow(input_path: str, output_path: str) -> dict:
                     "url": url,
                 })
         elif ev_type == "input":
+            selector = ev.get("selector", "")
+            raw_value = ev.get("value", "")
+            
+            if parameterize:
+                if selector in seen_selectors:
+                    var_name = seen_selectors[selector]
+                else:
+                    fallback_counter += 1
+                    var_name = _selector_to_var_name(selector, fallback_counter)
+                    seen_selectors[selector] = var_name
+                    parameters[var_name] = {
+                        "type": _infer_type(raw_value),
+                        "selector": selector,
+                    }
+                # Use placeholder
+                display_value = f"{{{{{var_name}}}}}"
+            else:
+                display_value = raw_value
+                # Also store original in parameters for reference
+                if not parameters.get("__raw_values__"):
+                    parameters["__raw_values__"] = {"warning": "raw values not parameterized"}
+            
             steps.append({
                 "action": "fill",
-                "selector": ev.get("selector", ""),
-                "value": ev.get("value", ""),
+                "selector": selector,
+                "value": display_value,
             })
         elif ev_type == "click":
             steps.append({
@@ -155,8 +250,17 @@ def convert_recording_to_workflow(input_path: str, output_path: str) -> dict:
         "generated_at": datetime.now().isoformat(),
         "step_count": len(steps),
         "password_events_filtered": password_count,
+        "parameterized": parameterize,
+        "parameters": parameters,
+        "var_substitution_hint": (
+            "All 'fill' step values use {{var}} placeholders. Provide actual values at runtime: "
+            "python replay_workflow.py workflow.json --vars key1=value1 --vars key2=value2"
+        ),
         "steps": steps,
     }
+    
+    if not parameterize:
+        workflow["WARNING_RAW_VALUES"] = "Raw values present. Do NOT commit to git."
     
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(workflow, f, ensure_ascii=False, indent=2)
@@ -165,19 +269,31 @@ def convert_recording_to_workflow(input_path: str, output_path: str) -> dict:
 
 
 def main():
-    if len(sys.argv) != 3:
-        print(f"Usage: {sys.argv[0]} <input_recording.json> <output_workflow.json>")
+    if len(sys.argv) < 3 or len(sys.argv) > 4:
+        print(f"Usage: {sys.argv[0]} <input_recording.json> <output_workflow.json> [--no-parameterize]")
         sys.exit(1)
     
     input_path = sys.argv[1]
     output_path = sys.argv[2]
+    parameterize = "--no-parameterize" not in sys.argv
     
-    workflow = convert_recording_to_workflow(input_path, output_path)
+    workflow = convert_recording_to_workflow(input_path, output_path, parameterize=parameterize)
     
     print(f"Converted {input_path} -> {output_path}")
     print(f"  Steps: {workflow['step_count']}")
     print(f"  Password events filtered: {workflow['password_events_filtered']}")
-    print(f"  First step: {workflow['steps'][0] if workflow['steps'] else '(none)'}")
+    print(f"  Parameterized: {workflow['parameterized']}")
+    if workflow['parameters']:
+        print(f"  Parameters ({len(workflow['parameters'])}):")
+        for k, v in workflow['parameters'].items():
+            print(f"    {{{{{k}}}}}: type={v.get('type', '?')}")
+    if workflow['steps']:
+        print(f"  First step: {workflow['steps'][0]}")
+        # Find first fill step
+        for s in workflow['steps']:
+            if s.get('action') == 'fill':
+                print(f"  First fill step value: {s.get('value')}")
+                break
 
 
 if __name__ == "__main__":
