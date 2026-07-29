@@ -1,0 +1,1167 @@
+{
+  "recorded_at": "2026-07-28T20:04:30.935316",
+  "total_events": 127,
+  "session_tag": "",
+  "events": [
+    {
+      "ts": 7.077,
+      "time": "19:58:22.641",
+      "type": "page_loaded",
+      "url": "chrome://new-tab-page/",
+      "title": "New Tab"
+    },
+    {
+      "ts": 36.471,
+      "time": "19:58:52.035",
+      "type": "page_loaded",
+      "url": "chrome-untrusted://new-tab-page/one-google-bar?paramsencoded=",
+      "status": 200
+    },
+    {
+      "ts": 74.113,
+      "time": "19:59:29.676",
+      "type": "page_loaded",
+      "url": "https://csmstest.ncs.com.sg/UAT/login.aspx",
+      "status": 200
+    },
+    {
+      "ts": 74.124,
+      "time": "19:59:29.687",
+      "type": "navigate",
+      "url": "https://csmstest.ncs.com.sg/UAT/login.aspx"
+    },
+    {
+      "ts": 74.747,
+      "time": "19:59:30.311",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_TextBox1"
+    },
+    {
+      "ts": 76.465,
+      "time": "19:59:32.029",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_TextBox1",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_TextBox1\",\"name\":\"ctl00$ContentPlaceHolder1$TextBox1\",\"type\":\"text\",\"class\":\"aspTextBox01\"}",
+      "x": 960,
+      "y": 252,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 112.461,
+      "time": "20:00:08.025",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_TextBox1",
+      "old_value": "",
+      "value": "z"
+    },
+    {
+      "ts": 112.711,
+      "time": "20:00:08.274",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_TextBox1",
+      "old_value": "z",
+      "value": "zu"
+    },
+    {
+      "ts": 113.09,
+      "time": "20:00:08.653",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_TextBox1",
+      "old_value": "zu",
+      "value": "zuy"
+    },
+    {
+      "ts": 113.214,
+      "time": "20:00:08.777",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_TextBox1",
+      "old_value": "zuy",
+      "value": "zuyi"
+    },
+    {
+      "ts": 113.335,
+      "time": "20:00:08.898",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_TextBox1",
+      "old_value": "zuyi",
+      "value": "zuyin"
+    },
+    {
+      "ts": 113.433,
+      "time": "20:00:08.996",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_TextBox1",
+      "old_value": "zuyin",
+      "value": "zuying"
+    },
+    {
+      "ts": 114.426,
+      "time": "20:00:09.990",
+      "type": "keydown",
+      "key": "Tab",
+      "selector": "#ctl00_ContentPlaceHolder1_TextBox1"
+    },
+    {
+      "ts": 114.43,
+      "time": "20:00:09.993",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_TextBox1"
+    },
+    {
+      "ts": 130.141,
+      "time": "20:00:25.705",
+      "type": "click",
+      "selector": "#aspnetForm > table.tableContainContentPlaceHolder01 > tbody > tr > td",
+      "text": "",
+      "tag": "td",
+      "attrs": "{}",
+      "x": 82,
+      "y": 191,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 131.114,
+      "time": "20:00:26.678",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_Button1"
+    },
+    {
+      "ts": 131.186,
+      "time": "20:00:26.749",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_Button1",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_Button1\",\"name\":\"ctl00$ContentPlaceHolder1$Button1\",\"type\":\"submit\",\"class\":\"aspButton01\",\"value\":\"Submit\"}",
+      "x": 951,
+      "y": 298,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 131.187,
+      "time": "20:00:26.751",
+      "type": "form_submit",
+      "selector": "#aspnetForm",
+      "attrs": "{\"id\":\"aspnetForm\"}"
+    },
+    {
+      "ts": 131.199,
+      "time": "20:00:26.763",
+      "type": "postback",
+      "url": "https://csmstest.ncs.com.sg/UAT/login.aspx",
+      "method": "POST",
+      "post_data": "__LASTFOCUS=&__ctl00_IcamMenu_C1WebMenu1_SSF=&__ctl00_IcamMenu_C1WebMenu1_SSIF=&__ctl00_ContentPlaceHolder1_Menu1_C1WebMenu1_SSF=&__ctl00_ContentPlaceHolder1_Menu1_C1WebMenu1_SSIF=&__EVENTTARGET=&__EVENTARGUMENT=&__VIEWSTATE=%2FwEPDwUKMTcxMDc1NzYzMg9kFgJmD2QWAgIDD2QWDAIFDw8WAh4EVGV4dGVkZAIJDw8WAh4HVmlzaWJsZWhkFgICAQ88KwAIAgA8KwAKAAEUKwARZBQrAAIFDUMxV2ViTWVudUl0ZW08KwAHAQA8KwAHAQYUKwAAFCsAAgUNQzFXZWJNZW51SXRlbRQrAAc8KwAHAQYUKwAAFCsAAjwrAAoBCRQrAAtkFCsAAgUNQzFXZWJNZW51SXRlbTwrAAcBADwrAAcBBhQrAAAUK",
+      "resource_type": "Document"
+    },
+    {
+      "ts": 133.615,
+      "time": "20:00:29.179",
+      "type": "page_loaded",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/CS/Outstanding_DSO.aspx?proposaltype=O",
+      "status": 200
+    },
+    {
+      "ts": 133.62,
+      "time": "20:00:29.184",
+      "type": "navigate",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/CS/Outstanding_DSO.aspx?proposaltype=O"
+    },
+    {
+      "ts": 148.391,
+      "time": "20:00:43.955",
+      "type": "click",
+      "selector": "#ctl00_IcamMenu_C1WebMenu1_int_i2_g0_i1_txt",
+      "text": "Create Proposal Group",
+      "tag": "td",
+      "attrs": "{\"id\":\"ctl00_IcamMenu_C1WebMenu1_int_i2_g0_i1_txt\"}",
+      "x": 352,
+      "y": 91,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 149.517,
+      "time": "20:00:45.081",
+      "type": "page_loaded",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "status": 200
+    },
+    {
+      "ts": 149.519,
+      "time": "20:00:45.083",
+      "type": "navigate",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx"
+    },
+    {
+      "ts": 158.244,
+      "time": "20:00:53.807",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_txtProposalNo"
+    },
+    {
+      "ts": 158.379,
+      "time": "20:00:53.942",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_txtProposalNo",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_txtProposalNo\",\"name\":\"ctl00$ContentPlaceHolder1$txtProposalNo\",\"type\":\"text\",\"class\":\"aspTextBox01\"}",
+      "x": 234,
+      "y": 147,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 164.844,
+      "time": "20:01:00.408",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_txtProposalNo"
+    },
+    {
+      "ts": 165.404,
+      "time": "20:01:00.968",
+      "type": "click",
+      "selector": "#Table2 > tbody > tr > td",
+      "text": "CSMS",
+      "tag": "td",
+      "attrs": "{}",
+      "x": 674,
+      "y": 21,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 166.012,
+      "time": "20:01:01.576",
+      "type": "click",
+      "selector": "#Table2 > tbody > tr > td",
+      "text": "CSMS",
+      "tag": "td",
+      "attrs": "{}",
+      "x": 598,
+      "y": 13,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 167.107,
+      "time": "20:01:02.671",
+      "type": "click",
+      "selector": "#Table2 > tbody > tr > td",
+      "text": "CSMS",
+      "tag": "td",
+      "attrs": "{}",
+      "x": 659,
+      "y": 19,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 168.236,
+      "time": "20:01:03.799",
+      "type": "click",
+      "selector": "#ctl00_lblPolicy",
+      "text": "CSMS",
+      "tag": "span",
+      "attrs": "{\"id\":\"ctl00_lblPolicy\"}",
+      "x": 607,
+      "y": 16,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 169.169,
+      "time": "20:01:04.732",
+      "type": "click",
+      "selector": "#Table2 > tbody > tr > td",
+      "text": "CSMS",
+      "tag": "td",
+      "attrs": "{}",
+      "x": 664,
+      "y": 13,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 170.253,
+      "time": "20:01:05.817",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_upnlProject",
+      "text": "New Proposal Group\n                        *Note: Fields highlighted in red are mandatory.\n         ",
+      "tag": "div",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_upnlProject\"}",
+      "x": 927,
+      "y": 247,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 173.201,
+      "time": "20:01:08.764",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_upnlProject",
+      "text": "New Proposal Group\n                        *Note: Fields highlighted in red are mandatory.\n         ",
+      "tag": "div",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_upnlProject\"}",
+      "x": 887,
+      "y": 213,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 186.011,
+      "time": "20:01:21.575",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_txtProposalNo"
+    },
+    {
+      "ts": 186.091,
+      "time": "20:01:21.654",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_txtProposalNo",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_txtProposalNo\",\"name\":\"ctl00$ContentPlaceHolder1$txtProposalNo\",\"type\":\"text\",\"class\":\"aspTextBox01\"}",
+      "x": 193,
+      "y": 147,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 187.145,
+      "time": "20:01:22.708",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtProposalNo",
+      "old_value": "",
+      "value": "OPP-047585"
+    },
+    {
+      "ts": 188.314,
+      "time": "20:01:23.878",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_txtProposalNo"
+    },
+    {
+      "ts": 188.425,
+      "time": "20:01:23.988",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_upnlProject",
+      "text": "New Proposal Group\n                        *Note: Fields highlighted in red are mandatory.\n         ",
+      "tag": "div",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_upnlProject\"}",
+      "x": 408,
+      "y": 111,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 189.147,
+      "time": "20:01:24.711",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_btnInfo"
+    },
+    {
+      "ts": 189.259,
+      "time": "20:01:24.823",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_btnInfo",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_btnInfo\",\"name\":\"ctl00$ContentPlaceHolder1$btnInfo\",\"type\":\"submit\",\"class\":\"aspButton01\",\"value\":\"Get CRM Info\"}",
+      "x": 448,
+      "y": 151,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 189.261,
+      "time": "20:01:24.824",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_btnInfo"
+    },
+    {
+      "ts": 189.284,
+      "time": "20:01:24.848",
+      "type": "postback",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "method": "POST",
+      "post_data": "__EVENTTARGET=ctl00%24ContentPlaceHolder1%24btnInfo&__EVENTARGUMENT=&ctl00_ContentPlaceHolder1_ToolkitScriptManager1_HiddenField=&__ctl00_IcamMenu_C1WebMenu1_SSF=&__ctl00_IcamMenu_C1WebMenu1_SSIF=&__LASTFOCUS=&__VIEWSTATE=%2FwEPDwULLTE5MDM0NTI5MTIPFgIeE1ZhbGlkYXRlUmVxdWVzdE1vZGUCARYCZg9kFgICAw9kFgwCBQ8PFgIeBFRleHQFC0xpbiBadSBZaW5nZGQCCQ8PFgIeB1Zpc2libGVoZBYCAgEPPCsACAIAPCsACgABFCsAEWQUKwACBQ1DMVdlYk1lbnVJdGVtPCsABwEAPCsABwEGFCsAABQrAAIFDUMxV2ViTWVudUl0ZW0UKwAHPCsABwEGFCsAABQrAAI8KwAKAQkUKwALZBQr",
+      "resource_type": "Document"
+    },
+    {
+      "ts": 190.172,
+      "time": "20:01:25.736",
+      "type": "page_loaded",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "status": 200
+    },
+    {
+      "ts": 193.467,
+      "time": "20:01:29.030",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity"
+    },
+    {
+      "ts": 193.658,
+      "time": "20:01:29.221",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_txtCity\",\"name\":\"ctl00$ContentPlaceHolder1$txtCity\",\"type\":\"text\",\"class\":\"aspTextBox01\"}",
+      "x": 695,
+      "y": 305,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 196.144,
+      "time": "20:01:31.707",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity",
+      "old_value": "",
+      "value": "h"
+    },
+    {
+      "ts": 196.343,
+      "time": "20:01:31.907",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity",
+      "old_value": "h",
+      "value": "ho"
+    },
+    {
+      "ts": 196.537,
+      "time": "20:01:32.101",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity",
+      "old_value": "ho",
+      "value": "hon"
+    },
+    {
+      "ts": 196.726,
+      "time": "20:01:32.290",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity",
+      "old_value": "hon",
+      "value": "hong"
+    },
+    {
+      "ts": 196.995,
+      "time": "20:01:32.558",
+      "type": "keydown",
+      "key": "Space",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity"
+    },
+    {
+      "ts": 196.995,
+      "time": "20:01:32.559",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity",
+      "old_value": "hong",
+      "value": "hong "
+    },
+    {
+      "ts": 197.403,
+      "time": "20:01:32.967",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity",
+      "old_value": "hong ",
+      "value": "hong k"
+    },
+    {
+      "ts": 197.505,
+      "time": "20:01:33.069",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity",
+      "old_value": "hong k",
+      "value": "hong ko"
+    },
+    {
+      "ts": 197.699,
+      "time": "20:01:33.263",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity",
+      "old_value": "hong ko",
+      "value": "hong kon"
+    },
+    {
+      "ts": 197.867,
+      "time": "20:01:33.430",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity",
+      "old_value": "hong kon",
+      "value": "hong kong"
+    },
+    {
+      "ts": 200.066,
+      "time": "20:01:35.630",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_txtCity\",\"name\":\"ctl00$ContentPlaceHolder1$txtCity\",\"type\":\"text\",\"class\":\"aspTextBox01\"}",
+      "x": 728,
+      "y": 303,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 204.402,
+      "time": "20:01:39.966",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity"
+    },
+    {
+      "ts": 205.603,
+      "time": "20:01:41.167",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_tbDetails > tbody > tr > td > table.tableDefault > tbody > tr",
+      "text": "Contracting Centre\n                                \n                                \n               ",
+      "tag": "tr",
+      "attrs": "{}",
+      "x": 649,
+      "y": 326,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 207.362,
+      "time": "20:01:42.926",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity"
+    },
+    {
+      "ts": 207.441,
+      "time": "20:01:43.005",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_txtCity\",\"name\":\"ctl00$ContentPlaceHolder1$txtCity\",\"type\":\"text\",\"class\":\"aspTextBox01\"}",
+      "x": 713,
+      "y": 297,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 207.594,
+      "time": "20:01:43.157",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_txtCity\",\"name\":\"ctl00$ContentPlaceHolder1$txtCity\",\"type\":\"text\",\"class\":\"aspTextBox01\"}",
+      "x": 713,
+      "y": 297,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 208.097,
+      "time": "20:01:43.661",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_txtCity\",\"name\":\"ctl00$ContentPlaceHolder1$txtCity\",\"type\":\"text\",\"class\":\"aspTextBox01\"}",
+      "x": 709,
+      "y": 299,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 210.023,
+      "time": "20:01:45.587",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity",
+      "old_value": "hong kong",
+      "value": "Hong Kong"
+    },
+    {
+      "ts": 211.034,
+      "time": "20:01:46.598",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity"
+    },
+    {
+      "ts": 211.094,
+      "time": "20:01:46.658",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_tbDetails > tbody > tr > td > table.tableDefault > tbody > tr > td",
+      "text": "Is NCS bearing withholding tax?",
+      "tag": "td",
+      "attrs": "{}",
+      "x": 577,
+      "y": 358,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 212.866,
+      "time": "20:01:48.430",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo"
+    },
+    {
+      "ts": 212.957,
+      "time": "20:01:48.520",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_txtCustRefNo\",\"name\":\"ctl00$ContentPlaceHolder1$txtCustRefNo\",\"type\":\"text\",\"class\":\"aspTextBox01\"}",
+      "x": 726,
+      "y": 190,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 216.265,
+      "time": "20:01:51.829",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "old_value": "",
+      "value": "a"
+    },
+    {
+      "ts": 217.381,
+      "time": "20:01:52.945",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "old_value": "a",
+      "value": ""
+    },
+    {
+      "ts": 217.642,
+      "time": "20:01:53.206",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "old_value": "",
+      "value": "A"
+    },
+    {
+      "ts": 218.14,
+      "time": "20:01:53.704",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "old_value": "A",
+      "value": "Au"
+    },
+    {
+      "ts": 218.339,
+      "time": "20:01:53.903",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "old_value": "Au",
+      "value": "Aut"
+    },
+    {
+      "ts": 218.542,
+      "time": "20:01:54.106",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "old_value": "Aut",
+      "value": "Auto"
+    },
+    {
+      "ts": 219.154,
+      "time": "20:01:54.718",
+      "type": "keydown",
+      "key": "Space",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo"
+    },
+    {
+      "ts": 219.155,
+      "time": "20:01:54.719",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "old_value": "Auto",
+      "value": "Auto "
+    },
+    {
+      "ts": 219.452,
+      "time": "20:01:55.015",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "old_value": "Auto ",
+      "value": "Auto T"
+    },
+    {
+      "ts": 219.721,
+      "time": "20:01:55.285",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "old_value": "Auto T",
+      "value": "Auto Te"
+    },
+    {
+      "ts": 219.9,
+      "time": "20:01:55.464",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "old_value": "Auto Te",
+      "value": "Auto Tes"
+    },
+    {
+      "ts": 220.042,
+      "time": "20:01:55.606",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "old_value": "Auto Tes",
+      "value": "Auto Test"
+    },
+    {
+      "ts": 220.868,
+      "time": "20:01:56.431",
+      "type": "keydown",
+      "key": "Space",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo"
+    },
+    {
+      "ts": 220.869,
+      "time": "20:01:56.432",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "old_value": "Auto Test",
+      "value": "Auto Test "
+    },
+    {
+      "ts": 221.598,
+      "time": "20:01:57.162",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "old_value": "Auto Test ",
+      "value": "Auto Test 1"
+    },
+    {
+      "ts": 221.775,
+      "time": "20:01:57.338",
+      "type": "text",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "old_value": "Auto Test 1",
+      "value": "Auto Test 10"
+    },
+    {
+      "ts": 234.194,
+      "time": "20:02:09.758",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo"
+    },
+    {
+      "ts": 234.194,
+      "time": "20:02:09.758",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_txtContractValue"
+    },
+    {
+      "ts": 234.262,
+      "time": "20:02:09.826",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_txtContractValue",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_txtContractValue\",\"name\":\"ctl00_ContentPlaceHolder1_txtContractValue\",\"type\":\"text\",\"value\":\"0.00\"}",
+      "x": 308,
+      "y": 238,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 238.719,
+      "time": "20:02:14.282",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_txtContractValue"
+    },
+    {
+      "ts": 238.781,
+      "time": "20:02:14.344",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_tbDetails > tbody > tr > td > table.tableDefault > tbody > tr > td",
+      "text": "AED\n\t\t\t\tAUD\n\t\t\t\tBHD\n\t\t\t\tBND\n\t\t\t\tEUR\n\t\t\t\tHKD\n\t\t\t\tINR\n\t\t\t\tKRW\n\t\t\t\tLKR\n\t\t\t\tMYR\n\t\t\t\tPHP\n\t\t\t\tQAR\n\t\t\t\tRMB\n",
+      "tag": "td",
+      "attrs": "{}",
+      "x": 404,
+      "y": 255,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 239.98,
+      "time": "20:02:15.544",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_ddlSelPriceCurrCode"
+    },
+    {
+      "ts": 240.041,
+      "time": "20:02:15.605",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_ddlSelPriceCurrCode",
+      "text": "AED\n\t\t\t\tAUD\n\t\t\t\tBHD\n\t\t\t\tBND\n\t\t\t\tEUR\n\t\t\t\tHKD\n\t\t\t\tINR\n\t\t\t\tKRW\n\t\t\t\tLKR\n\t\t\t\tMYR\n\t\t\t\tPHP\n\t\t\t\tQAR\n\t\t\t\tRMB\n",
+      "tag": "select",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_ddlSelPriceCurrCode\",\"name\":\"ctl00$ContentPlaceHolder1$ddlSelPriceCurrCode\",\"class\":\"aspDropDownList01\"}",
+      "x": 250,
+      "y": 268,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 244.964,
+      "time": "20:02:20.528",
+      "type": "select",
+      "selector": "#ctl00_ContentPlaceHolder1_ddlSelPriceCurrCode",
+      "value": "6",
+      "selected_text": "HKD"
+    },
+    {
+      "ts": 244.965,
+      "time": "20:02:20.529",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_ddlSelPriceCurrCode",
+      "text": "AED\n\t\t\t\tAUD\n\t\t\t\tBHD\n\t\t\t\tBND\n\t\t\t\tEUR\n\t\t\t\tHKD\n\t\t\t\tINR\n\t\t\t\tKRW\n\t\t\t\tLKR\n\t\t\t\tMYR\n\t\t\t\tPHP\n\t\t\t\tQAR\n\t\t\t\tRMB\n",
+      "tag": "select",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_ddlSelPriceCurrCode\",\"name\":\"ctl00$ContentPlaceHolder1$ddlSelPriceCurrCode\",\"class\":\"aspDropDownList01\"}",
+      "x": 213,
+      "y": 257,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 244.975,
+      "time": "20:02:20.538",
+      "type": "postback",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "method": "POST",
+      "post_data": "ctl00%24ContentPlaceHolder1%24ToolkitScriptManager1=ctl00%24ContentPlaceHolder1%24upnlProject%7Cctl00%24ContentPlaceHolder1%24ddlSelPriceCurrCode&__EVENTTARGET=ctl00%24ContentPlaceHolder1%24ddlSelPriceCurrCode&__EVENTARGUMENT=&ctl00_ContentPlaceHolder1_ToolkitScriptManager1_HiddenField=&__ctl00_IcamMenu_C1WebMenu1_SSF=&__ctl00_IcamMenu_C1WebMenu1_SSIF=&__LASTFOCUS=&ctl00_ContentPlaceHolder1_wgAttachment_scroll=0%2C0&__VIEWSTATE=%2FwEPDwULLTE5MDM0NTI5MTIPFgIeE1ZhbGlkYXRlUmVxdWVzdE1vZGUCARYCZg9kFg",
+      "resource_type": "XHR"
+    },
+    {
+      "ts": 245.506,
+      "time": "20:02:21.070",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_ddlSelPriceCurrCode"
+    },
+    {
+      "ts": 248.517,
+      "time": "20:02:24.081",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_dtDateofAward_btnCall"
+    },
+    {
+      "ts": 248.588,
+      "time": "20:02:24.152",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_dtDateofAward_btnCall",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_dtDateofAward_btnCall\",\"name\":\"ctl00$ContentPlaceHolder1$dtDateofAward$btnCall\",\"type\":\"submit\",\"class\":\"aspButton01\",\"value\":\" \"}",
+      "x": 364,
+      "y": 338,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 254.618,
+      "time": "20:02:30.181",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_dtDateofAward_btnCall"
+    },
+    {
+      "ts": 254.698,
+      "time": "20:02:30.261",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_ucEmpSearch_imgUserName",
+      "text": "",
+      "tag": "img",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_ucEmpSearch_imgUserName\"}",
+      "x": 872,
+      "y": 333,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 269.15,
+      "time": "20:02:44.714",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_ddlCategory1"
+    },
+    {
+      "ts": 269.226,
+      "time": "20:02:44.790",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_ddlCategory1",
+      "text": "(DSO) Lease Agreement\t\t(DSO) NCS Quotation signed by Customer\t\t(DSO) PO issued by Customer\t\t(DSO) Ve",
+      "tag": "select",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_wgAttachment_footer_ddlCategory1\",\"name\":\"ctl00$ContentPlaceHolder1$wgAttachment$footer$ddlCategory1\",\"class\":\"aspDropDownList01\"}",
+      "x": 115,
+      "y": 368,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 272.264,
+      "time": "20:02:47.828",
+      "type": "select",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_ddlCategory1",
+      "value": "PCA",
+      "selected_text": "(Project) Customer Award"
+    },
+    {
+      "ts": 272.264,
+      "time": "20:02:47.828",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_ddlCategory1",
+      "text": "(DSO) Lease Agreement\t\t(DSO) NCS Quotation signed by Customer\t\t(DSO) PO issued by Customer\t\t(DSO) Ve",
+      "tag": "select",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_wgAttachment_footer_ddlCategory1\",\"name\":\"ctl00$ContentPlaceHolder1$wgAttachment$footer$ddlCategory1\",\"class\":\"aspDropDownList01\"}",
+      "x": 95,
+      "y": 364,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 275.085,
+      "time": "20:02:50.649",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_ddlCategory1"
+    },
+    {
+      "ts": 275.085,
+      "time": "20:02:50.649",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_fileUpload0"
+    },
+    {
+      "ts": 275.146,
+      "time": "20:02:50.709",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_fileUpload0",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_wgAttachment_footer_fileUpload0\",\"name\":\"ctl00$ContentPlaceHolder1$wgAttachment$footer$fileUpload0\",\"type\":\"file\"}",
+      "x": 239,
+      "y": 367,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 296.496,
+      "time": "20:03:12.060",
+      "type": "file",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_fileUpload0",
+      "old_value": "",
+      "value": "C:\\fakepath\\log_20260521_143125 (1).txt"
+    },
+    {
+      "ts": 296.496,
+      "time": "20:03:12.060",
+      "type": "file_input",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_fileUpload0",
+      "files": "log_20260521_143125 (1).txt"
+    },
+    {
+      "ts": 299.347,
+      "time": "20:03:14.910",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_fileUpload0"
+    },
+    {
+      "ts": 299.347,
+      "time": "20:03:14.910",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_txtEditDescription0"
+    },
+    {
+      "ts": 299.426,
+      "time": "20:03:14.990",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_txtEditDescription0",
+      "text": "",
+      "tag": "textarea",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_wgAttachment_footer_txtEditDescription0\",\"name\":\"ctl00$ContentPlaceHolder1$wgAttachment$footer$txtEditDescription0\",\"class\":\"aspTextBox01\"}",
+      "x": 553,
+      "y": 375,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 300.235,
+      "time": "20:03:15.799",
+      "type": "textarea",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_txtEditDescription0",
+      "old_value": "",
+      "value": "t"
+    },
+    {
+      "ts": 300.502,
+      "time": "20:03:16.065",
+      "type": "textarea",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_txtEditDescription0",
+      "old_value": "t",
+      "value": "te"
+    },
+    {
+      "ts": 300.699,
+      "time": "20:03:16.263",
+      "type": "textarea",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_txtEditDescription0",
+      "old_value": "te",
+      "value": "tes"
+    },
+    {
+      "ts": 301.123,
+      "time": "20:03:16.687",
+      "type": "textarea",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_txtEditDescription0",
+      "old_value": "tes",
+      "value": "test"
+    },
+    {
+      "ts": 304.275,
+      "time": "20:03:19.839",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_txtEditDescription0"
+    },
+    {
+      "ts": 304.362,
+      "time": "20:03:19.926",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_lnkAdd",
+      "text": "Add",
+      "tag": "a",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_wgAttachment_footer_lnkAdd\",\"href\":\"javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions(\\\"ctl00$ContentPlaceHolder1$wgAttachment$footer$lnkAdd\\\", \\\"\\\", true, \\\"\\\", \\\"\\\", false, true))\"}",
+      "x": 60,
+      "y": 369,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 304.373,
+      "time": "20:03:19.936",
+      "type": "postback",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "method": "POST",
+      "post_data": "",
+      "resource_type": "Document"
+    },
+    {
+      "ts": 304.923,
+      "time": "20:03:20.488",
+      "type": "page_loaded",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "status": 200
+    },
+    {
+      "ts": 324.172,
+      "time": "20:03:39.736",
+      "type": "focus",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_fileUpload0"
+    },
+    {
+      "ts": 324.243,
+      "time": "20:03:39.807",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_fileUpload0",
+      "text": "",
+      "tag": "input",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_wgAttachment_footer_fileUpload0\",\"name\":\"ctl00$ContentPlaceHolder1$wgAttachment$footer$fileUpload0\",\"type\":\"file\"}",
+      "x": 231,
+      "y": 298,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 342.415,
+      "time": "20:03:57.979",
+      "type": "file",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_fileUpload0",
+      "old_value": "",
+      "value": "C:\\fakepath\\AgreementCreationReport_2026727144912.xlsx"
+    },
+    {
+      "ts": 342.416,
+      "time": "20:03:57.980",
+      "type": "file_input",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_fileUpload0",
+      "files": "AgreementCreationReport_2026727144912.xlsx"
+    },
+    {
+      "ts": 345.491,
+      "time": "20:04:01.055",
+      "type": "blur",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_fileUpload0"
+    },
+    {
+      "ts": 345.547,
+      "time": "20:04:01.111",
+      "type": "click",
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_lnkAdd",
+      "text": "Add",
+      "tag": "a",
+      "attrs": "{\"id\":\"ctl00_ContentPlaceHolder1_wgAttachment_footer_lnkAdd\",\"href\":\"javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions(\\\"ctl00$ContentPlaceHolder1$wgAttachment$footer$lnkAdd\\\", \\\"\\\", true, \\\"\\\", \\\"\\\", false, true))\"}",
+      "x": 51,
+      "y": 301,
+      "in_popup": false,
+      "popup_selector": "",
+      "popup_type": ""
+    },
+    {
+      "ts": 345.562,
+      "time": "20:04:01.126",
+      "type": "postback",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "method": "POST",
+      "post_data": "",
+      "resource_type": "Document"
+    },
+    {
+      "ts": 346.622,
+      "time": "20:04:02.186",
+      "type": "page_loaded",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "status": 200
+    }
+  ],
+  "sanitized_at": "2026-07-29T12:47:34.902334",
+  "password_events_removed": 13
+}

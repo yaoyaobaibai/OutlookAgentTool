@@ -174,6 +174,13 @@ class ActionLogger:
         dict
             The created event entry.
         """
+        # SECURITY: never persist password values to disk
+        if event_type == "password":
+            # Skip recording password events entirely (production safety)
+            # — but still log to console (for live debugging if needed)
+            print(f"  [SECURITY] Password event at {details.get('selector', '?')} skipped")
+            return {"ts": 0, "time": "", "type": "_password_skipped", "selector": details.get("selector", "")}
+
         if self._start_time is None:
             self.start()
 
@@ -639,6 +646,8 @@ class PageMonitor:
                 if (!isTrusted(e)) return;
                 let el = e.target;
                 if (!el || !el.tagName) return;
+                // SECURITY: never capture password field values (defense-in-depth)
+                if (el.type === 'password' || /TextBox2/i.test(el.id || el.name || '')) return;
                 let tag = el.tagName.toLowerCase();
                 if (tag === 'input' || tag === 'textarea') {
                     if (!el.__recorder_old_value) el.__recorder_old_value = el.defaultValue || '';
@@ -923,6 +932,9 @@ class PageMonitor:
         )
 
     async def _on_dom_input(self, d: dict):
+        # SECURITY: never record password field values to disk
+        if d.get("type") == "password" or "TextBox2" in d.get("selector", ""):
+            return
         self.log.record("input",
             selector=d.get("selector", ""),
             old_value=d.get("old_value", ""),
