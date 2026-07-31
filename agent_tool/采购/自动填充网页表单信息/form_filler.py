@@ -786,9 +786,16 @@ class FormFillerApp:
                             date_input.fill(f"{month}/{day}/{year}")
                             print(f"  ✓ 已填写日期：{month}/{day}/{year}")
                             
-                            # 触发 change 事件
-                            date_input.dispatch_event('change')
+                            # 触发 change 事件和 __doPostBack
+                            self.page.evaluate(f'''() => {{
+                                var elem = document.getElementById('ctl00_ContentPlaceHolder1_dtDateofAward_txtDate');
+                                if (elem) {{
+                                    elem.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                                    console.log('Date changed');
+                                }}
+                            }}''')
                             self.page.wait_for_timeout(500)
+                            print(f"  ✓ 已触发 change 事件")
                         else:
                             print("  ✗ 未找到日期输入框")
                             
@@ -924,16 +931,48 @@ class FormFillerApp:
                             print(f"  处理字段 '{label}' ({tag_name}): {value}")
                             
                             if tag_name == 'select':
-                                # 下拉框处理
-                                print(f"    → 使用 select_option 选择：{value}")
-                                try:
-                                    element.select_option(value)
-                                    print(f"  ✓ 已选择：{value}")
-                                except Exception as e:
-                                    print(f"  ⚠️ select_option 失败：{e}")
-                                    # 尝试使用 JavaScript
-                                    element.evaluate(f'el => {{ el.value = "{value}"; el.dispatchEvent(new Event("change")); }}')
-                                    print(f"  ✓ 使用 JavaScript 设置成功")
+                                # ASP.NET 下拉框 - 使用纯 JavaScript 方式
+                                element_id = selector.replace('#', '')
+                                print(f"    → ASP.NET 下拉框，使用 JavaScript 设置")
+                                
+                                # 使用 JavaScript 直接设置并触发 __doPostBack
+                                result = self.page.evaluate(f"""() => {{
+                                    var elem = document.getElementById('{element_id}');
+                                    if (!elem) {{
+                                        return 'Element not found';
+                                    }}
+                                    
+                                    var oldVal = elem.value;
+                                    console.log('Old value:', oldVal, 'Target value:', '{value}');
+                                    
+                                    // 设置值
+                                    elem.value = '{value}';
+                                    console.log('New value:', elem.value);
+                                    
+                                    // 触发 change 事件
+                                    var changeEvent = new Event('change', {{ bubbles: true, cancelable: true }});
+                                    elem.dispatchEvent(changeEvent);
+                                    console.log('Change event dispatched');
+                                    
+                                    // 检查 __doPostBack 是否存在
+                                    if (typeof __doPostBack === 'function') {{
+                                        // 延迟调用，模仿 ASP.NET 的行为
+                                        setTimeout(() => {{
+                                            __doPostBack(elem.id, '');
+                                            console.log('__doPostBack called');
+                                        }}, 100);
+                                        return 'Success - __doPostBack scheduled';
+                                    }} else {{
+                                        return 'Success - no __doPostBack';
+                                    }}
+                                }}""")
+                                
+                                print(f"    结果：{result}")
+                                # 等待 __doPostBack 完成和页面刷新
+                                self.page.wait_for_load_state('networkidle')
+                                self.page.wait_for_timeout(1000)
+                                print(f"  ✓ 下拉框处理完成")
+                                
                             elif selector.startswith('file:'):
                                 # 文件上传处理
                                 file_path = value
@@ -949,7 +988,7 @@ class FormFillerApp:
                                 element.fill(value)
                                 print(f"  ✓ 已填充")
                             else:
-                                # 其他元素类型，尝试点击或填充
+                                # 其他元素类型
                                 try:
                                     element.fill('')
                                     element.fill(value)
@@ -958,12 +997,8 @@ class FormFillerApp:
                                     print(f"  ⚠️ 尝试填充失败：{e}")
                         except Exception as e:
                             print(f"  ✗ 处理字段失败：{e}")
-                            # 尝试直接使用 JavaScript 设置值
-                            try:
-                                element.evaluate(f'el => {{ el.value = "{value}"; el.dispatchEvent(new Event("change")); }}')
-                                print(f"  ✓ 使用 JavaScript 设置值成功")
-                            except Exception as e2:
-                                print(f"  ✗ JavaScript 设置值也失败：{e2}")
+                            import traceback
+                            print(f"     详情：{traceback.format_exc()}")
                         
                         self.page.wait_for_timeout(200)
                         

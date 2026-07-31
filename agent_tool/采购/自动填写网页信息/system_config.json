@@ -1,0 +1,73 @@
+{
+  "version": "1.0",
+  "description": "多系统自动化流程配置",
+  "systems": [
+    {
+      "system_id": "csms",
+      "system_name": "CSMS",
+      "file": "systems/csms.json",
+      "icon": "🏢",
+      "description": "Contract & Supplier Management System",
+      "programs": {
+        "proposal": "auto_create_proposal.py",
+        "form": "form_filler.py"
+      }
+    },
+    {
+      "system_id": "acubuy",
+      "system_name": "Acubuy",
+      "file": "systems/acubuy.json",
+      "icon": "🛒",
+      "description": "Procurement Management System",
+      "programs": {
+        "form": "form_filler.py"
+      }
+    },
+    {
+      "system_id": "sap",
+      "system_name": "SAP",
+      "file": "systems/sap.json",
+      "icon": "📊",
+      "description": "SAP ERP System",
+      "programs": {
+        "form": "form_filler.py"
+      }
+    }
+  ],
+  "flows": [
+    {
+      "flow_id": "csms_create_proposal",
+      "flow_name": "CSMS - 创建提案",
+      "system_id": "csms",
+      "file": "flows/csms_create_proposal.json",
+      "icon": "📄",
+      "description": "自动创建 Proposal Group",
+      "recommended_program": "proposal"
+    },
+    {
+      "flow_id": "csms_update_contract",
+      "flow_name": "CSMS - 更新合同",
+      "system_id": "csms",
+      "file": "flows/csms_update_contract.json",
+      "icon": "📝",
+      "description": "更新现有合同信息",
+      "recommended_program": "form"
+    },
+    {
+      "flow_id": "acubuy_create_pr",
+      "flow_name": "Acubuy - 创建采购申请",
+      "system_id": "acubuy",
+      "file": "flows/acubuy_create_pr.json",
+      "icon": "🛍️",
+      "description": "在 Acubuy 系统中创建 PR",
+      "recommended_program": "form"
+    }
+  ],
+  "global_settings": {
+    "default_browser": "chrome",
+    "default_headless": false,
+    "default_slow_mo": 500,
+    "timeout": 30000,
+    "log_level": "INFO"
+  }
+}

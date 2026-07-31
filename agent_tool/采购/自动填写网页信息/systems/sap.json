@@ -1,0 +1,41 @@
+{
+  "system_id": "sap",
+  "system_name": "SAP",
+  "description": "SAP ERP System",
+  "base_url": "",
+  "login": {
+    "url": "/sap/bc/gui/sap/its/bsp",
+    "fields": {
+      "username": {"selector": "input[name='j_username']", "type": "fill"},
+      "password": {"selector": "input[name='j_password']", "type": "fill"},
+      "client": {"selector": "input[name='sap-client']", "type": "fill"},
+      "submit": {"selector": "input[type='submit']", "type": "click"}
+    },
+    "success_indicator": {"selector": ".sap-bar", "timeout": 15000}
+  },
+  "selectors": {
+    "po_number": "#EBELN",
+    "vendor": "#LIFNR",
+    "material": "#MATNR",
+    "quantity": "#MENGE",
+    "delivery_date": "#EINDT",
+    "plant": "#WERKS",
+    "date_picker": {
+      "trigger": ".f4-button",
+      "popup_wait": 3000,
+      "year": "select[name*='year']",
+      "month": "select[name*='month']",
+      "day_pattern": "td[text()='{day}']"
+    }
+  },
+  "attachment_config": {
+    "category_prefix": "#attachCat_",
+    "file_prefix": "input[type='file'][id*='fileUpload']",
+    "desc_prefix": "#attachDesc_"
+  },
+  "notes": [
+    "SAP 可能需要配置 client 号码",
+    "SAP GUI 元素可能需要特殊的选择器",
+    "某些字段可能需要事务码导航"
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "flow_id": "csms_update_contract",
+  "flow_name": "CSMS - 更新合同",
+  "system_id": "csms",
+  "description": "更新现有合同信息",
+  "version": "1.0",
+  
+  "browser": {
+    "type": "chrome",
+    "headless": false,
+    "slow_mo": 500
+  },
+  
+  "steps": [
+    {
+      "step_id": "login",
+      "name": "登录系统",
+      "type": "system_login",
+      "wait_after": 2000
+    },
+    {
+      "step_id": "search_contract",
+      "name": "搜索合同",
+      "type": "navigate",
+      "url": "/Contract/Search.aspx",
+      "fields": [
+        {
+          "name": "contract_no",
+          "selector": "#ctl00_ContentPlaceHolder1_txtContractNo",
+          "value": "{{contract_no}}",
+          "type": "fill"
+        },
+        {
+          "name": "search_btn",
+          "selector": "#ctl00_ContentPlaceHolder1_btnSearch",
+          "type": "click"
+        }
+      ],
+      "wait_after": 3000
+    },
+    {
+      "step_id": "edit_contract",
+      "name": "编辑合同",
+      "type": "action",
+      "actions": [
+        {
+          "selector": "#ctl00_ContentPlaceHolder1_grdResults a:has-text('Edit')",
+          "type": "click"
+        }
+      ],
+      "wait_after": 3000
+    },
+    {
+      "step_id": "update_fields",
+      "name": "更新字段",
+      "type": "form",
+      "fields": [
+        {
+          "name": "contract_value",
+          "selector": "#ctl00_ContentPlaceHolder1_txtContractValue",
+          "value": "{{new_contract_value}}",
+          "type": "fill"
+        },
+        {
+          "name": "remarks",
+          "selector": "#ctl00_ContentPlaceHolder1_txtRemarks",
+          "value": "{{remarks}}",
+          "type": "fill"
+        }
+      ],
+      "wait_after": 1000
+    },
+    {
+      "step_id": "save",
+      "name": "保存",
+      "type": "action",
+      "actions": [
+        {
+          "selector": "#ctl00_ContentPlaceHolder1_btnSave",
+          "type": "click"
+        }
+      ],
+      "wait_after": 3000
+    }
+  ],
+  
+  "variables": {
+    "contract_no": "",
+    "new_contract_value": "",
+    "remarks": ""
+  }
+}

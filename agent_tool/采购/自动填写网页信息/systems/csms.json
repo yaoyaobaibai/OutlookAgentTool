@@ -1,0 +1,40 @@
+{
+  "system_id": "csms",
+  "system_name": "CSMS",
+  "description": "Contract & Supplier Management System",
+  "base_url": "",
+  "login": {
+    "url": "https://csmstest.ncs.com.sg/UAT/login.aspx",
+    "fields": {
+      "username": {"selector": "#txtUsername", "type": "fill"},
+      "password": {"selector": "#txtPassword", "type": "fill"},
+      "submit": {"selector": "#btnLogin", "type": "click"}
+    },
+    "success_indicator": {"selector": "#dashboard", "timeout": 10000}
+  },
+  "selectors": {
+    "proposal_no": "#ctl00_ContentPlaceHolder1_txtProposalNo",
+    "cust_ref_no": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+    "contract_value": "#ctl00_ContentPlaceHolder1_txtContractValue",
+    "currency": "#ctl00_ContentPlaceHolder1_ddlSelPriceCurrCode",
+    "date_of_award": "#ctl00_ContentPlaceHolder1_dtDateofAward_txtDate",
+    "project_manager": "#ctl00_ContentPlaceHolder1_ucEmpSearch_txtUserName",
+    "date_picker": {
+      "trigger": "#ctl00_ContentPlaceHolder1_dtDateofAward_btnCall",
+      "popup_wait": 3000,
+      "year": "select[id*='Year']",
+      "month": "select[id*='Month']",
+      "day_pattern": "a:text('{day}')"
+    }
+  },
+  "attachment_config": {
+    "category_prefix": "#ddlAttachmentCategory_",
+    "file_prefix": "input[type='file'][id*='FileUpload_']",
+    "desc_prefix": "#txtAttachmentDesc_"
+  },
+  "notes": [
+    "请配置 base_url 和 login.url",
+    "根据实际页面调整选择器",
+    "日期控件需要特殊处理弹窗"
+  ]
+}

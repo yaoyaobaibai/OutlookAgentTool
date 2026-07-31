@@ -1,0 +1,120 @@
+{
+  "flow_id": "csms_create_proposal",
+  "flow_name": "CSMS - 创建提案",
+  "system_id": "csms",
+  "description": "自动创建 Proposal Group 流程",
+  "version": "1.0",
+  
+  "browser": {
+    "type": "chrome",
+    "headless": false,
+    "slow_mo": 500
+  },
+  
+  "steps": [
+    {
+      "step_id": "login",
+      "name": "登录系统",
+      "type": "system_login",
+      "wait_after": 2000
+    },
+    {
+      "step_id": "navigate_to_proposal",
+      "name": "导航到提案创建页",
+      "type": "navigate",
+      "url": "/Proposal/CreateProposalGroup.aspx",
+      "wait_after": 3000
+    },
+    {
+      "step_id": "fill_basic_info",
+      "name": "填写基本信息",
+      "type": "form",
+      "fields": [
+        {
+          "name": "proposal_no",
+          "selector": "{{selectors.proposal_no}}",
+          "value": "{{proposal_no}}",
+          "type": "fill"
+        },
+        {
+          "name": "cust_ref_no",
+          "selector": "{{selectors.cust_ref_no}}",
+          "value": "{{cust_ref_no}}",
+          "type": "fill"
+        },
+        {
+          "name": "contract_value",
+          "selector": "{{selectors.contract_value}}",
+          "value": "{{contract_value}}",
+          "type": "fill"
+        },
+        {
+          "name": "currency",
+          "selector": "{{selectors.currency}}",
+          "value": "{{currency}}",
+          "type": "select"
+        },
+        {
+          "name": "date_of_award",
+          "selector": "{{selectors.date_of_award}}",
+          "value": "{{date_of_award}}",
+          "type": "datepicker",
+          "datepicker_config": "{{selectors.date_picker}}"
+        },
+        {
+          "name": "project_manager",
+          "selector": "{{selectors.project_manager}}",
+          "value": "{{project_manager}}",
+          "type": "fill"
+        }
+      ],
+      "wait_after": 1000
+    },
+    {
+      "step_id": "upload_attachments",
+      "name": "上传附件",
+      "type": "attachments",
+      "attachments": [
+        {
+          "category": "{{attach1_category}}",
+          "file_path": "{{attach1_file_path}}",
+          "description": "{{attach1_description}}"
+        },
+        {
+          "category": "{{attach2_category}}",
+          "file_path": "{{attach2_file_path}}",
+          "description": "{{attach2_description}}"
+        }
+      ]
+    }
+  ],
+  
+  "variables": {
+    "proposal_no": "",
+    "cust_ref_no": "",
+    "contract_value": "",
+    "currency": "USD",
+    "date_of_award": "",
+    "project_manager": "",
+    "attach1_category": "Proposal Document",
+    "attach1_file_path": "",
+    "attach1_description": "Main proposal document",
+    "attach2_category": "Supporting Document",
+    "attach2_file_path": "",
+    "attach2_description": "Supporting materials"
+  },
+  
+  "data_source": {
+    "enabled": false,
+    "type": "excel",
+    "file": "",
+    "mapping": {
+      "proposal_no": "Proposal #",
+      "cust_ref_no": "Cust Ref. No",
+      "contract_value": "Contract Value",
+      "currency": "Currency",
+      "date_of_award": "Date of Award",
+      "project_manager": "Project Manager"
+    }
+  }
+}

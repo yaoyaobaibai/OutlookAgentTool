@@ -1,0 +1,40 @@
+{
+  "system_id": "acubuy",
+  "system_name": "Acubuy",
+  "description": "Procurement Management System",
+  "base_url": "",
+  "login": {
+    "url": "",
+    "fields": {
+      "username": {"selector": "input[name='j_username']", "type": "fill"},
+      "password": {"selector": "input[name='j_password']", "type": "fill"},
+      "submit": {"selector": "button[type='submit']", "type": "click"}
+    },
+    "success_indicator": {"selector": ".home-dashboard", "timeout": 10000}
+  },
+  "selectors": {
+    "pr_number": "#prNumber",
+    "description": "#description",
+    "amount": "#amount",
+    "currency": "#currency",
+    "request_date": "#requestDate",
+    "department": "#department",
+    "date_picker": {
+      "trigger": ".datepicker-trigger",
+      "popup_wait": 2000,
+      "year": "#yearSelect",
+      "month": "#monthSelect",
+      "day_pattern": ".day-{day}"
+    }
+  },
+  "attachment_config": {
+    "category_prefix": "#attachmentCategory_",
+    "file_prefix": "input[type='file'][id*='upload_']",
+    "desc_prefix": "#attachmentDesc_"
+  },
+  "notes": [
+    "请配置 base_url 和 login.url",
+    "根据实际页面调整选择器",
+    "Acubuy 可能需要额外的认证步骤"
+  ]
+}
