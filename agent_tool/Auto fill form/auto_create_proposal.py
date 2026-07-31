@@ -1,9 +1,13 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from playwright.sync_api import sync_playwright, expect
-import threading
+import logging
 import os
+import threading
 from datetime import datetime
+from logging_setup import setup_logging
+
+logger = logging.getLogger(__name__)
 
 
 class AutoCreateProposalApp:
@@ -356,6 +360,8 @@ class AutoCreateProposalApp:
     
     def _run_automation(self):
         try:
+            run_logger, log_path = setup_logging()
+            run_logger.info("Auto Create Proposal automation started")
             self._log("=" * 60)
             self._log("开始执行自动化流程")
             self._log("=" * 60)
@@ -386,7 +392,8 @@ class AutoCreateProposalApp:
             self.page.goto(self.login_url.get().strip())
             self.page.wait_for_load_state('networkidle')
             self._log("登录页面加载完成")
-            
+            run_logger.info("Login page loaded")
+
             # 等待用户手动登录（因为登录页面可能有验证码或其他安全机制）
             self._log("请输入用户名和密码进行登录...")
             messagebox.showinfo("提示", "请手动完成登录操作，然后点击确定继续")
@@ -422,7 +429,8 @@ class AutoCreateProposalApp:
             # 等待页面加载完成
             self.page.wait_for_selector('#ctl00_ContentPlaceHolder1_txtProposalNo', state='visible', timeout=10000)
             self._log("Create Proposal Group 页面加载完成")
-            
+            run_logger.info("Navigated to Create Proposal Group page")
+
             # 步骤 3: 填写 Proposal # 并点击 GET CRM INFO
             self._log("步骤 3: 填写 Proposal # 并点击 GET CRM INFO...")
             proposal_no_field = self.page.locator('#ctl00_ContentPlaceHolder1_txtProposalNo')
@@ -458,7 +466,8 @@ class AutoCreateProposalApp:
             currency_field = self.page.locator('#ctl00_ContentPlaceHolder1_ddlSelPriceCurrCode')
             currency_field.select_option(self.currency_code.get().strip())
             self._log(f"已选择 Currency Code: {self.currency_code.get()}")
-            
+            run_logger.info("Form fields filled successfully")
+
             # 步骤 5: 选择 Date of Award
             self._log("步骤 5: 选择 Date of Award...")
             date_field = self.page.locator('#ctl00_ContentPlaceHolder1_dtDateofAward_txtDate')
@@ -543,13 +552,18 @@ class AutoCreateProposalApp:
             self._log("=" * 60)
             self._log("自动化流程执行完成！")
             self._log("=" * 60)
-            
+            run_logger.info("Automation flow completed successfully")
+
             self.root.after(0, lambda: messagebox.showinfo("完成", "自动化流程执行完成！\n\n请检查页面上的信息，确认无误后手动点击 Create 按钮。"))
             
         except Exception as e:
             import traceback
             error_msg = f"自动化流程失败：{str(e)}\n\n{traceback.format_exc()}"
             self._log(error_msg)
+            try:
+                run_logger.error("Automation failed: %s", e, exc_info=True)
+            except Exception:
+                pass
             self.root.after(0, lambda: messagebox.showerror("错误", error_msg))
         
         finally:

@@ -7,8 +7,11 @@ Supports two modes via handler_config.mode:
   - "autocompletion": Type into _search input (triggers server-side search), select from suggestions
 """
 
+import logging
 from typing import Any
 from .base_handler import BaseHandler
+
+logger = logging.getLogger(__name__)
 
 
 class AutoCompleteHandler(BaseHandler):
@@ -38,6 +41,7 @@ class AutoCompleteHandler(BaseHandler):
         hidden_sel = hc.get("hidden_input_selector")
 
         try:
+            logger.debug("Autocomplete filling '%s' for selector '%s', mode=%s", value, selector, mode)
             # 1. Verify main selector element exists and is visible
             main_element = self.page.locator(selector)
             if main_element.count() == 0:
@@ -77,6 +81,7 @@ class AutoCompleteHandler(BaseHandler):
             if item_count > 0:
                 self._select_matching_item(items, str(value))
             else:
+                logger.warning("Autocomplete: no dropdown items for '%s', using fallback", selector)
                 # If no dropdown items appeared, attempt JS fallback
                 if hidden_sel:
                     self._set_hidden_input(hidden_sel, value)
@@ -99,6 +104,7 @@ class AutoCompleteHandler(BaseHandler):
             if hidden_sel:
                 self._set_hidden_input(hidden_sel, value)
 
+            logger.info("Autocomplete: selected '%s' from '%s'", value, selector)
             return {
                 "success": True,
                 "message": f"Selected '{value}' from autocomplete '{selector}'",
@@ -110,6 +116,7 @@ class AutoCompleteHandler(BaseHandler):
             }
 
         except Exception as e:
+            logger.error("Autocomplete failed for '%s': %s", selector, e)
             return {
                 "success": False,
                 "message": f"Autocomplete failed for '{selector}': {str(e)}",

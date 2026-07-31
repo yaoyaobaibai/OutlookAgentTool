@@ -5,9 +5,12 @@ Supports two modes:
   - "html5_uploader" (iValua style): click button, find hidden input, wait for upload
 """
 
+import logging
 import os
 from typing import Any
 from .base_handler import BaseHandler
+
+logger = logging.getLogger(__name__)
 
 
 class FileUploadHandler(BaseHandler):
@@ -33,12 +36,14 @@ class FileUploadHandler(BaseHandler):
 
         # Validate file exists
         if not os.path.exists(value):
+            logger.error("File not found: %s", value)
             return {
                 "success": False,
                 "message": f"File not found: {value}",
                 "evidence": {"file_path": value}
             }
 
+        logger.debug("File upload starting, mode=%s, file='%s'", mode, value)
         try:
             if mode == "native":
                 return self._handle_native(field_config, value)
@@ -48,6 +53,7 @@ class FileUploadHandler(BaseHandler):
                 # Unknown mode - fall back to native
                 return self._handle_native(field_config, value)
         except Exception as e:
+            logger.error("File upload failed: %s", e)
             return {
                 "success": False,
                 "message": f"File upload failed: {str(e)}",
@@ -60,6 +66,7 @@ class FileUploadHandler(BaseHandler):
         element = self.page.locator(selector)
         element.wait_for(state="visible", timeout=5000)
         element.set_input_files(value)
+        logger.info("File uploaded via native mode: %s", value)
         return {
             "success": True,
             "message": f"File uploaded to '{selector}': {value}",
@@ -85,6 +92,7 @@ class FileUploadHandler(BaseHandler):
         if file_input.count() == 0:
             file_input = self.page.locator('input[type="file"]').first
         file_input.set_input_files(value)
+        logger.info("File upload initiated via HTML5: %s", value)
 
         # Wait for upload to complete (progress indicator to disappear)
         if wait_sel:
