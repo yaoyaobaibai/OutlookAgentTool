@@ -1,0 +1,134 @@
+﻿================================================================================
+F1 PLAN COMPLIANCE AUDIT - gracubuy-gr-flow
+Date: 2026-07-31 | Auditor: oracle (plan-compliance)
+Interpreter: C:\Users\p1325970\AppData\Local\Python\bin\python.exe (Python 3.14)
+Project root: C:\Users\p1325970\AILearn\Auto fill form
+================================================================================
+
+PLAN: .sisyphus/plans/gracubuy-gr-flow.md (941 lines, read end-to-end)
+
+================================================================================
+MUST HAVE  [5/5]
+================================================================================
+1. 4-stage complete automation .................... PASS
+   Evidence: workflows/gracubuy_gr_flow/workflow.json lines 64-100.
+   WorkflowManager.load_workflow('gracubuy_gr_flow') -> stages: 4,
+   names: ['create_gr', 'edit_item', 'advance_workflow', 'select_approver'] (in order).
+   create_gr fields [Order,Code,Internal Comment,Attachment File] + click cmdSave;
+   edit_item fields [Quantity] + click cmdEnd; advance_workflow fields [] (nav click
+   #proxyActionBar_x_valsingtel_receipt_v2create); select_approver fields [Approver 2] + click cmdSave.
+
+2. Starts after login (login.enabled=false) ...... PASS
+   Evidence: workflow.json line 8: "login": { "url": "", "enabled": false }.
+   Confirmed via grep '"enabled"' -> single occurrence in login section.
+   WorkflowManager load reports login.enabled: False.
+
+3. Order two-step: search 6000017449 -> PO0147739 . PASS
+   Evidence:
+   - workflow.json Order handler_config (lines 14-20): mode=autocompletion,
+     search_selector=#..._selOrder_search, result_selector=#..._selOrder_MenuItem span.text,
+     wait_after_input_ms=1500, clear_before=true. (No search_value key - per plan Task 7
+     pragmatic decision: "Excel 填搜索值 + 选 first"; value fills search box, first
+     matching result selected - handler first-item fallback at autocomplete_handler.py:204-206.)
+   - Excel Order value = '6000017449' (search term; the first result per recording is PO0147739).
+   - autocomplete_handler.py supports two-step branch (search_value) AND backward-compat
+     fill-value-then-select path; search_selector/search_input_selector dual-key support (L48-59).
+
+4. Quantity in modal iframe (iframe_selector) ..... PASS
+   Evidence: workflow.json Quantity handler_config (lines 47-49):
+   "iframe_selector": "iframe[src*='modal.aspx']". input_handler.py L29-32 implements
+   frame_locator(iframe_selector).locator(selector). Evidence task-5-iframe-input.txt
+   and task-5-no-iframe-compat.txt present.
+
+5. Approver Amy Yin selection .................... PASS
+   Evidence: "Approver 2" field (workflow.json lines 51-62) autocomplete, present in
+   select_approver stage fields. Excel value row: 'Amy Yin - (Band C)'.
+   task-8-excel-values.txt confirms 6 values loadable (incl. Amy Yin).
+
+================================================================================
+MUST NOT HAVE  [3/3]
+================================================================================
+1. No Acubuy SSO auto-login config ............... PASS
+   Evidence: login.enabled=false, login.url="" (workflow.json line 8).
+   No SSO/username/password config in workflow.json. Grep for '"enabled"' ->
+   only login section occurrence, value false.
+
+2. No hardcoded GR 413955 / row 794641 ............ PASS
+   Evidence: grep workflow.json for '413955' -> 0 matches; '794641' -> 0 matches.
+   edit_item row selector is generalized:
+   "tr[data-object-type='delivery']:first-child td[data-iv-role='cell'] i.iv-grid-fa-icon.fa-pencil-alt"
+   (no row-id hardcoding). Matches plan Must NOT do (Task 7).
+
+3. form_filler.py unchanged except line 634 dtype=str PASS (with caveat)
+   Evidence: line 634 = "df = pd.read_excel(excel_path, dtype=str)" (in _build_field_values).
+   Grep form_filler.py for 'dtype'/'stages' -> only line 634. No git repo exists, so
+   baseline diff unavailable; task-8-fix2-form-filler-dtype.txt documents the edit as
+   single-line ("No other lines changed. Single-line minimal edit.") with before/after
+   and verification output. Caveat: "only change" rests on evidence file attestation,
+   not an automated diff.
+
+================================================================================
+DELIVERABLES  [5/5]
+================================================================================
+1. workflows/schema/workflow-schema.json .......... PASS  (stages prop at L97, optional;
+                                                          $defs.stage_config at L482;
+                                                          search_value/result_selector/iframe_selector present)
+2. workflow_engine.py ............................ PASS  (stages branch execute() L134-141;
+                                                          _execute_stages() L432; loop L455; top-level
+                                                          post_fill after stages; backward-compat else path)
+3. workflows/gracubuy_gr_flow/workflow.json ....... PASS  (4-stage config; schema-valid; exit 0)
+4. GR_Goods_Receipt_Data_Template.xlsx ............ PASS  (Sheet1; header row exactly matches
+                                                          fields keys: Order, Code, Internal Comment,
+                                                          Attachment File, Quantity, Approver 2; 6/6)
+5. workflows/settings.json ........................ PASS  (gracubuy_gr_flow registered, L20-23;
+                                                          current_workflow unchanged = csms_proposal_group_v2)
+
+================================================================================
+EVIDENCE FILES  [26/26 task files; 41 total in .sisyphus/evidence/]
+================================================================================
+All task-1..task-9 evidence present, incl. fix variants:
+task-1: schema-valid-stages / schema-reject-invalid / schema-legacy-compat /
+        fix-wait-state / fix2-handler-config   [5]
+task-2: stages-tests / legacy-regression / stage-transition / schema-valid  [4]
+task-3: autocomplete-two-step / autocomplete-compat / autocomplete-integration /
+        workflow-error / workflow-list / workflow-switch                     [6]
+task-4: file-upload-config                                                  [1]
+task-5: iframe-input / no-iframe-compat                                     [2]
+task-6: workflow-discovered                                                 [1]
+task-7: workflow-valid / stage-field-refs                                   [2]
+task-8: excel-mapping / excel-values / fix2-form-filler-dtype               [3]
+task-9: e2e-validation / workflow-load                                      [2]
+Total task evidence files: 26 (all present). Other evidence: 15 (screenshots, QA scripts, final-qa).
+
+================================================================================
+VERIFICATION COMMANDS (re-run this audit)
+================================================================================
+- validate_workflow.py gracubuy_gr_flow/workflow.json -> "Valid: ...", exit 0  PASS
+- Backward compat: csms_create_proposal, csms_proposal_group_v2, gracubuy_create_gr,
+  gracubuy_login all -> "Valid", exit 0                                        PASS
+- grep '413955' / '794641' in workflow.json -> NOT FOUND                       PASS
+- grep '"enabled": false' -> present in login section                          PASS
+- pytest tests/test_stages_engine.py -> 5 passed                               PASS
+- pytest tests/test_integration.py -> 30 passed, 1 failed, 1 error             WARN
+- Excel header == workflow.json fields keys (openpyxl)                         PASS
+
+================================================================================
+FINDINGS (non-blocking)
+================================================================================
+1. tests/test_integration.py::test_list_workflows FAILS: EXPECTED_WORKFLOWS hardcodes
+   only 2 workflows while 5 exist. PRE-EXISTING (settings.json already had 4 workflows
+   before this plan); task-9 evidence documents it as known pre-existing issue. Not a
+   regression from this implementation. Recommend updating EXPECTED_WORKFLOWS in a
+   follow-up test-maintenance task (out of scope for this plan).
+2. Same file has a stray async fixture ERROR (test_integration.py::test setup) - also
+   pre-existing per task-9 evidence. No impact on engine/workflow correctness.
+3. form_filler.py "only change" claim cannot be diff-verified (no git repo); rely on
+   task-8-fix2 evidence attestation + grep showing single dtype occurrence.
+
+================================================================================
+VERDICT: APPROVE
+================================================================================
+Must Have [5/5] | Must NOT Have [3/3] | Deliverables [5/5] | Evidence Files [26/26 task files]
+All plan-mandated deliverables exist, all guardrails respected, schema validation
+passes for the new workflow and all 4 legacy workflows. The only test failure is a
+documented pre-existing expectation-drift issue, not caused by this implementation.

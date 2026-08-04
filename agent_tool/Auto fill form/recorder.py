@@ -5,10 +5,8 @@ Records Chrome user interactions, builds CSS selectors, and exports
 workflow-compatible JSON summaries for Playwright automation replay.
 """
 
-import argparse
 import asyncio
 import json
-import logging
 import os
 import re
 import sys
@@ -37,44 +35,6 @@ def _safe_print(*args, **kwargs):
             str(a).encode("ascii", errors="replace").decode("ascii") for a in args
         ]
         print(*safe_args, **kwargs)
-
-
-# ── Postdata password redaction ─────────────────────────────────────────────
-
-# Pattern: matches key=value in URL-encoded form data
-# Redacts keys: password|passwd|pwd|secret OR wt\d+ (OutSystems convention)
-# Examples matched:
-#   "&password=secret"      -> "&password=[REDACTED]"
-#   "&wt18=password1"        -> "&wt18=[REDACTED]"
-#   ";pwd=abc;"              -> ";pwd=[REDACTED];"
-#   "&secret=xyz&"           -> "&secret=[REDACTED]&"
-#   "&wt15=user&"            -> "&wt15=[REDACTED]&" (OutSystems convention - both username AND password use wt\d+ prefix; conservative redaction)
-_POSTDATA_PASSWORD_RE = re.compile(
-    r'(?:^|([&;]))((?:password|passwd|pwd|secret|wt\d+)=)([^&;]*)',
-    re.IGNORECASE
-)
-
-
-def _redact_postdata(post_data: str) -> str:
-    """Redact password values in URL-encoded post_data string.
-    
-    Replaces values for keys matching password/passwd/pwd/secret OR wt\\d+ (OutSystems
-    convention — all wt\\d+ fields are treated as potentially sensitive).
-    
-    Examples:
-        'wt15=zemilytan&wt18=password1&...' -> 'wt15=[REDACTED]&wt18=[REDACTED]&...'
-        '__EVENTTARGET=wt19&password=foo' -> '__EVENTTARGET=wt19&password=[REDACTED]'
-        'foo=bar&baz=qux' (no password keys) -> 'foo=bar&baz=qux' (unchanged)
-    """
-    if not post_data:
-        return post_data
-    
-    def replace(match):
-        separator = match.group(1) or ""
-        key_eq = match.group(2)
-        return f"{separator}{key_eq}[REDACTED]"
-    
-    return _POSTDATA_PASSWORD_RE.sub(replace, post_data)
 
 
 # ── ANSI color helpers ─────────────────────────────────────────────────────
@@ -214,13 +174,6 @@ class ActionLogger:
         dict
             The created event entry.
         """
-        # SECURITY: never persist password values to disk
-        if event_type == "password":
-            # Skip recording password events entirely (production safety)
-            # — but still log to console (for live debugging if needed)
-            print(f"  [SECURITY] Password event at {details.get('selector', '?')} skipped")
-            return {"ts": 0, "time": "", "type": "_password_skipped", "selector": details.get("selector", "")}
-
         if self._start_time is None:
             self.start()
 
@@ -686,8 +639,6 @@ class PageMonitor:
                 if (!isTrusted(e)) return;
                 let el = e.target;
                 if (!el || !el.tagName) return;
-                // SECURITY: never capture password field values (defense-in-depth)
-                if (el.type === 'password' || /TextBox2/i.test(el.id || el.name || '')) return;
                 let tag = el.tagName.toLowerCase();
                 if (tag === 'input' || tag === 'textarea') {
                     if (!el.__recorder_old_value) el.__recorder_old_value = el.defaultValue || '';
@@ -880,7 +831,7 @@ class PageMonitor:
             self.log.record("postback",
                 url=url,
                 method=method,
-                post_data=_redact_postdata(post_data[:500] if post_data else ""),
+                post_data=post_data[:500] if post_data else "",
                 resource_type=params.get("type", ""),
             )
 
@@ -972,9 +923,6 @@ class PageMonitor:
         )
 
     async def _on_dom_input(self, d: dict):
-        # SECURITY: never record password field values to disk
-        if d.get("type") == "password" or "TextBox2" in d.get("selector", ""):
-            return
         self.log.record("input",
             selector=d.get("selector", ""),
             old_value=d.get("old_value", ""),
@@ -1044,7 +992,7 @@ def _find_chrome_path():
     return shutil.which("chrome") or shutil.which("google-chrome")
 
 
-async def _launch_chrome_debug(port=CDP_PORT):
+async def _launch_chrome_debug():
     """Launch a new Chrome instance with remote debugging enabled.
 
     Returns
@@ -1065,7 +1013,7 @@ async def _launch_chrome_debug(port=CDP_PORT):
         proc = subprocess.Popen(
             [
                 chrome_path,
-                f"--remote-debugging-port={port}",
+                f"--remote-debugging-port={CDP_PORT}",
                 f"--user-data-dir={user_data_dir}",
                 "--no-first-run",
                 "--no-default-browser-check",
@@ -1078,25 +1026,25 @@ async def _launch_chrome_debug(port=CDP_PORT):
         return None
 
 
-async def find_chrome_tab(playwright, port=CDP_PORT, launch=True):
+async def find_chrome_tab(playwright):
     """Connect to Chrome via CDP (auto-launch if needed) and pick a tab."""
     chrome_proc = None
 
     for attempt in range(2):
         try:
             browser = await playwright.chromium.connect_over_cdp(
-                f"http://localhost:{port}"
+                f"http://localhost:{CDP_PORT}"
             )
             break
         except Exception:
-            if attempt == 0 and launch:
+            if attempt == 0:
                 _safe_print(
                     _Colors.colorize(
                         "Chrome not in debug mode. Auto-launching...",
                         _Colors.YELLOW,
                     )
                 )
-                chrome_proc = await _launch_chrome_debug(port)
+                chrome_proc = await _launch_chrome_debug()
                 if chrome_proc is None:
                     _safe_print(
                         _Colors.colorize(
@@ -1178,38 +1126,7 @@ async def find_chrome_tab(playwright, port=CDP_PORT, launch=True):
 # ── Main Entry Point ──────────────────────────────────────────────────────
 
 async def main():
-    """Main entry point for the browser action recorder."""
-    parser = argparse.ArgumentParser(
-        description="Browser Action Recorder \u2014 CDP-based user operation monitoring",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""\
-Examples:
-  recorder.py                                    Use all defaults (Chrome + port 9222)
-  recorder.py --port 9223                        Custom CDP port
-  recorder.py --output-dir ./sessions            Custom output directory
-  recorder.py --no-launch                        Connect to existing Chrome (don't launch)
-  recorder.py --timeout 60                       Stop after 60 seconds
-  recorder.py --verbose                          Enable verbose logging
-""",
-    )
-    parser.add_argument("--port", type=int, default=CDP_PORT,
-                        help="CDP port (default: %(default)s)")
-    parser.add_argument("--output-dir", type=str, default=OUTPUT_DIR,
-                        help="Output directory for recordings (default: %(default)s)")
-    parser.add_argument("--no-launch", action="store_true",
-                        help="Don't launch Chrome \u2014 connect to existing one on --port")
-    parser.add_argument("--timeout", type=int, default=0,
-                        help="Stop recording after N seconds (0 = no timeout)")
-    parser.add_argument("--verbose", "-v", action="store_true",
-                        help="Enable verbose logging")
-    args = parser.parse_args()
-
-    # Apply overrides
-    cdp_port = args.port
-    output_dir = args.output_dir
-    if args.verbose:
-        logging.getLogger().setLevel(logging.DEBUG)
-
+    """Connect to Chrome, start monitoring, and record all user actions."""
     _safe_print("=" * 70)
     _safe_print(_Colors.colorize(
         "  Browser Action Recorder \u2014 \u6d4f\u89c8\u5668\u64cd\u4f5c\u8bb0\u5f55\u5668",
@@ -1218,14 +1135,7 @@ Examples:
     ))
     _safe_print("=" * 70)
     _safe_print()
-    _safe_print(f"  CDP port: {cdp_port}")
-    _safe_print(f"  Output dir: {output_dir}")
-    if args.no_launch:
-        _safe_print("  Mode: Connect to existing Chrome (no launch)")
-    else:
-        _safe_print("  Mode: Launch new Chrome + connect")
-    if args.timeout > 0:
-        _safe_print(f"  Timeout: {args.timeout} seconds")
+    _safe_print(f"  Port: localhost:9222")
     _safe_print("  \u64cd\u4f5c: \u5728 Chrome \u4e2d\u6267\u884c\u64cd\u4f5c\uff0c\u672c\u7a0b\u5e8f\u5c06\u81ea\u52a8\u8bb0\u5f55")
     _safe_print("  \u505c\u6b62: Ctrl+C")
     _safe_print()
@@ -1233,28 +1143,8 @@ Examples:
     log = ActionLogger()
     log.start()
 
-    # Set up timeout task
-    timeout_task = None
-    if args.timeout > 0:
-        async def _timeout_handler():
-            await asyncio.sleep(args.timeout)
-            _safe_print(
-                _Colors.colorize(
-                    f"\n\n[TIMEOUT] Recording stopped after {args.timeout} seconds",
-                    _Colors.YELLOW,
-                    bold=True,
-                )
-            )
-            # Cancel all tasks except current one
-            for task in asyncio.all_tasks():
-                if task is not asyncio.current_task():
-                    task.cancel()
-        timeout_task = asyncio.create_task(_timeout_handler())
-
     async with async_playwright() as playwright:
-        browser, page = await find_chrome_tab(
-            playwright, port=cdp_port, launch=not args.no_launch,
-        )
+        browser, page = await find_chrome_tab(playwright)
         if not page:
             return
 
@@ -1285,14 +1175,12 @@ Examples:
         except (KeyboardInterrupt, asyncio.CancelledError):
             _safe_print(
                 _Colors.colorize(
-                    "\n\n\u23f1 Recording stopped.\n",
+                    "\n\n\u23f1 User interrupted.\n",
                     _Colors.YELLOW,
                     bold=True,
                 )
             )
         finally:
-            if timeout_task and not timeout_task.done():
-                timeout_task.cancel()
             await browser.close()
 
     # Output results
@@ -1300,69 +1188,15 @@ Examples:
     log.summary()
 
     # Save log
-    os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
     tag = f"_{SESSION_TAG}" if SESSION_TAG else ""
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"recorder_log{tag}_{ts}.json"
-    filepath = os.path.join(output_dir, filename)
+    filepath = os.path.join(OUTPUT_DIR, filename)
     log.save(filepath)
 
     _safe_print(f"\n\U0001f4ca Total events recorded: {len(log.events)}")
 
 
-def _test_redact_postdata():
-    """Inline tests for _redact_postdata. Run with: python recorder.py --run-tests"""
-    tests = [
-        # (input, expected_output, description)
-        (
-            "wt15=zemilytan&wt18=password1&",
-            "wt15=[REDACTED]&wt18=[REDACTED]&",
-            "wt\\d+ keys redacted"
-        ),
-        (
-            "__EVENTTARGET=wt19&password=secret&wt18=pwd1",
-            "__EVENTTARGET=wt19&password=[REDACTED]&wt18=[REDACTED]",
-            "password + wt18 redacted, wt19 NOT redacted"
-        ),
-        (
-            "foo=bar&baz=qux",
-            "foo=bar&baz=qux",
-            "no sensitive keys - unchanged"
-        ),
-        (
-            "pwd=abc;secret=xyz&user=alice",
-            "pwd=[REDACTED];secret=[REDACTED]&user=alice",
-            "pwd + secret redacted, user not"
-        ),
-        (
-            "",
-            "",
-            "empty string"
-        ),
-        (
-            None,
-            None,
-            "None input"
-        ),
-    ]
-
-    print("=== Testing _redact_postdata ===")
-    for input_str, expected, desc in tests:
-        actual = _redact_postdata(input_str)
-        if actual == expected:
-            print(f"  PASS: {desc}")
-        else:
-            print(f"  FAIL: {desc}")
-            print(f"    Input:    {input_str!r}")
-            print(f"    Expected: {expected!r}")
-            print(f"    Actual:   {actual!r}")
-            raise AssertionError(f"Test failed: {desc}")
-    print("=== All tests passed ===")
-
-
 if __name__ == "__main__":
-    if "--run-tests" in sys.argv:
-        sys.argv.remove("--run-tests")
-        _test_redact_postdata()
-    else:
-        asyncio.run(main())
+    asyncio.run(main())

@@ -1,0 +1,53 @@
+REMOVE ATTACHMENT-MANAGEMENT FEATURE - EVIDENCE
+===============================================
+Date: 2026-08-03
+File modified: form_filler.py (only)
+Workflow files, schema, engine, handlers, tests, recorder.py, Excel template: NOT touched
+
+CHANGES MADE
+------------
+1. Removed class AttachmentDialog (dialog + _browse_file + _on_ok)
+2. Removed class AttachmentManager (JSON persistence + add/update/remove/get)
+3. __init__: removed self.attachment_manager = AttachmentManager()
+4. __init__: removed self._load_attachments_to_ui() call
+5. _create_widgets: removed "7. Attachment Management" frame (attach_frame,
+   attach_btn_frame, attachment_tree, columns_attach, scrollbar, bind);
+   renumbered log panel from "8." to "7."
+6. Removed methods _load_attachments_to_ui, _add_attachment, _edit_attachment,
+   _delete_attachment
+7. _build_field_values: removed __attachments__ injection block; now Excel-only;
+   docstring updated ("from Excel and attachment data" -> "from the selected
+   Excel file")
+8. Module docstring: removed "Manage attachments for upload"
+9. Class docstring: removed "Attachment management (add/edit/delete)" line
+10. _update_ui_for_workflow docstring: removed "and attachments"
+11. Removed unused `import json` (verified 0 remaining usages after removal;
+    previously only used by AttachmentManager)
+    KEPT imports still used: tkinter (tk, ttk, messagebox, filedialog - used by
+    login/browser/execution logic), os, subprocess, tempfile, threading, time,
+    urllib.request, logging, workflow_manager, workflow_engine, playwright
+
+VERIFICATION
+------------
+1. python -m py_compile form_filler.py -> exit 0
+2. python -c "import form_filler; print('OK')" -> OK (exit 0)
+3. Grep results (all ZERO occurrences in form_filler.py):
+   AttachmentDialog = 0
+   AttachmentManager = 0
+   attachment_manager = 0
+   attachment_tree = 0
+   __attachments__ = 0
+   attach_frame = 0
+   _add_attachment = 0
+   _edit_attachment = 0
+   _delete_attachment = 0
+   _load_attachments_to_ui = 0
+   columns_attach = 0
+   attachment_config = 0
+4. workflow.json NOT modified (lives in workflows/ directory; untouched)
+5. _build_field_values confirmed Excel-only: reads Excel -> df.iloc[0] ->
+   field_values dict -> return; no attachments block remains
+6. Layout: log_frame ("执行日志") still present and is the last GUI section;
+   pack hierarchy valid, no orphaned references
+7. Note: LSP (basedpyright) not installed in this environment; verification
+   done via py_compile + module import + static grep instead.

@@ -1,0 +1,94 @@
+==========================================================================
+F3 REAL MANUAL QA — gracubuy_gr_flow implementation
+Date: 2026-07-31 | Interpreter: C:\Users\p1325970\AppData\Local\Python\bin\python.exe (3.14.4)
+==========================================================================
+
+SCENARIOS [14/14 pass]
+--------------------------------------------------------------------------
+
+T1 — Schema stages (workflows/schema/workflow-schema.json)
+  A. Valid 2-stage workflow (fields as string arrays) -> jsonschema validate NO_ERROR        [PASS]
+     evidence: t1-schema-stages.txt (A-valid-stages: NO_ERROR)
+  B. Stage with invalid_prop -> ValidationError
+     "Additional properties are not allowed ('invalid_prop' was unexpected)" @ path ['stages',0]
+     (additionalProperties:false enforced in $defs.stage_config)                             [PASS]
+  C. Legacy csms_create_proposal/workflow.json (no stages) validates -> NO_ERROR             [PASS]
+
+T2 — Engine stages (tests/test_stages_engine.py): 5/5 PASSED
+  test_no_stages_uses_single_round, test_multi_stage_executes_in_order,
+  test_stage_post_fill_click, test_field_values_shared_across_stages,
+  test_stage_missing_field_raises                                                 [PASS]
+  Stage-transition mock call sequence (evidence t2-stage-transition-sequence.txt):
+    ('wait_for','#a',...) -> ('fill','#a','') -> ('fill','#a','hello')   [stage1 field]
+    -> ('click','#submit')                                                [stage1 post_fill]
+    -> ('wait_for_selector','#next-page',...)                             [stage2 navigation]
+    SEQUENCE_OK (fill < click < wait_for_selector): True                              [PASS]
+
+T3 — Autocomplete handler (tests/test_autocomplete_handler.py): 7/7 PASSED
+  Includes two-step: search box filled with search_value ("6000017449"),
+  then dropdown item whose text contains field value "PO0147739" clicked
+  (fills==['','6000017449'] on #sel_search; result_selector honored).                    [PASS]
+
+T4 — File upload handler (tests/test_file_upload_handler.py): 8/8 PASSED
+  Includes test_wait_after_upload_ms_highest_priority: with BOTH
+  wait_after_upload_ms(4000) and wait_for_upload_selector configured,
+  the fixed 4000ms wait is used and page.selector_waits == [] (no selector wait).        [PASS]
+
+T5 — Input iframe handler (tests/test_input_handler.py): 2/2 PASSED
+  test_iframe_present (iframe-scoped fill via frame_locator) + 
+  test_no_iframe_uses_page_locator (top-level unchanged).                                [PASS]
+
+INTEGRATION [5/5]
+--------------------------------------------------------------------------
+  I1. Missing Excel: _build_field_values with empty/nonexistent excel_path hits the
+      else branch and returns {} (engine falls back to config defaults).                  [PASS]
+      evidence: i1-missing-excel.txt
+  I2. Empty field values: engine skips optional fields with no value — with only
+      Required filled, selectors touched == ['#req','#req'], #opt never touched,
+      success==1, total==1.                                                               [PASS]
+      evidence: i2-empty-values-skip.txt
+  I3. Stage transition failure: navigation wait_selector timeout ->
+      "Navigation step 1 action 'wait_selector' failed: Timeout..." (WorkflowNavigationError)
+      execute() returns dict with "error" key.                                            [PASS]
+      evidence: i3-transition-failure.txt
+  I4. Workflow load: WorkflowManager().load_workflow('gracubuy_gr_flow')
+      -> 4 stages, 6 fields [Order, Code, Internal Comment, Attachment File, Quantity, Approver 2]
+      stage names: create_gr, edit_item, advance_workflow, select_approver                [PASS]
+      evidence: i4-workflow-load.txt
+  I5. Excel->engine chain: pandas read of GR_Goods_Receipt_Data_Template.xlsx (dtype=str)
+      -> all 6 values are str, no '.0', no NaN.                                           [PASS]
+      evidence: i5-excel-chain.txt
+      Order='6000017449', Code='12345', Internal Comment='8889',
+      Attachment File='C:/Users/p1325970/OneDrive - NCS PTE LTD/WorkSpace/GR/PR0157310.pdf',
+      Quantity='100', Approver 2='Amy Yin - (Band C)'
+
+EDGE CASES [2 tested]
+--------------------------------------------------------------------------
+  E1. Extra Excel column: template augmented with 7th 'Stray Col' column.
+      _build_field_values iterates only df.columns -> no crash; the stray column
+      becomes an unused key ('Stray Col' in result) while all 6 workflow columns load.
+      Engine ignores unknown keys (only looks up field_names).                            [PASS]
+      evidence: e1-extra-excel-column.txt
+  E2. (covered by T1-B) additionalProperties=false on stage_config rejects unknown props. [PASS]
+
+REGISTERED FINDINGS (non-blocking)
+--------------------------------------------------------------------------
+  F1. tests/test_integration.py::test_list_workflows FAILS with stale
+      EXPECTED_WORKFLOWS={"csms_create_proposal","gracubuy_create_gr"} (2) while 5
+      workflow dirs exist. FAILURE IS PRE-EXISTING and unrelated to this plan —
+      baseline evidence task-3-autocomplete-integration.txt records the identical
+      "25 passed, 1 failed, 1 error" signature. Full suite today: 47 passed, 1 failed, 1 error.
+  F2. tests/test_integration.py ERROR at setup: pytest auto-collects the file's module-level
+      decorator helper `def test(name)` as a test (missing fixture). PRE-EXISTING.
+  F3. All 5 workflow.json validate via CLI (exit 0):
+      gracubuy_gr_flow, csms_create_proposal, csms_proposal_group_v2,
+      gracubuy_create_gr, gracubuy_login.                                                [PASS]
+      evidence: schema-validation-all.txt
+  F4. Stray log line "Unknown post-fill action '' ignoring" when a stage/top-level
+      post_fill is an empty dict {} (cosmetic; empty dict is falsy so it is only
+      logged, never executed incorrectly). workflow.json's own empty "post_fill": {}
+      (advance_workflow stage) is skipped silently inside _execute_stages.
+
+==========================================================================
+VERDICT: APPROVE
+==========================================================================

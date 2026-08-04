@@ -1,0 +1,48 @@
+=== form_filler.py — bare-launch EDGE rework (evidence) ===
+Date: 2026-08-03
+File: C:\Users\p1325970\AILearn\Auto fill form\form_filler.py
+Python: C:\Users\p1325970\AppData\Local\Python\bin\python.exe (3.14.4)
+
+== What changed ==
+1. Imports added at top: subprocess, tempfile, time, urllib.request.
+2. __init__: self._edge_proc = None added.
+3. New helper _find_edge_path(): checks the three known msedge.exe locations
+   and returns the first that exists, else None.
+4. _launch_browser() reworked:
+   - connect_existing branch UNCHANGED (default True) — connect_over_cdp to
+     user's already-running browser, real profile + login.
+   - Fresh-launch path now bare-launches EDGE via subprocess.Popen with the
+     recorder-style minimal args:
+         --remote-debugging-port=9222
+         --user-data-dir=%TEMP%\formfiller_edge_profile   (FIXED dir -> login persists)
+         --no-first-run
+         --no-default-browser-check
+     stdout/stderr -> DEVNULL, process kept on self._edge_proc.
+   - Polls http://localhost:9222/json/version (up to 30 x 0.5s), then
+     connect_over_cdp, picks existing context/page or creates new ones.
+   - Old playwright.chromium.launch code kept ONLY as fallback when Edge is
+     not found / browser_choice == "chromium".
+5. _on_closing() cleanup: after closing browser/playwright, terminates
+   self._edge_proc if set (guarded, then reset to None).
+
+== Verification ==
+1. python -m py_compile form_filler.py  -> exit 0
+2. python -c "import form_filler; print('OK')" -> OK
+3. Live bare-launch test (port 9223, see formfiller-bare-edge-launch-test.txt):
+   [OK] Edge launched via Popen, CDP ready, connect_over_cdp succeeded,
+   page url https://ncsgpt.ncsi.com.cn/ (NCSgpt), spawned Edge terminated.
+4. Confirmed in final source:
+   - Edge bare-launch branch present with msedge.exe candidates
+   - recorder-style args used (remote-debugging-port, fixed user-data-dir,
+     no-first-run, no-default-browser-check)
+   - connect_over_cdp used after Popen launch
+   - connect_existing branch preserved (default True)
+   - _edge_proc cleanup added in _on_closing
+   - fallback chromium.launch retained only when Edge missing/chromium choice
+
+== Constraints respected ==
+- workflow.json / schema / engine / handlers / tests: NOT modified
+- recorder.py: NOT modified
+- connect_existing branch: NOT removed
+- Chrome: NOT launched — EDGE only
+- _run_engine_thread and all other methods: unchanged

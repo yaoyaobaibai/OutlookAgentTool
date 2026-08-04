@@ -1,0 +1,38 @@
+TASK: Extend $defs.handler_config in workflows/schema/workflow-schema.json
+with file_upload and autocomplete handler keys.
+============================================================
+Date: 2026-07-31
+
+CHANGE
+------
+Added 11 properties to $defs.handler_config.properties (additionalProperties
+stays false, no existing properties removed, no other $defs touched):
+  mode, search_input_selector, dropdown_selector, wait_after_input_ms,
+  clear_before, hidden_input_selector, upload_button_selector,
+  file_input_selector, wait_for_upload_selector, wait_upload_timeout_ms,
+  wait_after_upload_ms
+
+VERIFICATION
+------------
+1) validate_workflow.py workflows/csms_proposal_group_v2/workflow.json
+   -> Valid: workflows/csms_proposal_group_v2/workflow.json  (exit 0)
+
+2) validate_workflow.py workflows/csms_create_proposal/workflow.json
+   -> Valid: workflows/csms_create_proposal/workflow.json  (exit 0)
+
+3) validate_workflow.py workflows/gracubuy_create_gr/workflow.json
+   -> Valid: workflows/gracubuy_create_gr/workflow.json  (exit 0)
+
+4) validate_workflow.py workflows/gracubuy_login/workflow.json
+   -> Valid: workflows/gracubuy_login/workflow.json  (exit 0)
+
+5) Inline jsonschema.validate of minimal workflow with file_upload
+   handler_config (mode=html5_uploader, upload_button_selector=#btn,
+   file_input_selector=#in, wait_after_upload_ms=4000)
+   -> SAMPLE VALID: file_upload handler_config keys accepted
+
+6) pytest tests/test_stages_engine.py tests/test_input_handler.py
+   tests/test_file_upload_handler.py tests/test_autocomplete_handler.py -q
+   -> 22 passed, 876 warnings in 0.26s  (exit 0)
+
+RESULT: ALL PASS

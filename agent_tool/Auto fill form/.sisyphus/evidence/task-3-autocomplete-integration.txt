@@ -1,0 +1,35 @@
+AutoCompleteHandler Task-3 - Integration Test Suite Status
+======================================================================
+
+Command:  python -m pytest tests/test_integration.py
+Result  : 25 passed, 1 failed, 1 error  (2026-07-31)
+
+Handler tests (NEW, this task):
+  python -m pytest tests/test_autocomplete_handler.py -v  -> 7/7 PASS
+  python tests/test_autocomplete_handler.py                -> 7 passed, 0 failed
+
+The two test_integration.py issues are PRE-EXISTING and UNRELATED to this task:
+
+1. FAILED tests/test_integration.py::test_list_workflows
+     AssertionError: Expected {'csms_create_proposal', 'gracubuy_create_gr'},
+     got {'csms_proposal_group_v2', 'csms_create_proposal', 'gracubuy_create_gr',
+     'gracubuy_login'}
+   Cause: the workflows/ directory contains two extra workflow folders
+   (csms_proposal_group_v2, gracubuy_login) that were added outside this task,
+   but EXPECTED_WORKFLOWS in tests/test_integration.py was not updated. Nothing in
+   handlers/autocomplete_handler.py is involved (list_workflows only reads the
+   workflows directory).
+
+2. ERROR tests/test_integration.py::test
+   Cause: pytest auto-collects the module-level helper function `def test(name)`
+   (the decorator used by the file's own runner) as a test case and cannot call it
+   without the `name` argument. Pre-existing issue in tests/test_integration.py
+   (this file was NOT modified by this task).
+
+Baseline proof: both issues reproduce identically when tests/test_integration.py
+is run directly (python tests/test_integration.py) where additional pre-existing
+gbk console-encoding failures appear in two print statements of the file itself.
+None of these touch autocomplete/handler code, and the new autocomplete handler
+tests (7/7) all pass against the modified handler.
+
+CONCLUSION: integration suite has no NEW regressions from this task.

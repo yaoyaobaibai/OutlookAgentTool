@@ -1,0 +1,83 @@
+FIX: html5_uploader no longer clicks the upload button (native file dialog bug)
+================================================================================
+Date: 2026-08-04
+Project: C:\Users\p1325970\AILearn\Auto fill form
+
+ROOT CAUSE
+----------
+`_handle_html5()` in handlers/file_upload_handler.py previously executed:
+
+    if upload_btn_sel:
+        self.page.locator(upload_btn_sel).click()   # opens native OS file chooser
+        self.page.wait_for_timeout(500)
+
+Clicking the upload button triggers the hidden <input type="file">'s native
+click, opening the OS file-selection dialog. `set_input_files(value)` then
+uploads the file, but the already-opened dialog remained on screen.
+
+FIX
+---
+Removed the `if upload_btn_sel: ...click()... wait 500ms` block entirely.
+Files are now set DIRECTLY on the hidden file input via
+`file_input.set_input_files(value)`, which triggers iValua's change-based
+upload automatically.
+
+Docstring updated: "html5_uploader mode does NOT click the upload button (that
+opens a native file dialog); it sets files directly on the hidden input, which
+triggers iValua's change-based upload."
+
+validate() updated: `upload_button_selector` is now OPTIONAL for
+html5_uploader mode. Validation is lenient - base validate() still requires
+`selector`; html5 mode additionally errors only if BOTH `file_input_selector`
+(handler_config) and `selector` are missing. No hard-fail on missing
+upload_button_selector.
+
+FILES CHANGED
+-------------
+1. handlers/file_upload_handler.py
+   - `_handle_html5`: removed button-click block; direct set_input_files.
+   - `validate`: removed upload_button_selector requirement for html5 mode.
+2. tests/test_file_upload_handler.py
+   - Renamed test_html5_uploader_clicks_button_sets_input_waits ->
+     test_html5_uploader_sets_input_waits_without_click (asserts NO click,
+     set_input_files called directly, no 500ms settle timeout).
+   - Added test_html5_uploader_does_not_click_button: config with
+     upload_button_selector + file_input_selector -> no click, set_input_files
+     called, wait logic intact.
+   - All html5 tests asserting no-click added.
+   - Replaced test_validate_html5_requires_upload_button with
+     test_validate_html5_no_upload_button_required (html5 without
+     upload_button_selector now passes validation).
+   - Docstring updated.
+
+UNCHANGED (per spec)
+--------------------
+- workflows/gracubuy_gr_flow/workflow.json and ..._test/workflow.json left as-is
+  (upload_button_selector key remains, now harmless).
+- Wait logic (wait_after_upload_ms > wait_for_upload_selector > 2000ms)
+  and return dict shape unchanged.
+- No modification to schema, engine, form_filler.py, or recorder.py.
+
+VERIFICATION
+------------
+1. python -m py_compile handlers/file_upload_handler.py        -> exit 0 (COMPILE_OK)
+2. pytest tests/test_file_upload_handler.py -v                 -> 9 passed
+   - test_html5_uploader_sets_input_waits_without_click        PASSED
+   - test_html5_uploader_does_not_click_button                 PASSED
+   - test_wait_after_upload_ms_highest_priority                PASSED
+   - test_html5_fallback_wait_for_selector                     PASSED
+   - test_html5_default_wait_2000ms                            PASSED
+   - test_html5_hidden_input_fallback                          PASSED
+   - test_native_mode_unchanged                                PASSED
+   - test_native_mode_unchanged_with_handler_config            PASSED
+   - test_validate_html5_no_upload_button_required             PASSED
+3. pytest tests/test_stages_engine.py tests/test_autocomplete_handler.py \
+        tests/test_input_handler.py -q                          -> 15 passed
+
+FINAL _handle_html5 CONFIRMED
+-----------------------------
+- No `.click()` on the upload button.
+- `file_input.set_input_files(value)` called directly (with
+  `input[type="file"]` first fallback when count()==0).
+- Wait logic intact: wait_after_upload_ms (fixed wait), else
+  wait_for_selector(hidden), else 2000ms fallback.

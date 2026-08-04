@@ -1,0 +1,5 @@
+﻿Order hc: {'mode': 'autocompletion', 'search_selector': '#body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder_search', 'result_selector': '#body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder_MenuItem span.text', 'wait_after_input_ms': 1500, 'clear_before': True}
+Attachment hc: {'mode': 'html5_uploader', 'upload_button_selector': '#body_x_tabc_prxDelivery_prxprxDelivery_x_file_delivery_20240807224049492_x_UploadButtonControl', 'file_input_selector': '#fileselect_body_x_tabc_prxDelivery_prxprxDelivery_x_file_delivery_20240807224049492_x', 'wait_after_upload_ms': 4000}
+Quantity hc: {'iframe_selector': "iframe[src*='modal.aspx']"}
+Approver2 hc: {'mode': 'autocompletion', 'search_selector': '#body_x_tabc_prxDelivery_prxprxDelivery_x_selector_single_delivery_20240816105603081_search', 'result_selector': '#body_x_tabc_prxDelivery_prxprxDelivery_x_selector_single_delivery_20240816105603081_MenuItem span.text', 'wait_after_input_ms': 1500, 'clear_before': True}
+stage-field-subsets: [['Order', 'Code', 'Internal Comment', 'Attachment File'], ['Quantity'], [], ['Approver 2']]

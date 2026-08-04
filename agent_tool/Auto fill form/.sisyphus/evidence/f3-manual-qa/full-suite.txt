@@ -1,0 +1,21 @@
+﻿
+tests/test_integration.py::test_stop_mechanism PASSED                    [ 87%]
+tests/test_integration.py::test_interrupt_mid_flight PASSED              [ 89%]
+tests/test_stages_engine.py::test_no_stages_uses_single_round PASSED     [ 91%]
+tests/test_stages_engine.py::test_multi_stage_executes_in_order PASSED   [ 93%]
+tests/test_stages_engine.py::test_stage_post_fill_click PASSED           [ 95%]
+tests/test_stages_engine.py::test_field_values_shared_across_stages PASSED [ 97%]
+tests/test_stages_engine.py::test_stage_missing_field_raises PASSED      [100%]
+=================================== ERRORS ====================================
+___________________________ ERROR at setup of test ____________________________
+>           raise AssertionError(f"Expected {b!r}, got {a!r}" +
+E           AssertionError: Expected {'gracubuy_create_gr', 'csms_create_proposal'}, got {'gracubuy_login', 'csms_creat
+e_proposal', 'gracubuy_create_gr', 'gracubuy_gr_flow', 'csms_proposal_group_v2'} — list_workflows should return both wo
+rkflows
+..\采购\自动填充网页表单信息\tests\test_integration.py:94: AssertionError
+FAILED tests/test_integration.py::test_list_workflows - AssertionError: Expec...
+ERROR tests/test_integration.py::test
+============ 1 failed, 47 passed, 1976 warnings, 1 error in 1.08s =============
+
+
+

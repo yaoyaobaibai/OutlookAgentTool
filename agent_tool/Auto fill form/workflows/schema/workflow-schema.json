@@ -94,6 +94,13 @@
         "$ref": "#/$defs/navigation_step"
       }
     },
+    "stages": {
+      "type": "array",
+      "description": "Ordered list of execution phases. Each stage has its own navigation/fields/post_fill. When present, the engine executes stages sequentially instead of the single top-level round.",
+      "items": {
+        "$ref": "#/$defs/stage_config"
+      }
+    },
     "fields": {
       "type": "object",
       "description": "Map of field names to their configuration.",
@@ -148,28 +155,7 @@
       }
     },
     "post_fill": {
-      "type": "object",
-      "description": "Actions to perform after all fields have been filled.",
-      "additionalProperties": false,
-      "properties": {
-        "action": {
-          "type": "string",
-          "enum": ["manual_review", "click_button"],
-          "description": "What to do after filling all fields."
-        },
-        "message": {
-          "type": "string",
-          "description": "Message to display to the user."
-        },
-        "click_selector": {
-          "type": "string",
-          "description": "CSS selector of the button to click (for click_button action)."
-        },
-        "wait_selector": {
-          "type": "string",
-          "description": "CSS selector to wait for after clicking."
-        }
-      }
+      "$ref": "#/$defs/post_fill"
     }
   },
 
@@ -382,6 +368,55 @@
           "minimum": 0,
           "default": 500,
           "description": "Time in ms to wait after handler completes."
+        },
+        "mode": {
+          "type": "string",
+          "description": "Handler mode. For file_upload: 'native' or 'html5_uploader'. For autocomplete: 'dropdown' or 'autocompletion'."
+        },
+        "search_input_selector": {
+          "type": "string",
+          "description": "Alias for search_selector; the search input inside the selector widget."
+        },
+        "dropdown_selector": {
+          "type": "string",
+          "description": "Selector for dropdown items (autocomplete default '.menu > .item')."
+        },
+        "wait_after_input_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Time in ms to wait after typing in a search/autocomplete input."
+        },
+        "clear_before": {
+          "type": "boolean",
+          "default": true,
+          "description": "Clear the field before filling."
+        },
+        "hidden_input_selector": {
+          "type": "string",
+          "description": "Hidden input selector for JS value fallback."
+        },
+        "upload_button_selector": {
+          "type": "string",
+          "description": "Selector of the upload button to click first (html5_uploader mode)."
+        },
+        "file_input_selector": {
+          "type": "string",
+          "description": "Selector of the hidden file input (html5_uploader mode)."
+        },
+        "wait_for_upload_selector": {
+          "type": "string",
+          "description": "Selector to wait hidden after upload completes."
+        },
+        "wait_upload_timeout_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 30000,
+          "description": "Timeout for upload completion wait."
+        },
+        "wait_after_upload_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Fixed wait after upload in ms (highest priority)."
         }
       }
     },
@@ -403,6 +438,10 @@
           "type": "string",
           "description": "Selector to wait for after filling."
         },
+        "wait_state": {
+          "type": "string",
+          "description": "DOM state to wait for ('visible'/'hidden') when using click_and_wait. Defaults to 'hidden' in the engine."
+        },
         "wait_time": {
           "type": "integer",
           "minimum": 0,
@@ -413,6 +452,59 @@
           "description": "JavaScript code to evaluate after filling."
         }
       }
+    },
+
+    "post_fill": {
+      "type": "object",
+      "description": "Actions to perform after all fields have been filled.",
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": ["manual_review", "click_button"],
+          "description": "What to do after filling all fields."
+        },
+        "message": {
+          "type": "string",
+          "description": "Message to display to the user."
+        },
+        "click_selector": {
+          "type": "string",
+          "description": "CSS selector of the button to click (for click_button action)."
+        },
+        "wait_selector": {
+          "type": "string",
+          "description": "CSS selector to wait for after clicking."
+        }
+      }
+    },
+
+    "stage_config": {
+      "type": "object",
+      "description": "Configuration for a single execution stage.",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Display name of the stage."
+        },
+        "navigation": {
+          "type": "array",
+          "description": "Navigation steps specific to this stage.",
+          "items": {
+            "$ref": "#/$defs/navigation_step"
+          }
+        },
+        "fields": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Field names referencing keys in the top-level 'fields' map. The engine executes them in order."
+        },
+        "post_fill": {
+          "$ref": "#/$defs/post_fill"
+        }
+      },
+      "required": ["fields"]
     }
   }
 }

@@ -1,0 +1,25 @@
+TASK: Remove "connect to already-running browser" mode from form_filler.py
+Date: 2026-08-03
+Interpreter: C:\Users\p1325970\AppData\Local\Python\bin\python.exe
+
+CHANGES
+1. __init__: removed `self.connect_existing = tk.BooleanVar(value=True)` and `self.cdp_url = tk.StringVar(value="http://localhost:9222")` (and the surrounding comment).
+2. settings_frame GUI: removed the "连接已运行的浏览器..." ttk.Checkbutton row, the "调试地址:" label, and the ttk.Entry bound to self.cdp_url (grid row 1 of settings_frame).
+3. _launch_browser(): removed the entire `if self.connect_existing.get():` CDP-connect branch; docstring rewritten to describe ONLY bare-launch mode. Bare-launch logic kept intact (subprocess.Popen Edge with --remote-debugging-port=9222, --user-data-dir=formfiller_edge_profile, --no-first-run, --no-default-browser-check; CDP readiness poll; connect_over_cdp; _edge_proc reference; chromium.launch fallback preserved).
+4. Log messages: connect-mode lines removed; new lines added: "[i] 正在以裸启动方式打开 Edge: ...", "[i] 首次运行请先在弹出的 Edge 中登录 Acubuy，登录态将保存在 formfiller_edge_profile 中". Bare-launch "[✓] Edge 已启动 (端口 9222)，正在连接..." kept.
+
+NOT REMOVED (per spec): connect_over_cdp (bare-launch uses it), _find_edge_path(), _edge_proc cleanup in _on_closing(), subprocess/tempfile/time/urllib imports, chromium fallback launch.
+
+VERIFICATION
+1. python -m py_compile form_filler.py        -> exit 0 (COMPILE_OK)
+2. python -c "import form_filler; print('OK')" -> OK
+3. Grep counts in form_filler.py:
+   connect_existing:      0  (ABSENT, required)
+   cdp_url:               0  (ABSENT, required)
+   connect_over_cdp:      1  (present, required)
+   formfiller_edge_profile: 3 (present, required)
+   _find_edge_path:       2  (present, required)
+   _edge_proc:            5  (present, required)
+4. Read-back of _launch_browser(): single-mode bare-launch only (see form_filler.py lines ~616-696).
+
+RESULT: PASS

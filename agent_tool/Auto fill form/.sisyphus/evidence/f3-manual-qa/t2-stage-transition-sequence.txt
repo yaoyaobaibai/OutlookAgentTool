@@ -1,0 +1,9 @@
+﻿Unknown post-fill action '' — ignoring
+CALL_SEQUENCE:
+   ('wait_for', '#a', {'state': 'visible', 'timeout': 5000})
+   ('fill', '#a', '')
+   ('fill', '#a', 'hello')
+   ('click', '#submit')
+   ('wait_for_selector', '#next-page', {'timeout': 10000})
+SEQUENCE_OK (fill < click < wait_for_selector): True
+RESULT: True

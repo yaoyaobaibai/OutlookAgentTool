@@ -1,0 +1,61 @@
+================================================================================
+EVIDENCE: form_filler.py — Connect to already-running Edge via CDP
+================================================================================
+Date: 2026-08-03
+Interpreter: C:\Users\p1325970\AppData\Local\Python\bin\python.exe
+File modified: C:\Users\p1325970\AILearn\Auto fill form\form_filler.py
+Scope: form_filler.py ONLY. No changes to workflow.json, schema, engine,
+handlers, tests, workflow execution logic, or auto_create_proposal.py.
+
+--------------------------------------------------------------------------------
+1) What changed
+--------------------------------------------------------------------------------
+- Added `self.connect_existing = tk.BooleanVar(value=True)` (default True) and
+  `self.cdp_url = tk.StringVar(value="http://localhost:9222")` in __init__.
+- Browser settings frame now has a new row (row 1) with:
+    * ttk.Checkbutton "连接已运行的浏览器 (需以 --remote-debugging-port=9222 启动)"
+      bound to self.connect_existing
+    * Label "调试地址:" + Entry bound to self.cdp_url
+- `_launch_browser()` now branches:
+    * If connect_existing is True -> `playwright.chromium.connect_over_cdp(cdp_url)`,
+      reuses first context / first open page, sets self.page, logs hints, returns.
+    * Otherwise -> existing fresh-launch code unchanged (chromium / channel /
+      executable_path logic preserved verbatim), with one addition:
+      `launch_args["ignore_default_args"] = ["--enable-automation"]` to reduce
+      automation-detection so Microsoft login policy blocks less often.
+- `_run_engine_thread` unchanged — it already consumes self.page after
+  _launch_browser().
+
+--------------------------------------------------------------------------------
+2) Verification results
+--------------------------------------------------------------------------------
+[1] Syntax:  python -m py_compile form_filler.py            -> PY_COMPILE_EXIT=0
+[2] Import:  python -c "import form_filler; print('OK')"    -> OK
+             (module-level import does NOT start Tk; guarded by
+              `if __name__ == "__main__":`)
+[3] Code review (read form_filler.py):
+    - connect_existing default True:                          CONFIRMED
+    - cdp_url default "http://localhost:9222":               CONFIRMED
+    - _launch_browser has connect branch BEFORE fresh-launch: CONFIRMED
+    - fresh-launch code (chromium/channel/executable_path)   UNCHANGED
+    - ignore_default_args added to fresh-launch path:         CONFIRMED
+[4] Runtime launch test (fresh path, ignore_default_args):
+      playwright.chromium.launch(channel='msedge', headless=True,
+                                 ignore_default_args=['--enable-automation'])
+      -> EDGE_LAUNCH_WITH_IGNORE_DEFAULT_ARGS_OK
+[5] Runtime CDP connect test (connect path, end-to-end):
+      - Launched Edge with --remote-debugging-port=9333
+      - playwright.chromium.connect_over_cdp("http://localhost:9333")
+      - contexts[0] selected, pages[0] reused, page.goto worked
+      -> CDP_ENDPOINT_READY + CONNECT_OVER_CDP_OK
+
+NOTE: [4]/[5] prove both branches work in the real environment.
+NOTE: The first raw chromium launch test failed only because the Playwright
+      bundled chromium_headless_shell is not downloaded; irrelevant to this
+      change (app uses channel/executable_path Edge). Confirmed via msedge.
+
+--------------------------------------------------------------------------------
+3) Files touched
+--------------------------------------------------------------------------------
+modified:  form_filler.py   (only)
+================================================================================

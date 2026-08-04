@@ -1,0 +1,4 @@
+﻿selectors-touched: ['#req', '#req']
+PASS optional-#opt-skipped: True
+PASS required-#req-filled: True
+PASS success==1, total==1: True

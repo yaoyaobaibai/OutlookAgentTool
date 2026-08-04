@@ -1,0 +1,60 @@
+TASK: Fix pre-existing data-type bug in form_filler.py _build_field_values
+================================================================================
+
+FIX APPLIED
+-----------
+File: C:\Users\p1325970\AILearn\Auto fill form\form_filler.py (line 634, in _build_field_values)
+
+BEFORE:
+    df = pd.read_excel(excel_path)
+AFTER:
+    df = pd.read_excel(excel_path, dtype=str)
+
+No other lines changed. Single-line minimal edit.
+
+RATIONALE
+---------
+pandas inferred all-numeric-looking columns (e.g. Code, Quantity) as float64,
+so str(val) produced "12345.0" instead of "12345". dtype=str forces every cell
+to be read as a string, so str(val) yields exactly what the user typed.
+
+VERIFICATION 1: dtype=str read of GR template
+-----------------------------------------------
+Command:
+  python -c "import pandas as pd; df = pd.read_excel(r'workflows/gracubuy_gr_flow/GR_Goods_Receipt_Data_Template.xlsx', dtype=str); row = df.iloc[0]; print({k: str(v) for k, v in row.items()})"
+
+Output:
+  {'Order': '6000017449', 'Code': '12345', 'Internal Comment': '8889', 'Attachment File': 'C:/Users/p1325970/OneDrive - NCS PTE LTD/WorkSpace/GR/PR0157310.pdf', 'Quantity': '100', 'Approver 2': 'Amy Yin - (Band C)'}
+
+Assertions:
+  - Code == '12345'                -> PASS (no .0)
+  - Internal Comment == '8889'     -> PASS
+  - Quantity == '100'              -> PASS (no .0)
+  - Order == '6000017449'          -> PASS
+  - Attachment File == 'C:/Users/p1325970/OneDrive - NCS PTE LTD/WorkSpace/GR/PR0157310.pdf' -> PASS
+  - Approver 2 == 'Amy Yin - (Band C)' -> PASS
+
+VERIFICATION 2: pytest suite
+-----------------------------
+Command:
+  C:\Users\p1325970\AppData\Local\Python\bin\python.exe -m pytest tests/test_integration.py tests/test_stages_engine.py tests/test_input_handler.py tests/test_file_upload_handler.py tests/test_autocomplete_handler.py -q
+
+Result summary:
+  1 failed, 47 passed, 1924 warnings, 1 error in 1.07s
+
+Pre-existing issues (UNRELATED to this change, left untouched as instructed):
+  - FAILED tests/test_integration.py::test_list_workflows
+      AssertionError: Expected {'gracubuy_create_gr', 'csms_create_proposal'}, got
+      {'gracubuy_gr_flow', 'csms_proposal_group_v2', 'gracubuy_login', 'csms_create_proposal', 'gracubuy_create_gr'}
+      (list_workflows now returns more workflows than the stale test expectation)
+  - ERROR at setup of tests/test_integration.py::test
+      "def test(name: str):" -> fixture 'name' not found (collection error in test_integration.py line 71)
+
+No NEW failures introduced by the dtype=str change: all 47 non-broken tests pass,
+including test_stages_engine, test_input_handler, test_file_upload_handler,
+test_autocomplete_handler.
+
+CONCLUSION
+----------
+Fix verified. Excel values now load as exact strings ('12345', '8889', '100')
+instead of float-formatted strings ('12345.0', etc.).

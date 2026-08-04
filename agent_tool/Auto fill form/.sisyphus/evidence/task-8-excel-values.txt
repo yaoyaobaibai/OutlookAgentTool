@@ -1,0 +1,18 @@
+TASK-8 EVIDENCE: GR template numeric-to-text fix
+File: workflows/gracubuy_gr_flow/GR_Goods_Receipt_Data_Template.xlsx
+Date: 2026-07-31
+
+FIX APPLIED
+- Row 2 Code -> "12345" as str, number_format "@"
+- Row 2 Internal Comment -> "8889" as str, number_format "@"
+- Row 2 Quantity -> "100" as str, number_format "@"
+- Headers, freeze_panes=A2, A4 note, other cells unchanged.
+
+PANDAS VERIFICATION (pandas.read_excel, dtype=str, dict(df.iloc[0])):
+HEADERS: ['Order', 'Code', 'Internal Comment', 'Attachment File', 'Quantity', 'Approver 2']
+ROW0_TYPES: {'Order': 'str', 'Code': 'str', 'Internal Comment': 'str', 'Attachment File': 'str', 'Quantity': 'str', 'Approver 2': 'str'}
+ROW0: {'Order': '6000017449', 'Code': '12345', 'Internal Comment': '8889', 'Attachment File': 'C:/Users/p1325970/OneDrive - NCS PTE LTD/WorkSpace/GR/PR0157310.pdf', 'Quantity': '100', 'Approver 2': 'Amy Yin - (Band C)'}
+JSON: {"Order": "6000017449", "Code": "12345", "Internal Comment": "8889", "Attachment File": "C:/Users/p1325970/OneDrive - NCS PTE LTD/WorkSpace/GR/PR0157310.pdf", "Quantity": "100", "Approver 2": "Amy Yin - (Band C)"}
+
+RESULT: Code/Internal Comment/Quantity are plain str ('12345'/'8889'/'100'), NOT float.
+All assertions passed.

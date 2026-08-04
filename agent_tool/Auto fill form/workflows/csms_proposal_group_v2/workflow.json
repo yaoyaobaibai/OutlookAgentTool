@@ -1,0 +1,155 @@
+{
+  "$schema": "../../workflows/schema/workflow-schema.json",
+  "workflow_name": "CSMS Proposal Group V2",
+  "version": "1.0.0",
+  "description": "基于录制回放生成的 CSMS Create Proposal Group 工作流。相比 v1 版本新增了 City 字段和附件上传配置，支持完整的表单填写流程。",
+  "status": "active",
+
+  "browser": {
+    "channel": "chrome"
+  },
+
+  "login": {
+    "url": "https://csmstest.ncs.com.sg/UAT/login.aspx",
+    "enabled": true,
+    "fallback_selectors": {
+      "username": [
+        "#ctl00_ContentPlaceHolder1_TextBox1",
+        "input[name='username']",
+        "input[name='userName']",
+        "input[type='text']"
+      ],
+      "password": [
+        "#ctl00_ContentPlaceHolder1_TextBox2",
+        "input[name='password']",
+        "input[name='passwd']",
+        "input[type='password']"
+      ],
+      "submit": [
+        "#ctl00_ContentPlaceHolder1_Button1",
+        "input[type='submit']",
+        "button[type='submit']",
+        "input[value='Submit']"
+      ]
+    }
+  },
+
+  "navigation": [
+    {
+      "action": "goto",
+      "url": "https://csmstest.ncs.com.sg/UAT/app/consol_cs/details_pg.aspx",
+      "wait_until": "networkidle"
+    },
+    {
+      "action": "wait_selector",
+      "selector": "#ctl00_ContentPlaceHolder1_txtProposalNo",
+      "timeout": 15000
+    }
+  ],
+
+  "fields": {
+    "Proposal #": {
+      "selector": "#ctl00_ContentPlaceHolder1_txtProposalNo",
+      "type": "input",
+      "required": true,
+      "post_fill": {
+        "action": "click_and_wait",
+        "click_selector": "#ctl00_ContentPlaceHolder1_btnInfo",
+        "wait_selector": "#ctl00_ContentPlaceHolder1_txtCity",
+        "wait_state": "visible"
+      }
+    },
+    "City": {
+      "selector": "#ctl00_ContentPlaceHolder1_txtCity",
+      "type": "input",
+      "required": false
+    },
+    "Cust Ref. No": {
+      "selector": "#ctl00_ContentPlaceHolder1_txtCustRefNo",
+      "type": "input",
+      "required": true
+    },
+    "Proposal/Contract Value": {
+      "selector": "#ctl00_ContentPlaceHolder1_txtContractValue",
+      "type": "input",
+      "required": true
+    },
+    "Selling Price Currency Code": {
+      "selector": "#ctl00_ContentPlaceHolder1_ddlSelPriceCurrCode",
+      "type": "select",
+      "required": true,
+      "handler_config": {
+        "trigger_postback": true,
+        "trigger_change_event": true,
+        "value_type": "label",
+        "wait_after_ms": 1500
+      }
+    },
+    "Date of Award": {
+      "selector": "#ctl00_ContentPlaceHolder1_dtDateofAward_txtDate",
+      "type": "datepicker",
+      "required": true,
+      "handler_config": {
+        "date_format": "MM/DD/YYYY"
+      }
+    },
+    "Priming Project Manager": {
+      "selector": "#ctl00_ContentPlaceHolder1_ucEmpSearch_txtUserName",
+      "type": "popup_search",
+      "required": false,
+      "handler_config": {
+        "trigger_selector": "#ctl00_ContentPlaceHolder1_ucEmpSearch_imgUserName",
+        "popup_timeout_ms": 10000,
+        "steps": [
+          { "action": "fill", "selector": "#txtOAID", "value": "$ref" },
+          { "action": "click", "selector": "input[type='submit'][value*='Search']" },
+          { "action": "wait", "timeout_ms": 2000 },
+          { "action": "click", "selector": "table tr:nth-child(2)" },
+          { "action": "click", "selector": "input[type='submit'][value*='Select']" }
+        ]
+      }
+    },
+    "Attachment Category": {
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_ddlCategory1",
+      "type": "select",
+      "required": false,
+      "handler_config": {
+        "value_type": "label",
+        "wait_after_ms": 500
+      }
+    },
+    "Attachment File": {
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_fileUpload0",
+      "type": "file_upload",
+      "required": false
+    },
+    "Attachment Description": {
+      "selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_txtEditDescription0",
+      "type": "input",
+      "required": false,
+      "post_fill": {
+        "action": "click_button",
+        "click_selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer_lnkAdd"
+      }
+    }
+  },
+  "attachment": {
+    "enabled": true,
+    "scroll_selector": "#ctl00_ContentPlaceHolder1_wgAttachment_footer",
+    "category_selectors": [
+      "#ctl00_ContentPlaceHolder1_wgAttachment_footer_ddlCategory1"
+    ],
+    "file_selectors": [
+      "#ctl00_ContentPlaceHolder1_wgAttachment_footer_fileUpload0"
+    ],
+    "description_selectors": [
+      "#ctl00_ContentPlaceHolder1_wgAttachment_footer_txtEditDescription0"
+    ]
+  },
+
+  "post_fill": {
+    "action": "click_button",
+    "click_selector": "#ctl00_ContentPlaceHolder1_btnInsert",
+    "message": "正在点击 Create 按钮提交表单..."
+  }
+}

@@ -1,0 +1,25 @@
+=== formfiller bare-edge launch test ===
+Date: 2026-08-03
+Python: C:\Users\p1325970\AppData\Local\Python\bin\python.exe (3.14.4)
+
+Test: replicate form_filler.py fresh-launch logic on port 9223
+  - subprocess.Popen(msedge.exe, --remote-debugging-port=9223,
+      --user-data-dir=%TEMP%\formfiller_edge_profile, --no-first-run,
+      --no-default-browser-check)
+  - poll http://localhost:9223/json/version until ready
+  - playwright.chromium.connect_over_cdp -> page url/title
+  - terminate ONLY the spawned Edge (PID 24276)
+
+Output:
+[i] Edge path: C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe
+[i] Profile dir: C:\Users\p1325970\AppData\Local\Temp\formfiller_edge_profile
+[i] Spawned Edge PID: 24276
+[OK] CDP endpoint ready
+[OK] connect_over_cdp succeeded
+[OK] page url: 'https://ncsgpt.ncsi.com.cn/'
+[OK] page title: 'NCSgpt'
+[OK] bare-launch test PASSED
+[i] Terminated spawned Edge PID 24276
+
+Post-check: port 9223 has no listener (Edge spawned by test is gone).
+Only the user's pre-existing Edge processes remain (untouched).

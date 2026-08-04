@@ -1,0 +1,43 @@
+AutoCompleteHandler Two-Step (search-then-select) - QA Evidence
+======================================================================
+Date/Time      : 2026-07-31
+Interpreter    : C:\Users\p1325970\AppData\Local\Python\pythoncore-3.14-64\python.exe
+Recording ref  : recordings/recorder_log_20260731_140316.json
+                 (selOrder search: type '6000017449' -> click 'PO0147739 - 广州...' item)
+
+Scenario:
+  field_config.selector        = "#sel"
+  field_config.handler_config  = {
+      "search_value": "6000017449",
+      "result_selector": "#sel_results .text",
+      "wait_after_input_ms": 100
+  }
+  value                        = "PO0147739"
+
+Expected behaviour:
+  - fill search input "#sel_search" with the search term "6000017449" (NOT the value)
+  - wait 100ms for the server-side AJAX search results
+  - locate items via result_selector "#sel_results .text"
+  - click the item whose displayed text matches the field value "PO0147739"
+
+Observed MockPage interaction log:
+  fills on #sel_search : ['', '6000017449']
+  clicks on items      : [('#sel', None), ('#sel_results .text', 0)]
+  wait_for_timeout(ms) : [100]
+  clicked item text    : "PO0147739 - 广州2026年7月京东购买（不含税）-上海圆迈贸易有限公司"
+
+  [PASS] handler returns success=True
+  [PASS] search input filled with '6000017449' (search term, not 'PO0147739')
+  [PASS] clicked item located via result_selector '#sel_results .text'
+  [PASS] clicked item text contains field value 'PO0147739'
+  [PASS] waited wait_after_input_ms=100
+
+  handler result: {'success': True, 'message': "Selected 'PO0147739' from autocomplete '#sel'", 'evidence': {'selector': '#sel', 'value': 'PO0147739', 'mode': 'dropdown', 'search_value': '6000017449'}}
+
+Additional scenario tests (tests/test_autocomplete_handler.py):
+  test_two_step_search_then_select                   PASS
+  test_two_step_no_result_selector_uses_default      PASS
+  test_two_step_no_results_returns_success_warning   PASS
+  test_search_selector_key_supported                 PASS
+
+VERDICT: PASS

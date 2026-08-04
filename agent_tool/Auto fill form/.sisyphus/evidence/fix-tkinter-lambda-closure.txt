@@ -1,0 +1,62 @@
+Fix: Tkinter lambda closure bug (Python 3.14 exception-variable semantics)
+=======================================================================
+File:       form_filler.py
+Date:       2026-08-03
+Interpreter: C:\Users\p1325970\AppData\Local\Python\bin\python.exe
+
+BUG
+---
+In `_run_engine_thread`, the `except Exception as e:` block scheduled a
+deferred lambda that referenced the exception variable `e`:
+
+    self.root.after(0, lambda: self._on_execution_error(e))
+
+`self.root.after(0, ...)` runs the lambda on the Tk main thread's NEXT event
+loop iteration, i.e. AFTER the `except` block has exited. Python 3.14
+deletes the exception variable at the end of the `except` block (it is
+treated as an unbound free variable), raising:
+
+    NameError: cannot access free variable 'e' where it is not associated
+    with a value in enclosing scope
+
+FIX
+---
+Bound the exception as a lambda DEFAULT argument (captured at definition
+time), so the deferred lambda does not rely on the outer `e`:
+
+    self.root.after(0, lambda err=e: self._on_execution_error(err))
+
+LAMBDA AUDIT (all `lambda` occurrences in form_filler.py)
+---------------------------------------------------------
+Line 423: `self.attachment_tree.bind('<Double-1>', lambda e: self._edit_attachment())`
+    SAFE - `e` is the event parameter of the bind callback, not a loop or
+    exception variable. NOT modified.
+Line 882: `self.root.after(0, lambda: self._on_execution_complete(result))`
+    SAFE - `result` is a normal local assigned before the lambda is created
+    and never reassigned afterwards; it is NOT an except/loop variable.
+    NOT modified.
+Line 888: `self.root.after(0, lambda: self._on_execution_error(e))`
+    BUG - captured exception variable `e`. FIXED ->
+    `self.root.after(0, lambda err=e: self._on_execution_error(err))`
+Line 891: `self.root.after(0, lambda: self.btn_stop.config(state=tk.DISABLED))`
+    SAFE - only references `self`. NOT modified.
+Line 892: `self.root.after(0, lambda: self.btn_start.config(state=tk.NORMAL))`
+    SAFE - only references `self`. NOT modified.
+
+VERIFICATION
+------------
+1. `python -m py_compile form_filler.py`          -> exit 0 (COMPILE_EXIT=0)
+2. `python -c "import form_filler; print('OK')"`  -> OK
+3. Fixed except block confirmed (see below).
+
+FIXED CODE (lines 884-892, current state)
+-----------------------------------------
+        except Exception as e:
+            self._log(f"\n[!] 引擎错误: {e}")
+            import traceback
+            self._log(traceback.format_exc())
+            self.root.after(0, lambda err=e: self._on_execution_error(err))
+        finally:
+            self.is_running = False
+            self.root.after(0, lambda: self.btn_stop.config(state=tk.DISABLED))
+            self.root.after(0, lambda: self.btn_start.config(state=tk.NORMAL))

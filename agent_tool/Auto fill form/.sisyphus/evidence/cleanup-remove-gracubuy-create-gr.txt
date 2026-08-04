@@ -1,0 +1,53 @@
+CLEANUP EVIDENCE: Remove legacy draft workflow gracubuy_create_gr
+===================================================================
+Date: 2026-08-03
+Project: C:\Users\p1325970\AILearn\Auto fill form
+
+Actions performed:
+1. Deleted directory: workflows\gracubuy_create_gr (contained only workflow.json)
+2. Updated workflows\settings.json: removed "gracubuy_create_gr" entry from workflow_list
+   (all other entries and current_workflow preserved)
+
+--------------------------------------------------------------------------------
+VERIFY 1: Directory gone
+Command: Test-Path "workflows\gracubuy_create_gr"
+Result:  False
+Expected: False  -> PASS
+
+--------------------------------------------------------------------------------
+VERIFY 2: settings.json valid JSON; gracubuy_create_gr removed; current preserved
+Command:
+  python -c "import json; d=json.load(open('workflows/settings.json',encoding='utf-8')); names=[w['name'] for w in d['workflow_list']]; print(names); print('current:', d['current_workflow'])"
+Output:
+  workflow_list names: ['csms_create_proposal', 'csms_proposal_group_v2', 'gracubuy_gr_flow', 'gracubuy_login']
+  current: csms_proposal_group_v2
+Result:  gracubuy_create_gr NOT in names; gracubuy_gr_flow IS in names; current unchanged (csms_proposal_group_v2) -> PASS
+
+--------------------------------------------------------------------------------
+VERIFY 3: Workflow discovery no longer lists it
+Command:
+  python -c "from workflow_manager import WorkflowManager; print([w['name'] for w in WorkflowManager().list_workflows()])"
+Output:
+  ['csms_create_proposal', 'csms_proposal_group_v2', 'gracubuy_gr_flow', 'gracubuy_login']
+Result:  gracubuy_create_gr absent; gracubuy_gr_flow present -> PASS
+
+--------------------------------------------------------------------------------
+VERIFY 4: New workflow still validates
+Command: python workflows/schema/validate_workflow.py workflows/gracubuy_gr_flow/workflow.json
+Output:
+  Valid: workflows/gracubuy_gr_flow/workflow.json
+Result:  Valid -> PASS
+
+--------------------------------------------------------------------------------
+VERIFY 5: pytest sanity (stages_engine, input_handler, file_upload_handler, autocomplete_handler)
+Command:
+  python -m pytest tests/test_stages_engine.py tests/test_input_handler.py tests/test_file_upload_handler.py tests/test_autocomplete_handler.py -q
+Output:
+  ...................... [100%]
+  22 passed, 876 warnings in 0.36s
+Result:  22 passed (expected 22) -> PASS
+
+--------------------------------------------------------------------------------
+SUMMARY: ALL 5 VERIFICATIONS PASSED.
+- workflows\gracubuy_create_gr deleted
+- workflows\settings.json updated (gracubuy_create_gr removed; gracubuy_gr_flow and csms_* entries preserved; current_workflow = csms_proposal_group_v2)

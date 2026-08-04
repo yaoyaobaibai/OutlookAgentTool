@@ -1,0 +1,74 @@
+FIX: Autocomplete selector targets visible dropdown div instead of hidden input
+===============================================================================
+Date: 2026-08-03
+Workflow: GR-Acubuy Create Goods Receipt (workflows/gracubuy_gr_flow/workflow.json)
+
+BUG (observed in real browser run)
+----------------------------------
+Running the workflow failed on the Order field:
+  Autocomplete failed for '#body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder':
+  Locator.wait_for: Timeout 5000ms exceeded.
+  locator resolved to hidden <input type="hidden" value="139221" ...
+    class="selector-hidden-field" id="..._x_selOrder">
+
+Root cause: workflow.json Order (and Approver 2) fields set `selector` to the
+iValua HIDDEN input (`type="hidden"`, `class="selector-hidden-field"`).
+AutoCompleteHandler.execute() does self.page.locator(selector).wait_for(state="visible")
+-- a hidden element is NEVER visible -> 5s timeout -> 2 retries -> fail.
+The real visible, clickable element is the wrapping dropdown div which carries
+the hidden input's id in its data-selector attribute.
+
+PART 1 - workflow.json selector changes
+---------------------------------------
+- Order:      "#body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder"
+            -> "div[data-selector='body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder']"
+- Approver 2: "#body_x_tabc_prxDelivery_prxprxDelivery_x_selector_single_delivery_20240816105603081"
+            -> "div[data-selector='body_x_tabc_prxDelivery_prxprxDelivery_x_selector_single_delivery_20240816105603081']"
+- All other field config preserved verbatim (type/required/handler_config with
+  mode, search_selector, result_selector, wait_after_input_ms, clear_before).
+- Stage navigation wait on the _search input unchanged.
+
+PART 2 - autocomplete_handler.py (minimal change)
+-------------------------------------------------
+handlers/autocomplete_handler.py, _find_search_input(): after
+search_input.wait_for(state="visible", timeout=5000), add ONE line:
+    search_input.click()
+This mirrors the recorded interaction (click the _search field, then type),
+guaranteeing the control is focused before filling. It only runs when the
+search input exists (function already returns None otherwise), so it is guarded
+naturally. No other handler logic changed; search_selector/result_selector/
+wait_after_input_ms handling untouched.
+
+NEW TEST
+--------
+tests/test_autocomplete_handler.py::test_selector_can_be_data_selector_div
+Verifies a "div[data-selector='X']" selector resolves, execute() succeeds,
+the search input is located/filled, and the wrapper div is the click target.
+
+VERIFICATION (all executed on 2026-08-03)
+-----------------------------------------
+1) Schema validation:
+   > python workflows/schema/validate_workflow.py workflows/gracubuy_gr_flow/workflow.json
+   Output: Valid: workflows/gracubuy_gr_flow/workflow.json
+   Exit code: 0
+
+2) pytest:
+   > python -m pytest tests/test_autocomplete_handler.py tests/test_stages_engine.py \
+              tests/test_input_handler.py tests/test_file_upload_handler.py -q
+   Output: 23 passed, 908 warnings in 0.36s   (22 pre-existing + 1 new)
+   Exit code: 0
+
+3) Selector grep checks:
+   - old hidden-input field selectors (Order / Approver 2): OLD_SELECTOR_MATCHES=0  (absent)
+   - new div[data-selector=...] field selectors:             NEW_DIV_SELECTOR_MATCHES=2 (present)
+
+4) Syntax check:
+   > python -m py_compile handlers/autocomplete_handler.py tests/test_autocomplete_handler.py
+   Exit code: 0
+
+CONSTRAINTS RESPECTED
+---------------------
+- Schema NOT modified.
+- search_selector / result_selector / wait_after_input_ms values unchanged.
+- form_filler.py NOT touched.
+- Handler NOT rewritten - single line added.

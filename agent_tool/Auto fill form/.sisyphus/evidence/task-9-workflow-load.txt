@@ -1,0 +1,22 @@
+================================================================================
+TASK-9 WORKFLOW LOAD EVIDENCE — gracubuy_gr_flow (Step 4)
+Date: 2026-07-31
+Interpreter: C:\Users\p1325970\AppData\Local\Python\bin\python.exe
+================================================================================
+
+Command:
+  python -c "from workflow_manager import WorkflowManager; c = WorkflowManager().load_workflow('gracubuy_gr_flow'); print('stages:', len(c.get('stages', [])))"
+
+Raw output:
+  Skipping 'schema': workflow.json not found
+  stages: 4
+  validate_workflow module found but has no validate() function
+
+Notes:
+  - 'Skipping schema' and 'validate_workflow module found...' are benign log
+    lines from WorkflowManager's per-directory scan (the workflows/schema dir
+    holds the schema tool, not a workflow).
+  - Result: gracubuy_gr_flow loads successfully with exactly 4 stages:
+      ['create_gr', 'edit_item', 'advance_workflow', 'select_approver']
+
+================================================================================

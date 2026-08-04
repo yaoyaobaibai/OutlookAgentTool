@@ -1,0 +1,7 @@
+﻿======================================================================
+Scenario B (invalid stage property must FAIL) => PASS
+  ERROR: Additional properties are not allowed ('invalid_prop' was unexpected) | path=['stages', 0] | schema_path=['properties', 'stages', 'items', 'additionalProperties']
+  explicit 'Additional properties are not allowed' error present: True
+======================================================================
+OVERALL: ALL TESTS PASSED
+

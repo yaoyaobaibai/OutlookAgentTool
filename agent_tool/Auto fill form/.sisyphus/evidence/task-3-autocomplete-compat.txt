@@ -1,0 +1,31 @@
+AutoCompleteHandler Backward Compatibility - QA Evidence
+======================================================================
+Date/Time      : 2026-07-31
+Interpreter    : C:\Users\p1325970\AppData\Local\Python\pythoncore-3.14-64\python.exe
+
+Scenario:
+  field_config.selector        = "#sel"
+  field_config.handler_config  = {}   (no search_value, no result_selector)
+  value                        = "ABC123"
+
+Expected behaviour (unchanged from before this task):
+  - search input "#sel_search" is filled with the VALUE itself ("ABC123")
+  - dropdown items matched against the value via default selector "#sel .menu > .item"
+  - exact match clicked
+  - evidence dict shape unchanged (no search_value key)
+
+Observed MockPage interaction log:
+  fills on #sel_search : ['', 'ABC123']
+  clicks on items      : [('#sel', None), ('#sel .menu > .item', 0)]
+
+  [PASS] handler returns success=True
+  [PASS] search input filled with the value itself 'ABC123' (old behaviour)
+  [PASS] default dropdown selector '#sel .menu > .item' used, exact match clicked
+  [PASS] evidence shape unchanged (no search_value key)
+
+  handler result: {'success': True, 'message': "Selected 'ABC123' from autocomplete '#sel'", 'evidence': {'selector': '#sel', 'value': 'ABC123', 'mode': 'dropdown'}}
+
+Additional backward-compat test:
+  test_backward_compat_fill_value_directly           PASS
+
+VERDICT: PASS

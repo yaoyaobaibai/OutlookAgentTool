@@ -1,0 +1,102 @@
+{
+  "$schema": "../../workflows/schema/workflow-schema.json",
+  "workflow_name": "GR-Acubuy Create Goods Receipt",
+  "version": "1.0.0",
+  "description": "Singtel iValua Acubuy 收货单创建完整流程（创建→明细编辑→工作流推进→审批人）。从登录后开始，使用多阶段(stages)执行。",
+  "status": "active",
+  "browser": { "channel": "msedge" },
+  "login": { "url": "", "enabled": false },
+  "fields": {
+    "Order": {
+      "selector": "div[data-selector='body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder']",
+      "type": "autocomplete",
+      "required": true,
+      "handler_config": {
+        "mode": "autocompletion",
+        "search_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder_search",
+        "result_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder_MenuItem span.text",
+        "wait_after_input_ms": 1500,
+        "clear_before": true
+      }
+    },
+    "Code": {
+      "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_txtCode",
+      "type": "input",
+      "required": true
+    },
+    "Internal Comment": {
+      "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_udt_desc_delivery_20240807223748988",
+      "type": "input",
+      "required": true
+    },
+    "Attachment File": {
+      "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_file_delivery_20240807224049492_x_UploadButtonControl",
+      "type": "file_upload",
+      "required": false,
+      "handler_config": {
+        "mode": "html5_uploader",
+        "upload_button_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_file_delivery_20240807224049492_x_UploadButtonControl",
+        "file_input_selector": "#fileselect_body_x_tabc_prxDelivery_prxprxDelivery_x_file_delivery_20240807224049492_x",
+        "wait_after_upload_ms": 4000
+      }
+    },
+    "Quantity": {
+      "selector": "#body_x_txtQuantity",
+      "type": "input",
+      "required": false,
+      "handler_config": {
+        "iframe_selector": "iframe[src*='modal.aspx']"
+      }
+    },
+    "Approver 2": {
+      "selector": "div[data-selector='body_x_tabc_prxDelivery_prxprxDelivery_x_selector_single_delivery_20240816105603081']",
+      "type": "autocomplete",
+      "required": true,
+      "handler_config": {
+        "mode": "autocompletion",
+        "search_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selector_single_delivery_20240816105603081_search",
+        "result_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selector_single_delivery_20240816105603081_MenuItem span.text",
+        "wait_after_input_ms": 1500,
+        "clear_before": true
+      }
+    }
+  },
+  "stages": [
+    {
+      "name": "create_gr",
+      "navigation": [
+        { "action": "goto", "url": "https://singtel.ivalua.app/page.aspx/en/ord/delivery_manage?Create", "wait_until": "networkidle", "timeout": 300000 },
+        { "action": "wait_selector", "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_txtCode", "timeout": 60000 }
+      ],
+      "fields": ["Order", "Code", "Internal Comment", "Attachment File"],
+      "post_fill": { "action": "click_button", "click_selector": "#proxyActionBar_x__cmdSave", "message": "保存创建 GR..." }
+    },
+    {
+      "name": "edit_item",
+      "navigation": [
+        { "action": "wait_selector", "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_prxItem_x_gridDeliveryItems_grd", "timeout": 20000 },
+        { "action": "click", "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_prxItem_x_gridDeliveryItems_grd tr[data-object-type='delivery']:first-child td[data-iv-role='cell'] i.iv-grid-fa-icon.fa-pencil-alt" },
+        { "action": "wait_selector", "selector": "iframe[src*='modal.aspx']", "timeout": 15000 }
+      ],
+      "fields": ["Quantity"],
+      "post_fill": { "action": "click_button", "click_selector": "#proxyActionBar_x__cmdEnd", "message": "保存并关闭明细编辑..." }
+    },
+    {
+      "name": "advance_workflow",
+      "navigation": [
+        { "action": "wait_selector", "selector": "#proxyActionBar_x_valsingtel_receipt_v2create", "timeout": 20000 },
+        { "action": "click", "selector": "#proxyActionBar_x_valsingtel_receipt_v2create" },
+        { "action": "wait_selector", "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selector_single_delivery_20240816105603081_search", "timeout": 20000 }
+      ],
+      "fields": [],
+      "post_fill": {}
+    },
+    {
+      "name": "select_approver",
+      "navigation": [],
+      "fields": ["Approver 2"],
+      "post_fill": { "action": "click_button", "click_selector": "#proxyActionBar_x__cmdSave", "message": "保存审批人..." }
+    }
+  ],
+  "post_fill": { "action": "manual_review", "message": "GR 创建完成，请检查结果" }
+}

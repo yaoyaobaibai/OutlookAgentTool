@@ -1,0 +1,63 @@
+============================================================
+Task: Switch default browser from Chrome to Microsoft Edge
+Date: 2026-08-03
+============================================================
+
+EDGE PATH USED (verified to exist):
+  C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe
+  Test-Path result: True
+  (64-bit variant C:\Program Files\Microsoft\Edge\Application\msedge.exe -> False)
+
+============================================================
+CHANGES - form_filler.py
+============================================================
+- Line 207: browser_choice default "chrome" -> "msedge"
+- Lines 208-210: chrome_path default -> r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+- Line 307: browser_combo.current(0) -> current(1)  [default selection = msedge index]
+- Line 309: label "Chrome 路径 (可选):" -> "浏览器路径 (可选):"
+- Line 314: button command self._browse_chrome -> self._browse_browser
+- Line 571: method renamed def _browse_chrome -> def _browse_browser
+- Line 573: dialog title "选择 Chrome 浏览器" -> "选择浏览器程序"
+- initialdir now points to Edge dir with fallback to C:\Program Files if missing
+
+============================================================
+CHANGES - auto_create_proposal.py
+============================================================
+- Line 22: browser_choice default "chrome" -> "msedge"
+- Line 23: chrome_path default -> r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+- Line 87: browser_combo.current(0) -> current(1)  [default selection = msedge index]
+- Line 89: label "Chrome 路径:" -> "浏览器路径:"
+- Line 184: dialog title "选择 Chrome 浏览器" -> "选择浏览器程序"
+- Method name _browse_chrome kept (task required only title change here);
+  def (line 182) and button command (line 92) remain consistent.
+
+NOTE: browser_combo.current(0) previously forced the visible default to
+index 0 (chrome) regardless of the StringVar value; changed to current(1)
+so the on-screen default is Microsoft Edge. Dropdown value lists were NOT
+modified.
+
+============================================================
+VERIFICATION OUTPUT
+============================================================
+1) py_compile (python -m py_compile form_filler.py auto_create_proposal.py)
+   exit code: 0  (PASS)
+
+2) grep markers:
+   form_filler.py:207        self.browser_choice = tk.StringVar(value="msedge")
+   form_filler.py:209        value=r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+   auto_create_proposal.py:22  self.browser_choice = tk.StringVar(value="msedge")
+   auto_create_proposal.py:23  self.chrome_path = tk.StringVar(value=r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe")
+   - value="chrome": NO remaining occurrences in either file (PASS)
+   - value="msedge": present in both files (PASS)
+   - msedge.exe: present in both files (PASS)
+   - remaining current(0) at form_filler.py:440,444 are the WORKFLOW
+     combo, unrelated to browser selection (untouched by design)
+
+3) import sanity check:
+   python -c "import form_filler, auto_create_proposal; print('imports OK')"
+   output: imports OK
+   exit code: 0  (PASS)
+
+============================================================
+RESULT: ALL CHECKS PASSED
+============================================================

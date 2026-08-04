@@ -1,0 +1,217 @@
+================================================================================
+TASK-9 E2E VALIDATION REPORT — gracubuy_gr_flow workflow
+Date: 2026-07-31
+Interpreter: C:\Users\p1325970\AppData\Local\Python\bin\python.exe (Python 3.14)
+Project root: C:\Users\p1325970\AILearn\Auto fill form
+================================================================================
+
+SUMMARY
+-------
+Step 1  New workflow schema validation .......... PASS
+Step 2  Existing workflows regression (4) ....... PASS
+Step 3  Full test suite ......................... PASS*  (only 2 pre-existing
+                                                         known issues; no new
+                                                         failures)
+Step 4  WorkflowManager load .................... PASS  (stages: 4)
+Step 5  Workflow discovery ...................... PASS  (gracubuy_gr_flow found)
+Step 6  Excel mapping assertion ................. PASS
+Step 7  Engine Mock run (4 stages, 6 fields) .... PASS  (success=6, failed=0,
+                                                        15-step trace order OK)
+Step 8  msedge GUI browser support .............. PASS
+
+* Step 3 note: tests/test_integration.py has 2 PRE-EXISTING issues, unrelated
+  to this workflow (test_list_workflows fails on workflow-count drift; a stray
+  `def test():` at line 71 causes a collection ERROR). NOT fixed per mandate.
+  All other tests pass, including all new suites (stages engine, input,
+  file_upload, autocomplete).
+
+--------------------------------------------------------------------------------
+STEP 1 — New workflow schema validation
+--------------------------------------------------------------------------------
+Command:
+  python workflows/schema/validate_workflow.py workflows/gracubuy_gr_flow/workflow.json
+
+Output:
+  Valid: workflows/gracubuy_gr_flow/workflow.json
+Exit code: 0
+
+Result: PASS
+
+--------------------------------------------------------------------------------
+STEP 2 — Existing workflows regression (backward compatibility)
+--------------------------------------------------------------------------------
+Commands:
+  python workflows/schema/validate_workflow.py workflows/csms_create_proposal/workflow.json
+  python workflows/schema/validate_workflow.py workflows/csms_proposal_group_v2/workflow.json
+  python workflows/schema/validate_workflow.py workflows/gracubuy_create_gr/workflow.json
+  python workflows/schema/validate_workflow.py workflows/gracubuy_login/workflow.json
+
+Output (each, in order):
+  Valid: workflows/csms_create_proposal/workflow.json       (exit 0)
+  Valid: workflows/csms_proposal_group_v2/workflow.json     (exit 0)
+  Valid: workflows/gracubuy_create_gr/workflow.json         (exit 0)
+  Valid: workflows/gracubuy_login/workflow.json             (exit 0)
+
+Result: PASS — extended schema is backward compatible with all 4 existing workflows.
+
+--------------------------------------------------------------------------------
+STEP 3 — Full test suite
+--------------------------------------------------------------------------------
+Command:
+  python -m pytest tests/test_integration.py tests/test_stages_engine.py tests/test_input_handler.py tests/test_file_upload_handler.py tests/test_autocomplete_handler.py -q
+
+Output:
+  1 failed, 47 passed, 1924 warnings, 1 error in 0.71s
+  (pytest exit code 1)
+
+Failures/Errors (BOTH pre-existing, unrelated — NOT fixed):
+  1) FAILED tests/test_integration.py::test_list_workflows
+     AssertionError: Expected {'csms_create_proposal', 'gracubuy_create_gr'},
+     got {..., 'csms_proposal_group_v2', 'gracubuy_login', 'gracubuy_gr_flow'}
+     -> workflow-count drift in a hardcoded EXPECTED_WORKFLOWS set.
+  2) ERROR tests/test_integration.py::test
+     `def test(name: str):` at tests/test_integration.py:71 is collected as a
+     test; fixture 'name' not found -> collection error.
+
+Result: PASS* — ALL new suites (test_stages_engine, test_input_handler,
+test_file_upload_handler, test_autocomplete_handler) pass; the 4 csms_create_proposal
+integration tests pass. No OTHER failures beyond the 2 known pre-existing issues.
+(The only workflow discovered that still lacks a dir is 'schema' — benign log line
+ "Skipping 'schema': workflow.json not found".)
+
+--------------------------------------------------------------------------------
+STEP 4 — WorkflowManager load
+--------------------------------------------------------------------------------
+Command:
+  python -c "from workflow_manager import WorkflowManager; c = WorkflowManager().load_workflow('gracubuy_gr_flow'); print('stages:', len(c.get('stages', [])))"
+
+Output:
+  Skipping 'schema': workflow.json not found        (benign, schema dir skip)
+  stages: 4
+  validate_workflow module found but has no validate() function   (benign log)
+
+Result: PASS — gracubuy_gr_flow loads with exactly 4 stages.
+(Same output also saved verbatim to task-9-workflow-load.txt.)
+
+--------------------------------------------------------------------------------
+STEP 5 — Workflow discovery
+--------------------------------------------------------------------------------
+Command:
+  python -c "from workflow_manager import WorkflowManager; print([w['name'] for w in WorkflowManager().list_workflows()])"
+
+Output:
+  ['csms_create_proposal', 'csms_proposal_group_v2', 'gracubuy_create_gr', 'gracubuy_gr_flow', 'gracubuy_login']
+
+Result: PASS — gracubuy_gr_flow IS discovered (its workflow dir now exists).
+
+--------------------------------------------------------------------------------
+STEP 6 — Excel mapping assertion
+--------------------------------------------------------------------------------
+Temp script (written to %TEMP%\opencode\, run, then deleted):
+  - Load workflows/gracubuy_gr_flow/workflow.json  -> fields keys
+  - Load GR_Goods_Receipt_Data_Template.xlsx header row via openpyxl
+  - Assert the two sets are EXACTLY equal
+  - Load via pandas dtype=str; assert df.iloc[0] cell values (no trailing .0)
+
+Output:
+  JSON field keys: ['Approver 2', 'Attachment File', 'Code', 'Internal Comment', 'Order', 'Quantity']
+  XLSX header: ['Order', 'Code', 'Internal Comment', 'Attachment File', 'Quantity', 'Approver 2']
+  Field sets EXACTLY equal (no missing, no extra): PASS
+  row0 as loaded: {'Order': '6000017449', 'Code': '12345',
+    'Internal Comment': '8889', 'Attachment File': 'C:/Users/p1325970/OneDrive - NCS PTE LTD/WorkSpace/GR/PR0157310.pdf',
+    'Quantity': '100', 'Approver 2': 'Amy Yin - (Band C)'}
+  pandas dtype=str row checks (no trailing .0): PASS
+  RESULT: PASS
+Exit code: 0
+
+Result: PASS — JSON field keys == XLSX headers exactly (6 == 6); pandas dtype=str
+row values verified: Code=='12345', Internal Comment=='8889', Quantity=='100',
+Order=='6000017449', Approver 2=='Amy Yin - (Band C)' (no ".0" suffixes).
+
+--------------------------------------------------------------------------------
+STEP 7 — Engine loads workflow with stages (Mock run)
+--------------------------------------------------------------------------------
+Temp script (written to %TEMP%\opencode\, run, then deleted):
+  - Load workflow.json via WorkflowManager
+  - WorkflowEngine with MockPage (MockPage + MockLocator imported from
+    tests/test_stages_engine.py; subclassed locally to also record
+    frame_locator() and set_input_files() for iframe + html5_uploader)
+  - engine.execute(field_values={all 6 fields})
+  - Assert no 'error' key, failed==0, and the expected 15-step ordered trace.
+
+Output:
+  Workflow loaded: GR-Acubuy Create Goods Receipt
+  Stages: ['create_gr', 'edit_item', 'advance_workflow', 'select_approver']
+  Fields: ['Order', 'Code', 'Internal Comment', 'Attachment File', 'Quantity', 'Approver 2']
+
+  engine.execute() result:
+    {'total': 6, 'success': 6, 'failed': 0,
+     'results': {
+       'Order':            {'success': True, mode autocompletion, value 6000017449},
+       'Code':             {'success': True, value 12345},
+       'Internal Comment': {'success': True, value 8889},
+       'Attachment File':  {'success': True, HTML5 upload completed},
+       'Quantity':         {'success': True, iframe modal.aspx, value 100},
+       'Approver 2':       {'success': True, mode autocompletion, value Amy Yin - (Band C)}
+     }}
+  execute() returned success, no error key: PASS
+
+  Full call trace (39 calls) — key sequence (abridged):
+    goto  .../delivery_manage?Create
+    wait_for_selector #..._txtCode
+    fill  #..._selOrder_search  ''  ->  '6000017449'      (Order autocomplete)
+    wait_for_timeout 1500
+    click #..._selOrder_MenuItem span.text
+    fill  #..._txtCode '' -> '12345'                      (Code)
+    fill  #..._udt_desc_delivery... '' -> '8889'          (Internal Comment)
+    click #..._file_delivery..._x_UploadButtonControl     (Attachment File html5)
+    wait_for_timeout 500
+    set_input_files #fileselect_...                        (file upload recorded)
+    wait_for_timeout 4000
+    click #proxyActionBar_x__cmdSave                       (stage1 post_fill)
+    wait_for_selector #..._gridDeliveryItems_grd           (stage2 nav)
+    click #..._gridDeliveryItems_grd tr[...] i.iv-grid-fa-icon.fa-pencil-alt
+    wait_for_selector iframe[src*='modal.aspx']
+    frame_locator iframe[src*='modal.aspx']                (Quantity in iframe)
+    fill  #body_x_txtQuantity '' -> '100'
+    click #proxyActionBar_x__cmdEnd                        (stage2 post_fill)
+    wait_for_selector #proxyActionBar_x_valsingtel_receipt_v2create  (stage3 nav)
+    click #proxyActionBar_x_valsingtel_receipt_v2create
+    wait_for_selector #..._selector_single_delivery_20240816105603081_search
+    fill  #..._selector_single_delivery_20240816105603081_search '' -> 'Amy Yin - (Band C)'  (Approver 2)
+    wait_for_timeout 1500
+    click #..._selector_single_delivery_20240816105603081_MenuItem span.text
+    click #proxyActionBar_x__cmdSave                       (stage4 post_fill)
+
+  Expected 15-step trace order verified: PASS
+  File upload (set_input_files) recorded: PASS
+  RESULT: PASS
+Exit code: 0
+
+Result: PASS — engine executes all 4 stages sequentially, all 6 fields succeed
+(success=6, failed=0), no 'error' key, and the recorded trace contains the full
+expected sequence in order: goto delivery_manage?Create -> fill Order search ->
+fill Code -> fill Internal Comment -> click #cmdSave -> wait #gridDeliveryItems ->
+click pencil -> fill Quantity (in iframe) -> click #cmdEnd -> wait #valsingtel ->
+click #valsingtel -> wait approver search -> fill approver -> click #cmdSave.
+No exception raised. (Log note "Unknown post-fill action 'manual_review' —
+ignoring" is benign: top-level post_fill is intentionally a manual_review action.)
+
+--------------------------------------------------------------------------------
+STEP 8 — GUI msedge browser support
+--------------------------------------------------------------------------------
+Command: Select-String form_filler.py -Pattern "msedge"  /  "browser_combo"
+
+Output:
+  form_filler.py:300:  ("msedge", "Microsoft Edge"),
+  browser_combo (ttk.Combobox, form_filler.py:295) values list at lines 298-302:
+      ("chrome", "Google Chrome"),
+      ("msedge", "Microsoft Edge"),
+      ("chromium", "Chromium (需下载)")
+
+Result: PASS — "msedge" is present in the browser_combo values list
+(and matches workflow.json "browser": { "channel": "msedge" }).
+
+================================================================================
+END OF REPORT — ALL 8 STEPS PASS
+================================================================================

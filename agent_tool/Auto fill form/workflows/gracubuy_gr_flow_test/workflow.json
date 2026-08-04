@@ -1,0 +1,76 @@
+{
+  "$schema": "../../workflows/schema/workflow-schema.json",
+  "workflow_name": "GR-Acubuy Create GR (TEST - 不提交)",
+  "version": "1.0.0",
+  "description": "⚠️ 测试专用：只填写表单，不点击任何提交按钮。用于生产环境验证字段填充。不会创建真实收货单。",
+  "status": "active",
+  "browser": { "channel": "msedge" },
+  "login": { "url": "", "enabled": false },
+  "fields": {
+    "Order": {
+      "selector": "div[data-selector='body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder']",
+      "type": "autocomplete",
+      "required": true,
+      "handler_config": {
+        "mode": "autocompletion",
+        "search_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder_search",
+        "result_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder_MenuItem span.text",
+        "wait_after_input_ms": 1500,
+        "clear_before": true
+      }
+    },
+    "Code": {
+      "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_txtCode",
+      "type": "input",
+      "required": true
+    },
+    "Internal Comment": {
+      "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_udt_desc_delivery_20240807223748988",
+      "type": "input",
+      "required": true
+    },
+    "Attachment File": {
+      "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_file_delivery_20240807224049492_x_UploadButtonControl",
+      "type": "file_upload",
+      "required": false,
+      "handler_config": {
+        "mode": "html5_uploader",
+        "upload_button_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_file_delivery_20240807224049492_x_UploadButtonControl",
+        "file_input_selector": "#fileselect_body_x_tabc_prxDelivery_prxprxDelivery_x_file_delivery_20240807224049492_x",
+        "wait_after_upload_ms": 4000
+      }
+    },
+    "Quantity": {
+      "selector": "#body_x_txtQuantity",
+      "type": "input",
+      "required": false,
+      "handler_config": {
+        "iframe_selector": "iframe[src*='modal.aspx']"
+      }
+    },
+    "Approver 2": {
+      "selector": "div[data-selector='body_x_tabc_prxDelivery_prxprxDelivery_x_selector_single_delivery_20240816105603081']",
+      "type": "autocomplete",
+      "required": true,
+      "handler_config": {
+        "mode": "autocompletion",
+        "search_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selector_single_delivery_20240816105603081_search",
+        "result_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selector_single_delivery_20240816105603081_MenuItem span.text",
+        "wait_after_input_ms": 1500,
+        "clear_before": true
+      }
+    }
+  },
+  "stages": [
+    {
+      "name": "create_gr",
+      "navigation": [
+        { "action": "goto", "url": "https://singtel.ivalua.app/page.aspx/en/ord/delivery_manage?Create", "wait_until": "networkidle", "timeout": 300000 },
+        { "action": "wait_selector", "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_txtCode", "timeout": 60000 }
+      ],
+      "fields": ["Order", "Code", "Internal Comment", "Attachment File"],
+      "post_fill": { "action": "manual_review", "message": "测试模式：字段已填写，未提交。请人工检查后手动关闭页面。" }
+    }
+  ],
+  "post_fill": { "action": "manual_review", "message": "GR 创建完成，请检查结果" }
+}

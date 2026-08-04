@@ -1,0 +1,86 @@
+================================================================================
+F2 CODE QUALITY REVIEW - gracubuy-gr-flow
+Date: 2026-07-31 | Auditor: unspecified-high (code-quality)
+Interpreter: C:\Users\p1325970\AppData\Local\Python\bin\python.exe (Python 3.14)
+Project root: C:\Users\p1325970\AILearn\Auto fill form
+================================================================================
+
+Build [PASS] - py_compile workflow_engine.py, handlers/autocomplete_handler.py,
+  handlers/file_upload_handler.py, handlers/input_handler.py, form_filler.py -> all OK
+  (PY_COMPILE_OK, no syntax errors).
+
+Tests [48 pass / 1 fail / 1 error]
+  New tests: 22/22 passed (test_stages_engine, test_input_handler,
+    test_file_upload_handler, test_autocomplete_handler). No failures.
+  Integration: 25 passed, 1 FAILED, 1 ERROR — both PRE-EXISTING and expected:
+    - FAILED tests/test_integration.py::test_list_workflows — count drift:
+      expected {'csms_create_proposal','gracubuy_create_gr'}, got 5 workflows
+      (settings/workflow list now contains 5 entries; test hardcodes 2). Drift
+      caused by prior workflow additions (gracubuy_login, csms_proposal_group_v2)
+      plus new gracubuy_gr_flow. Not a regression from this change.
+    - ERROR tests/test_integration.py::test — collection error (def test() no-arg
+      fixture-scope issue), pre-existing.
+    No OTHER failures.
+
+Schema [5/5 valid]
+  workflows/schema/validate_workflow.py passed for all 5 workflow.json files:
+    csms_create_proposal, csms_proposal_group_v2, gracubuy_create_gr,
+    gracubuy_gr_flow, gracubuy_login.
+  Schema additions verified present: stages def, handler_config keys
+  (search_input_selector, search_value, result_selector, dropdown_selector,
+  wait_after_input_ms, clear_before, hidden_input_selector, upload_button_selector,
+  file_input_selector, wait_for_upload_selector, wait_upload_timeout_ms,
+  wait_after_upload_ms), and wait_state in post_fill_action (engine reads it at
+  workflow_engine.py:572 with default 'hidden').
+
+Files [5 clean / 2 minor issues]
+  CLEAN:
+  - workflows/gracubuy_gr_flow/workflow.json — 4 stages, valid refs to top-level
+    fields, stage post_fill click_button entries, top-level manual_review. All
+    schema-valid; engine handles click_button paths.
+  - handlers/autocomplete_handler.py — two-step search-then-select cleanly
+    implemented; dual-key search_selector/search_input_selector backward compat;
+    result_selector override; matching priority (exact > partial > first).
+    No unused imports; no dead code; comments purposeful, not AI-slop.
+  - handlers/file_upload_handler.py — wait_after_upload_ms highest-priority wait
+    logic correct (handler file_upload_handler.py:93-99).
+  - handlers/input_handler.py — iframe_selector branch uses
+    frame_locator().locator(), top-level path untouched when key absent.
+  - workflow_engine.py — execute() signature unchanged; execute_navigation()
+    and execute_fields() use None->config fallback (backward compatible);
+    _execute_stages correctly raises WorkflowFieldError on unknown field refs;
+    single-round path identical (verified by test_no_stages_uses_single_round).
+  - form_filler.py — confirmed ONLY line 634 is the dtype=str addition:
+    df = pd.read_excel(excel_path, dtype=str). No git repo available (not a
+    git repository), but line 634 verified in place and surrounding function
+    (_build_field_values) shows no other modifications.
+  - workflows/settings.json — gracubuy_gr_flow registered.
+
+  MINOR ISSUES (non-blocking):
+  1. workflow_engine.py:22 — 'Any' imported from typing but never used
+     (unused import; also handlers file_upload_handler.py:9 and
+     input_handler.py:6). Pre-existing codebase-wide pattern (all handlers
+     import Any); not introduced by this change. Cosmetic.
+  2. workflows/settings.json — display_name "GR-Acubuy Create Goods Receipt"
+     now duplicated between gracubuy_create_gr and gracubuy_gr_flow. GUI
+     dropdown will show two identical labels; workflow keys remain distinct.
+     UX ambiguity only, no functional impact.
+
+  OBSERVATIONS (no action required):
+  - _handle_post_fill (workflow_engine.py:547) does not implement the schema's
+    'manual_review' action — it logs "Unknown post-fill action" and continues.
+    This matches the behavior of all 3 existing workflows (csms_create_proposal,
+    gracubuy_create_gr, gracubuy_login) which also use top-level manual_review,
+    so it is pre-existing, not a regression. GUI shows the completion messagebox
+    independently.
+  - autocomplete_handler.py:218-219 uses bare `except Exception: pass` in
+    _set_hidden_input — justified as an intentional best-effort JS fallback
+    with an explanatory comment. Acceptable.
+
+================================================================================
+VERDICT: APPROVE
+================================================================================
+All blocking checks pass: 22/22 new tests, 5/5 schema validation, py_compile
+clean. Integration shows exactly the 2 pre-existing expected issues and no
+others. Only cosmetic unused-import (pre-existing pattern) and a duplicate
+display_name in settings.json.

@@ -131,15 +131,25 @@ class WorkflowEngine:
             self.execute_login(username, password)
             self._emit("on_step_end", "login")
 
-            # --- Step 2: Navigation ---
-            self._emit("on_step_start", "navigation")
-            self.execute_navigation()
-            self._emit("on_step_end", "navigation")
+            stages = self.config.get("stages")
+            if stages:
+                # --- Multi-stage execution: each stage runs its own
+                #     navigation + field subset + post_fill, in order. ---
+                self._emit("on_step_start", "stages")
+                self._execute_stages(stages, field_values)
+                self._emit("on_step_end", "stages")
+                # Top-level post_fill runs after ALL stages complete
+                self._handle_post_fill(self.config.get("post_fill", {}))
+            else:
+                # --- Step 2: Navigation ---
+                self._emit("on_step_start", "navigation")
+                self.execute_navigation()
+                self._emit("on_step_end", "navigation")
 
-            # --- Step 3: Fields ---
-            self._emit("on_step_start", "fields")
-            self.execute_fields(field_values)
-            self._emit("on_step_end", "fields")
+                # --- Step 3: Fields ---
+                self._emit("on_step_start", "fields")
+                self.execute_fields(field_values)
+                self._emit("on_step_end", "fields")
 
             return self.get_results()
 
@@ -248,7 +258,7 @@ class WorkflowEngine:
     # Navigation
     # ------------------------------------------------------------------
 
-    def execute_navigation(self) -> bool:
+    def execute_navigation(self, nav_steps=None) -> bool:
         """Execute navigation steps defined in the workflow config.
 
         Each step is a dict with at least an ``action`` key.
@@ -265,13 +275,19 @@ class WorkflowEngine:
 
         Each step can have ``optional: true`` to skip failures gracefully.
 
+        Args:
+            nav_steps: Optional list of navigation steps to execute. When
+                       omitted (or None), falls back to the config's
+                       top-level ``navigation`` array.
+
         Raises:
             WorkflowNavigationError: If a non-optional step fails.
 
         Returns:
             True if all steps completed (or optional steps failed).
         """
-        nav_steps = self.config.get("navigation", [])
+        if nav_steps is None:
+            nav_steps = self.config.get("navigation", [])
         if not nav_steps:
             logger.info("No navigation steps configured")
             return True
@@ -287,7 +303,7 @@ class WorkflowEngine:
                 if action == "goto":
                     url = step.get("url", "")
                     wait_until = step.get("wait_until", "networkidle")
-                    self.page.goto(url, wait_until=wait_until)
+                    self.page.goto(url, wait_until=wait_until, timeout=step.get("timeout", 30000))
 
                 elif action == "click":
                     selector = step.get("selector", "")
@@ -323,7 +339,7 @@ class WorkflowEngine:
     # Field Iteration
     # ------------------------------------------------------------------
 
-    def execute_fields(self, field_values: dict) -> dict:
+    def execute_fields(self, field_values: dict, fields_config: dict = None) -> dict:
         """Iterate over fields, resolve dependencies, call handlers.
 
         Fields are processed in dependency order (topological sort based on
@@ -333,6 +349,10 @@ class WorkflowEngine:
         Args:
             field_values: Dict of field_name -> value. Missing fields fall
                           back to the config's ``default_value``.
+            fields_config: Optional dict of field_name -> config to process.
+                           When omitted (or None), falls back to the config's
+                           top-level ``fields`` map. Stage execution passes a
+                           resolved subset here.
 
         Returns:
             dict: Per-field results (``{field_name: {"success": bool, ...}}``).
@@ -340,7 +360,8 @@ class WorkflowEngine:
         Raises:
             WorkflowFieldError: If a required field fails after all retries.
         """
-        fields_config = self.config.get("fields", {})
+        if fields_config is None:
+            fields_config = self.config.get("fields", {})
         if not fields_config:
             logger.info("No fields configured")
             return self.results
@@ -407,6 +428,54 @@ class WorkflowEngine:
                     logger.warning("Post-fill action failed for '%s': %s", field_name, e)
 
         return self.results
+
+    def _execute_stages(self, stages: list, field_values: dict):
+        """Execute a multi-stage workflow sequentially.
+
+        Each stage runs, in order:
+            1. its own navigation steps,
+            2. the subset of top-level fields it references,
+            3. its own post_fill action (if any).
+
+        ``field_values`` is shared across every stage. Stage ``fields`` is a
+        string array of names referencing keys in the config's top-level
+        ``fields`` map (single source of truth).
+
+        Args:
+            stages: List of stage dicts, each with optional ``name``,
+                    ``navigation``, ``fields`` (string array) and ``post_fill``.
+            field_values: Dict of field_name -> value, shared by all stages.
+
+        Raises:
+            WorkflowFieldError: If a stage references an unknown field name.
+            WorkflowNavigationError: If a non-optional navigation step fails.
+        """
+        all_fields = self.config.get("fields", {})
+
+        for stage in stages:
+            stage_name = stage.get("name", "")
+            self._emit("on_step_start", f"stage:{stage_name}")
+
+            # Stage-specific navigation
+            self.execute_navigation(stage.get("navigation", []))
+
+            # Resolve the stage's field subset from the top-level fields map
+            resolved: dict[str, dict] = {}
+            for fname in stage.get("fields", []):
+                if fname not in all_fields:
+                    raise WorkflowFieldError(
+                        f"Stage '{stage_name}' references unknown field '{fname}'"
+                    )
+                resolved[fname] = all_fields[fname]
+
+            self.execute_fields(field_values, fields_config=resolved)
+
+            # Stage-level post-fill (only when a non-empty action is defined)
+            post_fill = stage.get("post_fill", {})
+            if post_fill:
+                self._handle_post_fill(post_fill)
+
+            self._emit("on_step_end", f"stage:{stage_name}")
 
     def _get_handler(self, field_type: str):
         """Get a handler instance for the given field type.

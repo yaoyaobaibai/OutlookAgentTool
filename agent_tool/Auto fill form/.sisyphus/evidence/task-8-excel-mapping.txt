@@ -1,0 +1,8 @@
+Excel template verified: C:\Users\p1325970\AILearn\Auto fill form\workflows\gracubuy_gr_flow\GR_Goods_Receipt_Data_Template.xlsx
+Header row (row 1): ['Order', 'Code', 'Internal Comment', 'Attachment File', 'Quantity', 'Approver 2']
+Row 2 values: ['6000017449', '12345', '8889', 'C:/Users/p1325970/OneDrive - NCS PTE LTD/WorkSpace/GR/PR0157310.pdf', '100', 'Amy Yin - (Band C)']
+freeze_panes: A2
+Note (A4): Header names must match workflow.json field keys exactly. Order = 订单搜索编号；Attachment File = 附件文件完整路径；Quantity = 明细数量；Approver 2 = 审批人姓名。
+
+workflow.json cross-check: WARNING: workflow.json not present yet; verified against 6 known field names.
+PASS

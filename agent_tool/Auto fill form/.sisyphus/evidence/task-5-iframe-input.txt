@@ -1,0 +1,79 @@
+﻿python.exe : C:\Users\p1325970\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pytest_asyncio\plugin.py:208: 
+PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+所在位置 行:1 字符: 1
++ & "C:\Users\p1325970\AppData\Local\Python\bin\python.exe" -m pytest t ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\p13259...cope" is unset.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asy
+ncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explic
+itly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module",
+ "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+============================= test session starts =============================
+platform win32 -- Python 3.14.4, pytest-8.3.0, pluggy-1.6.0
+rootdir: C:\Users\p1325970\AILearn\Auto fill form
+plugins: anyio-4.13.0, asyncio-0.24.0, mock-3.15.1
+asyncio: mode=Mode.STRICT, default_loop_scope=None
+collected 29 items
+
+tests\test_input_handler.py ..                                           [  6%]
+tests\test_integration.py E.....F....................                    [100%]
+
+=================================== ERRORS ====================================
+___________________________ ERROR at setup of test ____________________________
+file C:\Users\p1325970\AILearn\采购\自动填充网页表单信息\tests\test_integration.py, line 71
+  def test(name: str):
+E       fixture 'name' not found
+>       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mocker, module_mocker, monkeypatch, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, session_mocker, tests/test_integration.py::<event_loop>, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+C:\Users\p1325970\AILearn\采购\自动填充网页表单信息\tests\test_integration.py:71
+================================== FAILURES ===================================
+_____________________________ test_list_workflows _____________________________
+
+    @test("Workflow list_workflows returns correct entries")
+    def test_list_workflows():
+        from workflow_manager import WorkflowManager
+        wm = WorkflowManager()
+        wf_list = wm.list_workflows()
+        wf_names = {w["name"] for w in wf_list}
+>       assert_eq(wf_names, EXPECTED_WORKFLOWS,
+                  "list_workflows should return both workflows")
+
+..\采购\自动填充网页表单信息\tests\test_integration.py:180: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = {'csms_create_proposal', 'csms_proposal_group_v2', 'gracubuy_create_gr', 'gracubuy_login'}
+b = {'csms_create_proposal', 'gracubuy_create_gr'}
+msg = 'list_workflows should return both workflows'
+
+    def assert_eq(a, b, msg=""):
+        if a != b:
+>           raise AssertionError(f"Expected {b!r}, got {a!r}" +
+                                 (f" — {msg}" if msg else ""))
+E           AssertionError: Expected {'csms_create_proposal', 'gracubuy_create_gr'}, got {'gracubuy_login', 'csms_create_proposal', 'csms_proposal_group_v2', 'gracubuy_create_gr'} — list_workflows should return both workflows
+
+..\采购\自动填充网页表单信息\tests\test_integration.py:94: AssertionError
+------------------------------ Captured log call ------------------------------
+WARNING  workflow_manager:workflow_manager.py:160 Skipping 'schema': workflow.json not found
+============================== warnings summary ===============================
+..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pytest_asyncio\plugin.py:179: 1100 warnings
+  C:\Users\p1325970\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pytest_asyncio\plugin.py:179: DeprecationWarning: 'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16; use inspect.iscoroutinefunction() instead
+    return asyncio.iscoroutinefunction(obj) or inspect.isasyncgenfunction(obj)
+
+..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pytest_asyncio\plugin.py:450: 29 warnings
+  C:\Users\p1325970\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pytest_asyncio\plugin.py:450: DeprecationWarning: 'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16; use inspect.iscoroutinefunction() instead
+    return asyncio.iscoroutinefunction(func)
+
+tests/test_input_handler.py::test_iframe_present
+  C:\Users\p1325970\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pytest_asyncio\plugin.py:1056: DeprecationWarning: 'asyncio.get_event_loop_policy' is deprecated and slated for removal in Python 3.16
+    return asyncio.get_event_loop_policy()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_integration.py::test_list_workflows - AssertionError: Expec...
+ERROR tests/test_integration.py::test
+============ 1 failed, 27 passed, 1130 warnings, 1 error in 0.68s =============

@@ -1,0 +1,5 @@
+﻿I1-no-excel-selected -> result: {} | EMPTY: True
+I1-else-branch-log: [i] 未选择 Excel 文件 — 使用默认字段值。
+I1b-nonexistent-path -> result: {} | EMPTY: True
+I1b-else-branch-log: [i] 未选择 Excel 文件 — 使用默认字段值。
+I1c-else-branch-returns-empty: False

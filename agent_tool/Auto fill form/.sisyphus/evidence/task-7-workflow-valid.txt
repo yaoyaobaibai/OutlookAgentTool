@@ -1,0 +1,38 @@
+Task 7 — GR-Acubuy workflow.json schema validation evidence
+============================================================
+Date: 2026-07-31
+Interpreter: C:\Users\p1325970\AppData\Local\Python\bin\python.exe
+Workflow: workflows/gracubuy_gr_flow/workflow.json
+
+STEP 1 — Schema validation (validate_workflow.py)
+-------------------------------------------------
+Command:
+  python workflows/schema/validate_workflow.py workflows/gracubuy_gr_flow/workflow.json
+Output:
+  Valid: workflows/gracubuy_gr_flow/workflow.json
+Exit code: 0
+
+STEP 2 — Structural assertions (python -c equivalent, temp script)
+------------------------------------------------------------------
+Checks performed:
+  * exactly 6 top-level fields in order:
+      Order, Code, Internal Comment, Attachment File, Quantity, Approver 2
+  * exactly 4 stages in order:
+      create_gr, edit_item, advance_workflow, select_approver
+  * every stage "fields" entry resolves to a top-level field key (0 dangling refs)
+  * no hardcoded id "794641" (grid row) anywhere in the JSON
+  * no hardcoded GR number "413955" anywhere in the JSON
+  * login.enabled is false (SSO handled externally)
+Output:
+  PASS: 6 fields, 4 stages in order, no dangling field refs, no hardcoded ids, login disabled
+Exit code: 0
+
+STEP 3 — Engine stages pytest suite
+-----------------------------------
+Command:
+  python -m pytest tests/test_stages_engine.py -q
+Output:
+  5 passed, 191 warnings in 0.05s
+Exit code: 0
+
+RESULT: VALID ✅

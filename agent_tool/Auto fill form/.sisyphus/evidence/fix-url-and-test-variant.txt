@@ -1,0 +1,93 @@
+================================================================================
+EVIDENCE: fix-url-and-test-variant
+Date: 2026-08-03
+Project: C:\Users\p1325970\AILearn\Auto fill form
+================================================================================
+
+--------------------------------------------------------------------------------
+TASK A: Fix goto URL in workflows/gracubuy_gr_flow/workflow.json (line 68)
+--------------------------------------------------------------------------------
+Changed:
+  OLD: { "action": "goto", "url": "file:///C:/Users/p1325970/AILearn/Auto%20fill%20form/GR-Acubuy/GR-Acubuy/Create_%20Group%20Procurement%20AcuBuy1.html", "wait_until": "networkidle" }
+  NEW: { "action": "goto", "url": "https://singtel.ivalua.app/page.aspx/en/ord/delivery_manage?Create", "wait_until": "networkidle" }
+Only line 68 changed; nothing else modified.
+
+Verify A-1: schema validation of fixed original
+  C:\Users\p1325970\AppData\Local\Python\bin\python.exe workflows/schema/validate_workflow.py workflows/gracubuy_gr_flow/workflow.json
+  Output: Valid: workflows/gracubuy_gr_flow/workflow.json
+  Exit code: 0
+
+Verify A-2: grep for file:/// in workflows/gracubuy_gr_flow/workflow.json
+  Output: NO file:/// matches in gracubuy_gr_flow/workflow.json
+  PASS (absent)
+
+Confirm original workflow untouched beyond line 68:
+  workflow_name = GR-Acubuy Create Goods Receipt
+  stages = ['create_gr', 'edit_item', 'advance_workflow', 'select_approver']  (4 stages intact)
+
+--------------------------------------------------------------------------------
+TASK B: Create SAFE TEST-ONLY workflow variant (never submits)
+--------------------------------------------------------------------------------
+B1: Created directory workflows/gracubuy_gr_flow_test/
+B2: Created workflows/gracubuy_gr_flow_test/workflow.json
+    - workflow_name: "GR-Acubuy Create GR (TEST - 不提交)"
+    - version: "1.0.0" | status: "active"
+    - description: "⚠️ 测试专用：只填写表单，不点击任何提交按钮。用于生产环境验证字段填充。不会创建真实收货单。"
+    - stages: only create_gr (stages edit_item/advance_workflow/select_approver removed)
+    - Stage 1 post_fill: { "action": "manual_review", "message": "测试模式：字段已填写，未提交。请人工检查后手动关闭页面。" }
+    - top-level post_fill: manual_review
+    - All fields/selectors/handler_config identical to original (Order/Code/Internal Comment/Attachment File
+      with div[data-selector] fix + html5_uploader config; Quantity/Approver 2 kept in fields map)
+    - $schema: "../../workflows/schema/workflow-schema.json"
+
+B3: Registered in workflows/settings.json workflow_list (current_workflow unchanged)
+  workflow_list names:
+    ['csms_create_proposal', 'csms_proposal_group_v2', 'gracubuy_gr_flow', 'gracubuy_gr_flow_test', 'gracubuy_login']
+  current_workflow = gracubuy_gr_flow  (UNCHANGED)
+
+--------------------------------------------------------------------------------
+VERIFY B
+--------------------------------------------------------------------------------
+B-1: validate test workflow
+  C:\Users\p1325970\AppData\Local\Python\bin\python.exe workflows/schema/validate_workflow.py workflows/gracubuy_gr_flow_test/workflow.json
+  Output: Valid: workflows/gracubuy_gr_flow_test/workflow.json
+  Exit code: 0
+
+B-2: validate fixed original (regression)
+  C:\Users\p1325970\AppData\Local\Python\bin\python.exe workflows/schema/validate_workflow.py workflows/gracubuy_gr_flow/workflow.json
+  Output: Valid: workflows/gracubuy_gr_flow/workflow.json
+  Exit code: 0
+
+B-3: Python assertion check on test workflow
+  Output:
+    PASS
+    workflow_name: GR-Acubuy Create GR (TEST - 不提交)
+    version: 1.0.0 | status: active
+    stage count: 1 | stage name: create_gr
+    stage fields: ['Order', 'Code', 'Internal Comment', 'Attachment File']
+    stage post_fill: {'action': 'manual_review', 'message': '测试模式：字段已填写，未提交。请人工检查后手动关闭页面。'}
+    goto url: https://singtel.ivalua.app/page.aspx/en/ord/delivery_manage?Create
+    top-level post_fill: {'action': 'manual_review', 'message': 'GR 创建完成，请检查结果'}
+    no click_button anywhere: True
+  Assertions asserted: exactly 1 stage named create_gr; stage post_fill action == manual_review;
+    NO click_button anywhere in test workflow; goto URL is the production https URL (not file:///).
+  Exit code: 0
+
+B-4: settings.json workflow_list contains both gracubuy_gr_flow and gracubuy_gr_flow_test
+  Output: ['csms_create_proposal', 'csms_proposal_group_v2', 'gracubuy_gr_flow', 'gracubuy_gr_flow_test', 'gracubuy_login']
+  PASS
+
+B-5: regression pytest
+  C:\Users\p1325970\AppData\Local\Python\bin\python.exe -m pytest tests/test_stages_engine.py tests/test_autocomplete_handler.py -q
+  Output: 13 passed, 503 warnings in 0.11s   (warnings are pre-existing asyncio deprecation warnings)
+  Exit code: 0
+
+--------------------------------------------------------------------------------
+RESULT
+--------------------------------------------------------------------------------
+- production workflows/gracubuy_gr_flow/workflow.json: URL fixed to production https, 4 stages intact
+- test-only workflows/gracubuy_gr_flow_test/workflow.json: fills form, never clicks Save,
+  ends with manual_review message; both variants coexist in settings.json
+- current_workflow unchanged; schema/engine/handlers/tests unmodified
+ALL VERIFICATIONS PASSED (exit 0)
+================================================================================

@@ -5,17 +5,25 @@ Handles custom autocomplete/dropdown widgets (iValua SelectorControl components)
 Supports two modes via handler_config.mode:
   - "dropdown": Click selector div, type into _search input, select from dropdown items
   - "autocompletion": Type into _search input (triggers server-side search), select from suggestions
+
+Supports a two-step search-then-select interaction for iValua SelectorControl widgets:
+when handler_config.search_value is set, the search input is filled with the search
+term while dropdown items are matched against the field value (displayed text).
+handler_config.result_selector overrides the default dropdown item selector.
 """
 
-import logging
 from typing import Any
 from .base_handler import BaseHandler
 
-logger = logging.getLogger(__name__)
-
 
 class AutoCompleteHandler(BaseHandler):
-    """Handles 'autocomplete' field type - custom SelectorControl widgets (iValua)."""
+    """Handles 'autocomplete' field type - custom SelectorControl widgets (iValua).
+
+    Two-step interaction (handler_config.search_value): type the search term into
+    the _search input (server-side AJAX search), wait for results, then click the
+    dropdown item whose text matches the field value. handler_config.result_selector
+    overrides the default dropdown item selector (default "{selector} {dropdown_selector}").
+    """
 
     def execute(self, field_config: dict, value: str) -> dict:
         """
@@ -34,14 +42,27 @@ class AutoCompleteHandler(BaseHandler):
 
         hc = field_config.get("handler_config", {})
         mode = hc.get("mode", "dropdown")
-        search_sel = hc.get("search_input_selector", f"{selector}_search")
+        # Two-step search-then-select: when set, the search input is filled with
+        # search_value (the search term) while dropdown items are matched against
+        # the field value (the displayed text of the desired result).
+        search_value = hc.get("search_value")
+        # Accept both the legacy search_input_selector key and the schema-level
+        # search_selector key used by existing workflows, falling back to the
+        # conventional "{selector}_search" suffix.
+        search_sel = (
+            hc.get("search_input_selector")
+            or hc.get("search_selector")
+            or f"{selector}_search"
+        )
+        # result_selector overrides the default dropdown item selector so custom
+        # widgets (e.g. iValua "{selector}_MenuItem span.text") can be targeted.
+        result_sel = hc.get("result_selector")
         dropdown_sel = hc.get("dropdown_selector", ".menu > .item")
         wait_ms = hc.get("wait_after_input_ms", 1000)
         clear_before = hc.get("clear_before", True)
         hidden_sel = hc.get("hidden_input_selector")
 
         try:
-            logger.debug("Autocomplete filling '%s' for selector '%s', mode=%s", value, selector, mode)
             # 1. Verify main selector element exists and is visible
             main_element = self.page.locator(selector)
             if main_element.count() == 0:
@@ -67,24 +88,41 @@ class AutoCompleteHandler(BaseHandler):
 
             if clear_before:
                 search_input.fill("")
-            search_input.fill(str(value))
+
+            if search_value is not None:
+                # Two-step: fill the search term (triggers server-side search),
+                # then select the result whose displayed text matches the value.
+                search_input.fill(str(search_value))
+            else:
+                # Backward compatible: fill the field value itself.
+                search_input.fill(str(value))
 
             # 4. Wait for suggestions to appear (server roundtrip in autocompletion mode,
             #    dropdown render in dropdown mode)
             self.page.wait_for_timeout(wait_ms)
 
-            # 5. Scope dropdown items under the field's selector and select matching item
-            item_selector = f"{selector} {dropdown_sel}"
+            # 5. Locate dropdown items (custom result_selector, or the default
+            #    scoped under the field's selector) and select the matching item.
+            #    Items are always matched against the field value.
+            item_selector = result_sel or f"{selector} {dropdown_sel}"
             items = self.page.locator(item_selector)
             item_count = items.count()
 
             if item_count > 0:
                 self._select_matching_item(items, str(value))
             else:
-                logger.warning("Autocomplete: no dropdown items for '%s', using fallback", selector)
                 # If no dropdown items appeared, attempt JS fallback
                 if hidden_sel:
                     self._set_hidden_input(hidden_sel, value)
+
+                evidence = {
+                    "selector": selector,
+                    "value": value,
+                    "mode": mode,
+                }
+                if search_value is not None:
+                    evidence["search_value"] = search_value
+                evidence["warning"] = "No dropdown items appeared"
 
                 return {
                     "success": True,
@@ -92,31 +130,28 @@ class AutoCompleteHandler(BaseHandler):
                         f"Filled '{value}' on '{selector}', "
                         "no dropdown items appeared to select"
                     ),
-                    "evidence": {
-                        "selector": selector,
-                        "value": value,
-                        "mode": mode,
-                        "warning": "No dropdown items appeared"
-                    }
+                    "evidence": evidence
                 }
 
             # 6. Optionally set hidden input as extra fallback
             if hidden_sel:
                 self._set_hidden_input(hidden_sel, value)
 
-            logger.info("Autocomplete: selected '%s' from '%s'", value, selector)
+            evidence = {
+                "selector": selector,
+                "value": value,
+                "mode": mode,
+            }
+            if search_value is not None:
+                evidence["search_value"] = search_value
+
             return {
                 "success": True,
                 "message": f"Selected '{value}' from autocomplete '{selector}'",
-                "evidence": {
-                    "selector": selector,
-                    "value": value,
-                    "mode": mode
-                }
+                "evidence": evidence
             }
 
         except Exception as e:
-            logger.error("Autocomplete failed for '%s': %s", selector, e)
             return {
                 "success": False,
                 "message": f"Autocomplete failed for '{selector}': {str(e)}",
@@ -139,6 +174,9 @@ class AutoCompleteHandler(BaseHandler):
                 return None
 
         search_input.wait_for(state="visible", timeout=5000)
+        # Click the search input before filling (mirrors the real interaction:
+        # focus the _search field, then type) so the control is guaranteed active.
+        search_input.click()
         return search_input
 
     def _select_matching_item(self, items, value: str) -> None:

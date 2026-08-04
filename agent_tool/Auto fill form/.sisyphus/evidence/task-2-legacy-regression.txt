@@ -1,0 +1,114 @@
+﻿WorkflowEngine Legacy Regression QA - Task 2 (2026-07-31)
+Command: python -m pytest tests/test_integration.py -v
+python.exe : C:\Users\p1325970\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pytest_asyncio\plugin.py:208: 
+PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+所在位置 行:1 字符: 331
++ ... oding utf8; & "C:\Users\p1325970\AppData\Local\Python\bin\python.exe" ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\p13259...cope" is unset.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asy
+ncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explic
+itly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module",
+ "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+============================= test session starts =============================
+platform win32 -- Python 3.14.4, pytest-8.3.0, pluggy-1.6.0 -- C:\Users\p1325970\AppData\Local\Python\pythoncore-3.14-64\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\p1325970\AILearn\Auto fill form
+plugins: anyio-4.13.0, asyncio-0.24.0, mock-3.15.1
+asyncio: mode=Mode.STRICT, default_loop_scope=None
+collecting ... collected 27 items
+
+tests/test_integration.py::test ERROR                                    [  3%]
+tests/test_integration.py::test_discover_csms PASSED                     [  7%]
+tests/test_integration.py::test_discover_gracubuy PASSED                 [ 11%]
+tests/test_integration.py::test_load_both_workflows PASSED               [ 14%]
+tests/test_integration.py::test_field_defs_csms PASSED                   [ 18%]
+tests/test_integration.py::test_field_defs_gracubuy PASSED               [ 22%]
+tests/test_integration.py::test_list_workflows FAILED                    [ 25%]
+tests/test_integration.py::test_all_handler_types PASSED                 [ 29%]
+tests/test_integration.py::test_handlers_instantiable PASSED             [ 33%]
+tests/test_integration.py::test_handlers_have_methods PASSED             [ 37%]
+tests/test_integration.py::test_no_stub_in_handlers PASSED               [ 40%]
+tests/test_integration.py::test_engine_instantiation PASSED              [ 44%]
+tests/test_integration.py::test_navigation_parsed PASSED                 [ 48%]
+tests/test_integration.py::test_field_dependency_ordering PASSED         [ 51%]
+tests/test_integration.py::test_retry_count PASSED                       [ 55%]
+tests/test_integration.py::test_event_callbacks PASSED                   [ 59%]
+tests/test_integration.py::test_stop_sets_flag PASSED                    [ 62%]
+tests/test_integration.py::test_csms_schema_valid PASSED                 [ 66%]
+tests/test_integration.py::test_gracubuy_schema_valid PASSED             [ 70%]
+tests/test_integration.py::test_invalid_config PASSED                    [ 74%]
+tests/test_integration.py::test_workflow_not_found PASSED                [ 77%]
+tests/test_integration.py::test_corrupt_json PASSED                      [ 81%]
+tests/test_integration.py::test_skip_no_config PASSED                    [ 85%]
+tests/test_integration.py::test_gui_import PASSED                        [ 88%]
+tests/test_integration.py::test_gui_class_exists PASSED                  [ 92%]
+tests/test_integration.py::test_stop_mechanism PASSED                    [ 96%]
+tests/test_integration.py::test_interrupt_mid_flight PASSED              [100%]
+
+=================================== ERRORS ====================================
+___________________________ ERROR at setup of test ____________________________
+file C:\Users\p1325970\AILearn\閲囪喘\鑷姩濉厖缃戦〉琛ㄥ崟淇℃伅\tests\test_integration.py, line 71
+  def test(name: str):
+E       fixture 'name' not found
+>       available fixtures: _session_event_loop, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, doctest_namespace, event_loop, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mocker, module_mocker, monkeypatch, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, session_mocker, tests/test_integration.py::<event_loop>, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+C:\Users\p1325970\AILearn\閲囪喘\鑷姩濉厖缃戦〉琛ㄥ崟淇℃伅\tests\test_integration.py:71
+================================== FAILURES ===================================
+_____________________________ test_list_workflows _____________________________
+
+    @test("Workflow list_workflows returns correct entries")
+    def test_list_workflows():
+        from workflow_manager import WorkflowManager
+        wm = WorkflowManager()
+        wf_list = wm.list_workflows()
+        wf_names = {w["name"] for w in wf_list}
+>       assert_eq(wf_names, EXPECTED_WORKFLOWS,
+                  "list_workflows should return both workflows")
+
+..\閲囪喘\鑷姩濉厖缃戦〉琛ㄥ崟淇℃伅\tests\test_integration.py:180: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = {'csms_create_proposal', 'csms_proposal_group_v2', 'gracubuy_create_gr', 'gracubuy_login'}
+b = {'csms_create_proposal', 'gracubuy_create_gr'}
+msg = 'list_workflows should return both workflows'
+
+    def assert_eq(a, b, msg=""):
+        if a != b:
+>           raise AssertionError(f"Expected {b!r}, got {a!r}" +
+                                 (f" 鈥?{msg}" if msg else ""))
+E           AssertionError: Expected {'gracubuy_create_gr', 'csms_create_proposal'}, got {'gracubuy_create_gr', 'csms_create_proposal', 'csms_proposal_group_v2', 'gracubuy_login'} 鈥?list_workflows should return both workflows
+
+..\閲囪喘\鑷姩濉厖缃戦〉琛ㄥ崟淇℃伅\tests\test_integration.py:94: AssertionError
+------------------------------ Captured log call ------------------------------
+WARNING  workflow_manager:workflow_manager.py:160 Skipping 'schema': workflow.json not found
+============================== warnings summary ===============================
+..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pytest_asyncio\plugin.py:179: 999 warnings
+  C:\Users\p1325970\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pytest_asyncio\plugin.py:179: DeprecationWarning: 'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16; use inspect.iscoroutinefunction() instead
+    return asyncio.iscoroutinefunction(obj) or inspect.isasyncgenfunction(obj)
+
+..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pytest_asyncio\plugin.py:450: 27 warnings
+  C:\Users\p1325970\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pytest_asyncio\plugin.py:450: DeprecationWarning: 'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16; use inspect.iscoroutinefunction() instead
+    return asyncio.iscoroutinefunction(func)
+
+tests/test_integration.py::test
+  C:\Users\p1325970\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pytest_asyncio\plugin.py:1056: DeprecationWarning: 'asyncio.get_event_loop_policy' is deprecated and slated for removal in Python 3.16
+    return asyncio.get_event_loop_policy()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_integration.py::test_list_workflows - AssertionError: Expec...
+ERROR tests/test_integration.py::test
+============ 1 failed, 25 passed, 1027 warnings, 1 error in 0.83s =============
+
+ANALYSIS
+Result: 25 passed, 1 failed, 1 error -- IDENTICAL to pre-task baseline (task-3-autocomplete-integration.txt: '25 passed, 1 failed, 1 error').
+Failures are PRE-EXISTING and unrelated to this task:
+1) test_list_workflows -- stale EXPECTED_WORKFLOWS set (extra workflow folders csms_proposal_group_v2/gracubuy_login added outside this task).
+2) ERROR tests/test_integration.py::test -- pytest auto-collects the file's module-level decorator fn def test(name) as a test (missing 'name' fixture).
+ALL WorkflowEngine legacy tests PASS (instantiation, event_callbacks, dependency_ordering, stop, interrupt, navigation, schema). No NEW regressions.

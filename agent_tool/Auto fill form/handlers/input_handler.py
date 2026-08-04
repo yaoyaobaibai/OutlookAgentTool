@@ -26,7 +26,13 @@ class InputHandler(BaseHandler):
             return {"success": False, "message": "No selector provided", "evidence": {}}
 
         try:
-            element = self.page.locator(selector)
+            iframe_selector = field_config.get("handler_config", {}).get("iframe_selector", "")
+            if iframe_selector:
+                # Field lives inside an iframe (e.g. modal.aspx delivery_item_manage)
+                element = self.page.frame_locator(iframe_selector).locator(selector)
+            else:
+                element = self.page.locator(selector)
+
             if element.count() == 0:
                 return {"success": False, "message": f"Element not found: {selector}", "evidence": {}}
 
@@ -37,10 +43,13 @@ class InputHandler(BaseHandler):
                 element.fill("")
             element.fill(str(value))
 
+            evidence = {"selector": selector, "value": value}
+            if iframe_selector:
+                evidence["iframe"] = iframe_selector
             return {
                 "success": True,
                 "message": f"Filled '{value}' into '{selector}'",
-                "evidence": {"selector": selector, "value": value}
+                "evidence": evidence
             }
         except Exception as e:
             return {

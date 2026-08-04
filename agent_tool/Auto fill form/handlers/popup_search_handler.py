@@ -8,11 +8,8 @@ This is designed for fields like CSMS's Priming Project Manager, where
 a trigger button opens a search popup for selecting values.
 """
 
-import logging
 from typing import Any
 from .base_handler import BaseHandler
-
-logger = logging.getLogger(__name__)
 
 
 class PopupSearchHandler(BaseHandler):
@@ -44,7 +41,6 @@ class PopupSearchHandler(BaseHandler):
         popup_timeout_ms = hc.get("popup_timeout_ms", 10000)
         steps = hc.get("steps", [])
 
-        logger.info("Popup search starting for selector '%s'", selector)
         try:
             # --- Step 1: Click trigger button ---
             print(f"  Clicking trigger: '{trigger_sel}'")
@@ -52,7 +48,6 @@ class PopupSearchHandler(BaseHandler):
             trigger.wait_for(state="visible", timeout=5000)
             trigger.click()
             print(f"  ✓ Trigger clicked")
-            logger.debug("Popup trigger clicked: '%s'", trigger_sel)
 
             # --- Step 2: Detect popup/iframe ---
             popup = self._detect_popup(popup_timeout_ms)
@@ -74,7 +69,6 @@ class PopupSearchHandler(BaseHandler):
                     steps_executed += 1
                 except Exception as e:
                     print(f"  Step {i + 1} failed: {e}")
-                    logger.warning("Popup step %d failed for '%s': %s", i + 1, selector, e)
                     # Continue with next step (non-fatal)
 
             return {
@@ -88,7 +82,6 @@ class PopupSearchHandler(BaseHandler):
             }
 
         except Exception as e:
-            logger.error("Popup search failed for '%s': %s", selector, e)
             return {
                 "success": False,
                 "message": f"Popup search failed: {str(e)}",

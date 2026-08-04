@@ -6,168 +6,24 @@ This module provides a tkinter GUI that allows users to:
   - View dynamic field definitions loaded from the selected workflow config
   - Configure browser, credentials, and data source settings
   - Execute workflows using the WorkflowEngine
-  - Manage attachments for upload
   - View real-time execution logs
 """
 
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
-import json
 import os
+import subprocess
+import tempfile
 import threading
+import time
+import urllib.request
 import logging
 
-from logging_setup import setup_logging, get_log_path
 from workflow_manager import WorkflowManager, WorkflowNotFoundError
 from workflow_engine import WorkflowEngine
 from playwright.sync_api import sync_playwright
 
 logger = logging.getLogger(__name__)
-
-# ==============================================================================
-# Attachment Dialog (kept from original for backward compatibility)
-# ==============================================================================
-
-class AttachmentDialog:
-    """Dialog for adding/editing an attachment entry."""
-
-    def __init__(self, parent, title, attachment_data=None):
-        self.result = None
-        self.dialog = tk.Toplevel(parent)
-        self.dialog.title(title)
-        self.dialog.transient(parent)
-        self.dialog.grab_set()
-        self.attachment_data = attachment_data
-
-        self.category = tk.StringVar(value="")
-        self.file_path = tk.StringVar(value="")
-        self.description = tk.StringVar(value="")
-
-        self._create_widgets()
-
-        if attachment_data:
-            self.category.set(attachment_data.get('category', ''))
-            self.file_path.set(attachment_data.get('file_path', ''))
-            self.description.set(attachment_data.get('description', ''))
-
-        self.dialog.wait_window()
-
-    def _create_widgets(self):
-        main_frame = ttk.Frame(self.dialog, padding=20)
-        main_frame.pack(fill=tk.BOTH, expand=True)
-
-        ttk.Label(main_frame, text="类别:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        category_combo = ttk.Combobox(main_frame, textvariable=self.category, width=50, state="readonly")
-        category_combo['values'] = (
-            "建议书",
-            "合同",
-            "支持文件",
-            "技术规范",
-            "财务文件",
-            "其他"
-        )
-        category_combo.grid(row=0, column=1, pady=5, padx=10)
-
-        ttk.Label(main_frame, text="文件:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        file_frame = ttk.Frame(main_frame)
-        file_frame.grid(row=1, column=1, sticky=tk.W, pady=5)
-        ttk.Entry(file_frame, textvariable=self.file_path, width=45).pack(side=tk.LEFT)
-        ttk.Button(file_frame, text="浏览", command=self._browse_file).pack(side=tk.LEFT, padx=5)
-
-        ttk.Label(main_frame, text="描述:").grid(row=2, column=0, sticky=tk.W, pady=5)
-        self.desc_text = tk.Text(main_frame, width=50, height=5)
-        self.desc_text.grid(row=2, column=1, pady=5, padx=10)
-
-        btn_frame = ttk.Frame(main_frame)
-        btn_frame.grid(row=3, column=1, pady=20, sticky=tk.E)
-
-        ttk.Button(btn_frame, text="确定", command=self._on_ok).pack(side=tk.LEFT, padx=5)
-        ttk.Button(btn_frame, text="取消", command=self.dialog.destroy).pack(side=tk.LEFT, padx=5)
-
-    def _browse_file(self):
-        file_path = filedialog.askopenfilename(
-            title="选择附件文件",
-            filetypes=[("所有文件", "*.*")],
-            initialdir=os.path.expanduser("~")
-        )
-        if file_path:
-            self.file_path.set(file_path)
-
-    def _on_ok(self):
-        if not self.category.get().strip():
-            messagebox.showerror("错误", "请选择类别")
-            return
-
-        if not self.file_path.get().strip():
-            messagebox.showerror("错误", "请选择文件")
-            return
-
-        if not os.path.exists(self.file_path.get()):
-            messagebox.showerror("错误", "文件不存在")
-            return
-
-        self.result = {
-            'category': self.category.get().strip(),
-            'file_path': self.file_path.get().strip(),
-            'description': self.desc_text.get("1.0", tk.END).strip()
-        }
-        self.dialog.destroy()
-
-
-# ==============================================================================
-# Attachment Manager (kept from original for backward compatibility)
-# ==============================================================================
-
-class AttachmentManager:
-    """Manages attachment entries loaded from and persisted to a JSON file."""
-
-    def __init__(self, config_file="attachment_config.json"):
-        self.config_file = config_file
-        self.attachments = []
-        self.load_config()
-
-    def load_config(self):
-        if os.path.exists(self.config_file):
-            try:
-                with open(self.config_file, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                    self.attachments = data.get('attachments', [])
-            except Exception as e:
-                print(f"加载附件配置失败：{e}")
-                self.attachments = []
-        else:
-            self.attachments = []
-
-    def save_config(self):
-        data = {'attachments': self.attachments}
-        with open(self.config_file, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-
-    def add_attachment(self, category, file_path, description=""):
-        self.attachments.append({
-            'category': category,
-            'file_path': file_path,
-            'description': description
-        })
-        self.save_config()
-
-    def update_attachment(self, index, category, file_path, description):
-        if 0 <= index < len(self.attachments):
-            self.attachments[index] = {
-                'category': category,
-                'file_path': file_path,
-                'description': description
-            }
-            self.save_config()
-
-    def remove_attachment(self, index):
-        if 0 <= index < len(self.attachments):
-            self.attachments.pop(index)
-            self.save_config()
-
-    def get_attachments(self):
-        return self.attachments
-
 
 # ==============================================================================
 # Main Application
@@ -183,7 +39,6 @@ class FormFillerApp:
       - Data source (Excel file selection)
       - Action buttons (Start / Stop)
       - Fields treeview (from workflow config)
-      - Attachment management (add/edit/delete)
       - Log panel
     """
 
@@ -192,26 +47,22 @@ class FormFillerApp:
         self.root.title("表单自动填充工具 - 多工作流")
         self.root.geometry("1100x850")
 
-        # Setup centralized logging
-        logger, log_path = setup_logging()
-        logger.info("FormFiller app initializing")
-
         # Workflow management
         self.workflow_manager = WorkflowManager()
-        self.attachment_manager = AttachmentManager()
 
         # Playwright resources
         self.page = None
         self.context = None
         self.browser = None
         self.playwright = None
+        self._edge_proc = None
         self.engine = None
         self.is_running = False
 
         # Configuration variables
-        self.browser_choice = tk.StringVar(value="chrome")
+        self.browser_choice = tk.StringVar(value="msedge")
         self.chrome_path = tk.StringVar(
-            value=r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+            value=r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
         )
         self.target_url = tk.StringVar(value="")
         self.excel_path = tk.StringVar(value="")
@@ -227,7 +78,6 @@ class FormFillerApp:
         self._check_backward_compatibility()
         self._create_widgets()
         self._init_workflow_selector()
-        self._load_attachments_to_ui()
 
     # ------------------------------------------------------------------
     # Backward Compatibility
@@ -309,14 +159,14 @@ class FormFillerApp:
             width=30
         )
         browser_combo.grid(row=0, column=1, sticky=tk.W, pady=5, padx=5)
-        browser_combo.current(0)
+        browser_combo.current(1)
 
-        ttk.Label(settings_frame, text="Chrome 路径 (可选):").grid(
+        ttk.Label(settings_frame, text="浏览器路径 (可选):").grid(
             row=0, column=2, sticky=tk.W, pady=5, padx=(15, 5)
         )
         path_entry = ttk.Entry(settings_frame, textvariable=self.chrome_path, width=45)
         path_entry.grid(row=0, column=3, pady=5, padx=5, sticky=tk.W)
-        ttk.Button(settings_frame, text="浏览", command=self._browse_chrome).grid(
+        ttk.Button(settings_frame, text="浏览", command=self._browse_browser).grid(
             row=0, column=4, pady=5, padx=5
         )
 
@@ -373,41 +223,7 @@ class FormFillerApp:
         scrollbar_tree.pack(side=tk.RIGHT, fill=tk.Y)
 
         # ================================================================
-        # 7. Attachment Management
-        # ================================================================
-        attach_frame = ttk.LabelFrame(main_frame, text="附件管理", padding=5)
-        attach_frame.pack(fill=tk.BOTH, expand=True, pady=3)
-
-        attach_btn_frame = ttk.Frame(attach_frame)
-        attach_btn_frame.pack(fill=tk.X, pady=3)
-
-        ttk.Button(attach_btn_frame, text="添加附件", command=self._add_attachment).pack(side=tk.LEFT, padx=3)
-        ttk.Button(attach_btn_frame, text="编辑附件", command=self._edit_attachment).pack(side=tk.LEFT, padx=3)
-        ttk.Button(attach_btn_frame, text="删除附件", command=self._delete_attachment).pack(side=tk.LEFT, padx=3)
-
-        columns_attach = ('category', 'file', 'description')
-        self.attachment_tree = ttk.Treeview(
-            attach_frame, columns=columns_attach, show='headings', height=4
-        )
-
-        self.attachment_tree.heading('category', text='类别')
-        self.attachment_tree.heading('file', text='文件路径')
-        self.attachment_tree.heading('description', text='描述')
-
-        self.attachment_tree.column('category', width=140)
-        self.attachment_tree.column('file', width=400)
-        self.attachment_tree.column('description', width=280)
-
-        scrollbar_attach = ttk.Scrollbar(attach_frame, orient=tk.VERTICAL, command=self.attachment_tree.yview)
-        self.attachment_tree.configure(yscrollcommand=scrollbar_attach.set)
-
-        self.attachment_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar_attach.pack(side=tk.RIGHT, fill=tk.Y)
-
-        self.attachment_tree.bind('<Double-1>', lambda e: self._edit_attachment())
-
-        # ================================================================
-        # 8. Log Panel
+        # 7. Log Panel
         # ================================================================
         log_frame = ttk.LabelFrame(main_frame, text="执行日志", padding=5)
         log_frame.pack(fill=tk.BOTH, expand=True, pady=3)
@@ -451,7 +267,6 @@ class FormFillerApp:
 
     def _on_workflow_changed(self, event=None):
         """Handle workflow selection change — update all UI elements."""
-        logger.info("User changed workflow selection")
         workflows = self.workflow_manager.list_workflows()
         idx = self.workflow_combo.current()
         if idx < 0 or idx >= len(workflows):
@@ -475,7 +290,7 @@ class FormFillerApp:
         self._update_ui_for_workflow()
 
     def _update_ui_for_workflow(self):
-        """Update login URL, field list, and attachments for current workflow."""
+        """Update login URL and field list for current workflow."""
         name = self._current_workflow_name
         if not name:
             return
@@ -509,79 +324,17 @@ class FormFillerApp:
             ))
 
     # ------------------------------------------------------------------
-    # Attachment Management
-    # ------------------------------------------------------------------
-
-    def _load_attachments_to_ui(self):
-        """Refresh the attachment treeview from the attachment manager."""
-        for item in self.attachment_tree.get_children():
-            self.attachment_tree.delete(item)
-
-        for attachment in self.attachment_manager.get_attachments():
-            self.attachment_tree.insert('', tk.END, values=(
-                attachment['category'],
-                attachment['file_path'],
-                attachment['description']
-            ))
-
-    def _add_attachment(self):
-        logger.info("User clicked [Add attachment]")
-        dialog = AttachmentDialog(self.root, "添加附件")
-        if dialog.result:
-            self.attachment_manager.add_attachment(
-                dialog.result['category'],
-                dialog.result['file_path'],
-                dialog.result['description']
-            )
-            self._load_attachments_to_ui()
-
-    def _edit_attachment(self):
-        logger.info("User clicked [Edit attachment]")
-        selection = self.attachment_tree.selection()
-        if not selection:
-            messagebox.showwarning("提示", "请先选择要编辑的附件")
-            return
-
-        item = self.attachment_tree.item(selection[0])
-        values = item['values']
-        attachment_data = {
-            'category': values[0],
-            'file_path': values[1],
-            'description': values[2] if len(values) > 2 else ''
-        }
-
-        dialog = AttachmentDialog(self.root, "编辑附件", attachment_data)
-        if dialog.result:
-            index = self.attachment_tree.index(selection[0])
-            self.attachment_manager.update_attachment(
-                index,
-                dialog.result['category'],
-                dialog.result['file_path'],
-                dialog.result['description']
-            )
-            self._load_attachments_to_ui()
-
-    def _delete_attachment(self):
-        logger.info("User clicked [Delete attachment]")
-        selection = self.attachment_tree.selection()
-        if not selection:
-            messagebox.showwarning("提示", "请先选择要删除的附件")
-            return
-
-        if messagebox.askyesno("确认", "确定要删除选中的附件吗？"):
-            index = self.attachment_tree.index(selection[0])
-            self.attachment_manager.remove_attachment(index)
-            self._load_attachments_to_ui()
-
-    # ------------------------------------------------------------------
     # Browser Utilities
     # ------------------------------------------------------------------
 
-    def _browse_chrome(self):
+    def _browse_browser(self):
+        edge_dir = r"C:\Program Files (x86)\Microsoft\Edge\Application"
+        if not os.path.exists(edge_dir):
+            edge_dir = r"C:\Program Files"
         file_path = filedialog.askopenfilename(
-            title="选择 Chrome 浏览器",
+            title="选择浏览器程序",
             filetypes=[("可执行文件", "*.exe"), ("所有文件", "*.*")],
-            initialdir=r"C:\Program Files"
+            initialdir=edge_dir
         )
         if file_path:
             self.chrome_path.set(file_path)
@@ -598,22 +351,98 @@ class FormFillerApp:
     def _clear_excel(self):
         self.excel_path.set("")
 
+    def _find_edge_path(self):
+        """Locate the installed Microsoft Edge executable.
+
+        Returns the first existing candidate path, or ``None`` if Edge
+        cannot be found anywhere.
+        """
+        candidates = [
+            r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+            r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+            os.path.expanduser(r"~\AppData\Local\Microsoft\Edge\Application\msedge.exe"),
+        ]
+        for p in candidates:
+            if os.path.isfile(p):
+                return p
+        return None
+
     def _launch_browser(self):
-        """Launch Playwright browser based on current settings."""
+        """Bare-launch a NEW Edge instance and connect over CDP.
+
+        Playwright's `chromium.launch` injects `--disable-*` automation flags
+        that trigger Microsoft's login block, so we launch Edge manually via
+        subprocess.Popen with only the minimal debugging flags (same approach
+        as recorder.py) and connect over CDP. A FIXED user-data-dir
+        (formfiller_edge_profile) keeps the login session across runs.
+        """
         self.playwright = sync_playwright().start()
 
-        launch_args = {"headless": False}
-        browser_type = self.browser_choice.get()
+        browser_choice = self.browser_choice.get()
+        if browser_choice == "chromium":
+            # "chromium" channel has no pre-built launcher — fall through to Playwright launch
+            edge_path = None
+        else:
+            # Prefer the user-specified path, then fall back to a detected Edge install
+            edge_path = self.chrome_path.get().strip() or self._find_edge_path()
 
-        if browser_type == "chromium":
+        if edge_path and os.path.isfile(edge_path):
+            cdp_port = 9222
+            user_data_dir = os.path.join(tempfile.gettempdir(), "formfiller_edge_profile")
+            os.makedirs(user_data_dir, exist_ok=True)
+
+            self._log(f"[i] 正在以裸启动方式打开 Edge: {edge_path}")
+            proc = subprocess.Popen(
+                [edge_path,
+                 f"--remote-debugging-port={cdp_port}",
+                 f"--user-data-dir={user_data_dir}",
+                 "--no-first-run",
+                 "--no-default-browser-check"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            )
+            self._edge_proc = proc  # keep reference so we can close it on exit
+
+            # Wait for CDP ready
+            ready = False
+            for _ in range(30):
+                try:
+                    urllib.request.urlopen(f"http://localhost:{cdp_port}/json/version", timeout=2)
+                    ready = True
+                    break
+                except Exception:
+                    time.sleep(0.5)
+            if not ready:
+                self._log("[!] Edge CDP 启动超时")
+                return
+
+            self._log(f"[✓] Edge 已启动 (端口 {cdp_port})，正在连接...")
+            self._log("[i] 首次运行请先在弹出的 Edge 中登录 Acubuy，登录态将保存在 formfiller_edge_profile 中")
+            self.browser = self.playwright.chromium.connect_over_cdp(f"http://localhost:{cdp_port}")
+            self.context = self.browser.contexts[0] if self.browser.contexts else self.browser.new_context()
+            if self.context.pages:
+                self.page = self.context.pages[0]
+            else:
+                self.page = self.context.new_page()
+            return
+
+        self._log("[!] 未找到 Edge，回退到 Playwright 直接启动")
+
+        # Fallback: legacy Playwright launch path (only when Edge not found
+        # or browser_choice is "chromium").
+        launch_args = {"headless": False}
+        # Chromium-based browsers advertise automation via --enable-automation;
+        # removing it helps Microsoft's login policy accept the fresh instance.
+        launch_args["ignore_default_args"] = ["--enable-automation"]
+
+        if browser_choice == "chromium":
             self.browser = self.playwright.chromium.launch(**launch_args)
         else:
             if self.chrome_path.get().strip():
                 launch_args["executable_path"] = self.chrome_path.get().strip()
                 self._log(f"  使用自定义路径: {self.chrome_path.get().strip()}")
             else:
-                launch_args["channel"] = browser_type
-                self._log(f"  使用浏览器渠道: {browser_type}")
+                launch_args["channel"] = browser_choice
+                self._log(f"  使用浏览器渠道: {browser_choice}")
 
             self.browser = self.playwright.chromium.launch(**launch_args)
 
@@ -621,11 +450,11 @@ class FormFillerApp:
         self.page = self.context.new_page()
 
     # ------------------------------------------------------------------
-    # Value Builder (Excel + attachments)
+    # Value Builder (Excel)
     # ------------------------------------------------------------------
 
     def _build_field_values(self, config):
-        """Build a dict of field_name -> value from Excel and attachment data.
+        """Build a dict of field_name -> value from the selected Excel file.
 
         First tries to load values from the selected Excel file.
         If no Excel file is provided, returns an empty dict (engine uses
@@ -640,7 +469,7 @@ class FormFillerApp:
         if excel_path and os.path.exists(excel_path):
             try:
                 import pandas as pd
-                df = pd.read_excel(excel_path)
+                df = pd.read_excel(excel_path, dtype=str)
                 if df.empty:
                     self._log("[!] Excel 文件为空 — 未加载任何值。")
                     return field_values
@@ -656,12 +485,6 @@ class FormFillerApp:
                 self._log(f"[!] 读取 Excel 失败: {e}")
         else:
             self._log("[i] 未选择 Excel 文件 — 使用默认字段值。")
-
-        # Attachments: add as a special field that the engine can handle
-        attachments = self.attachment_manager.get_attachments()
-        if attachments:
-            field_values["__attachments__"] = attachments
-            self._log(f"[i] 包含 {len(attachments)} 个附件")
 
         return field_values
 
@@ -700,7 +523,6 @@ class FormFillerApp:
 
     def _start_execution(self):
         """Start the workflow execution in a background thread."""
-        logger.info("User clicked [Start workflow]")
         if self.is_running:
             messagebox.showwarning("提示", "工作流正在运行中")
             return
@@ -773,7 +595,7 @@ class FormFillerApp:
             self._log(f"\n[!] 引擎错误: {e}")
             import traceback
             self._log(traceback.format_exc())
-            self.root.after(0, lambda: self._on_execution_error(e))
+            self.root.after(0, lambda err=e: self._on_execution_error(err))
         finally:
             self.is_running = False
             self.root.after(0, lambda: self.btn_stop.config(state=tk.DISABLED))
@@ -804,7 +626,6 @@ class FormFillerApp:
 
     def _stop_execution(self):
         """Request the engine to stop after the current field."""
-        logger.info("User clicked [Stop workflow]")
         if self.engine and self.is_running:
             self._log("\n[i] 已请求停止 — 将在当前字段处理后停止...\n")
             self.engine.stop()
@@ -841,6 +662,20 @@ class FormFillerApp:
                     self.playwright.stop()
             except Exception:
                 pass
+            # Terminate the bare-launched Edge we spawned — kill the whole tree
+            if getattr(self, "_edge_proc", None):
+                try:
+                    subprocess.run(
+                        ["taskkill", "/PID", str(self._edge_proc.pid), "/T", "/F"],
+                        capture_output=True,
+                        timeout=10,
+                    )
+                except Exception:
+                    try:
+                        self._edge_proc.kill()
+                    except Exception:
+                        pass
+                self._edge_proc = None
             self.root.after(0, self.root.destroy)
 
         threading.Thread(target=cleanup, daemon=True).start()

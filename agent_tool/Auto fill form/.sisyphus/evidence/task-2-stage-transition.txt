@@ -1,0 +1,36 @@
+﻿WorkflowEngine Stage-Transition QA - Task 2 (2026-07-31)
+Command: python C:\Users\p1325970\AppData\Local\Temp\opencode\stage_transition_evidence.py
+EVENT SEQUENCE
+==============
+   step_start:login
+   step_end:login
+   step_start:stages
+   step_start:stage:header
+   step_end:stage:header
+   step_start:stage:lines
+   step_end:stage:lines
+   step_start:stage:submit
+   step_end:stage:submit
+   step_end:stages
+
+PAGE TRACE (ordered)
+====================
+   ('goto', 'https://app/header', {'wait_until': 'networkidle'})
+   ('wait_for', '#header', {'state': 'visible', 'timeout': 5000})
+   ('fill', '#header', '')
+   ('fill', '#header', 'PO-100')
+   ('wait_for_selector', '#lines-section', {'timeout': 10000})
+   ('wait_for', '#line1', {'state': 'visible', 'timeout': 5000})
+   ('fill', '#line1', '')
+   ('fill', '#line1', '50 units')
+   ('click', '#add-line')
+   ('wait_for', '#submit', {'state': 'visible', 'timeout': 5000})
+   ('fill', '#submit', '')
+   ('fill', '#submit', 'Y')
+   ('click', '#final-save')
+
+FILLS: ['PO-100', '50 units', 'Y']
+GOTOS: ['https://app/header']
+RESULT: {'total': 3, 'success': 3, 'failed': 0, 'results': {'Header': {'success': True, 'message': "Filled 'PO-100' into '#header'", 'evidence': {'selector': '#header', 'value': 'PO-100'}}, 'Line1': {'success': True, 'message': "Filled '50 units' into '#line1'", 'evidence': {'selector': '#line1', 'value': '50 units'}}, 'Submit': {'success': True, 'message': "Filled 'Y' into '#submit'", 'evidence': {'selector': '#submit', 'value': 'Y'}}}}
+
+STAGE TRANSITIONS: OK

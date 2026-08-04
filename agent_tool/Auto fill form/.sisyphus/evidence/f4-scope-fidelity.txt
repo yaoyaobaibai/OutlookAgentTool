@@ -1,0 +1,185 @@
+================================================================================
+F4: SCOPE FIDELITY CHECK — gracubuy-gr-flow
+Date: 2026-07-31
+Checker: deep (scope fidelity executor)
+Plan: .sisyphus/plans/gracubuy-gr-flow.md (9 tasks)
+================================================================================
+
+METHOD
+------
+1. Read plan fully; per-task "What to do" + "Must NOT do" extracted.
+2. Read actual implementation (schema, engine, 3 handlers, workflow.json,
+   settings.json, form_filler.py:634, Excel template, 4 test files).
+3. Re-ran verification live: pytest (22 passed) + schema validation
+   (new workflow + 4 existing workflows all Valid).
+4. Scanned file modification timestamps across project (no git repo) to
+   detect any file touched outside the known set.
+
+================================================================================
+TASKS [9/9 compliant]
+================================================================================
+
+T1 workflow-schema.json stages ......... COMPLIANT
+  - "stages" added to top-level properties, NOT in "required" (optional).
+  - $defs.stage_config present: name/navigation/fields(string array)/post_fill,
+    additionalProperties:false, required:["fields"].
+  - Stage post_fill reuses $defs.post_fill (enum manual_review/click_button).
+  - Top-level "fields" retained (single source of truth).
+  - QA evidence: task-1-schema-valid-stages / -reject-invalid (rejects
+    'invalid_prop') / -legacy-compat all PASS.
+  - Must NOT respected: field_config.type enum unchanged (7 types intact);
+    stages not required; old workflows still validate (verified live: all 4 Valid).
+
+T2 engine stages (TDD) ................ COMPLIANT
+  - execute() has stages branch (config.get("stages")) -> _execute_stages();
+    else branch = unchanged single-round path.
+  - _execute_stages(): per-stage navigation -> resolve fields from top-level map
+    (unknown name -> WorkflowFieldError) -> execute_fields(fields_config=resolved)
+    -> stage post_fill; top-level post_fill runs after ALL stages.
+  - execute_fields() gained optional fields_config param; execute() signature
+    unchanged (execute(username, password, field_values)).
+  - No async/threading; wait steps reuse navigation wait_selector/wait_time.
+  - tests/test_stages_engine.py covers 4 required scenarios + 1 extra
+    (unknown-field error path of the new method — in-scope, not creep).
+    Live run: 5/5 PASS. Existing test_integration has only 2 PRE-EXISTING
+    issues (stale EXPECTED_WORKFLOWS, stray `def test()` collection error),
+    documented in evidence, not fixed per mandate.
+  - Evidence: task-2-stages-tests, task-2-legacy-regression, task-2-stage-transition.
+
+T3 autocomplete two-step .............. COMPLIANT
+  - search_value two-step (fill search term, match dropdown items against value).
+  - result_selector override supported (default "{selector} {dropdown_selector}").
+  - Match strategy: exact -> case-insensitive partial -> first (preserved).
+  - Naming fix: search_input_selector or search_selector or f"{selector}_search".
+  - Backward compat: no search_value -> fill(value) + match (tested).
+  - Only handlers/autocomplete_handler.py touched (timestamp-confirmed).
+  - Evidence: task-3-autocomplete-two-step, -compat, -integration; tests 7/7 PASS.
+
+T4 file_upload html5 ................. COMPLIANT
+  - _handle_html5 verified for iValua: upload_button_selector click ->
+    file_input_selector set_input_files -> wait.
+  - wait_after_upload_ms added as highest-priority wait; wait_for_upload_selector
+    (state=hidden) + wait_upload_timeout_ms and 2000ms default preserved.
+  - native mode unchanged (tested); no new handler type.
+  - Workflow Attachment File handler_config produced (documented in evidence).
+  - Evidence: task-4-file-upload-config; tests 8/8 PASS.
+
+T5 input iframe ...................... COMPLIANT
+  - iframe_selector -> page.frame_locator(iframe_selector).locator(selector).
+  - No iframe_selector -> top-level page.locator (unchanged, tested).
+  - Only handlers/input_handler.py touched; frame (not popup) assumed.
+  - Evidence: task-5-iframe-input, -no-iframe-compat; tests 2/2 PASS.
+
+T6 settings.json registration ......... COMPLIANT
+  - gracubuy_gr_flow appended to workflow_list (last entry).
+  - current_workflow unchanged ('csms_proposal_group_v2'); other entries intact.
+  - Directory-scan discovery surfaces it once workflow.json exists (documented).
+  - Evidence: task-6-workflow-discovered (list_workflows shows all 5).
+
+T7 workflow.json 4 stages ............. COMPLIANT
+  - 6 fields (Order/Code/Internal Comment/Attachment File/Quantity/Approver 2)
+    defined exactly; 4 stages in order create_gr->edit_item->advance_workflow
+    ->select_approver; stage fields are name arrays referencing top-level keys.
+  - Order/Approver 2 use autocompletion mode + search_selector + result_selector
+    ({selector}_MenuItem span.text) + wait_after_input_ms. Order has NO
+    search_value — matches the plan's pragmatic decision ("Excel 填搜索值
+    6000017449 + 选 first"); Excel Order value = 6000017449 (verified).
+  - Attachment File html5_uploader config; Quantity iframe_selector
+    iframe[src*='modal.aspx']; login.enabled=false; browser msedge;
+    top-level post_fill manual_review.
+  - Must NOT respected: no SSO login config; no fields beyond top-level 6;
+    NO hardcoded row id 794641 / GR number 413955 (edit_item pencil uses generic
+    tr[data-object-type='delivery']:first-child selector — BETTER than the plan
+    sketch's hardcoded id, directly honoring the guardrail).
+  - Evidence: task-7-workflow-valid (Valid, exit 0 — re-verified live),
+    task-7-stage-field-refs (0 dangling refs).
+
+T8 Excel data template ............... COMPLIANT
+  - GR_Goods_Receipt_Data_Template.xlsx Sheet1: header row = exactly
+    [Order, Code, Internal Comment, Attachment File, Quantity, Approver 2]
+    == workflow.json fields keys (exact set equality, verified live via openpyxl).
+  - Row 2 = recording-derived sample values (6000017449/12345/8889/
+    PR0157310.pdf/100/Amy Yin - (Band C)); freeze_panes A2; A4 note;
+    numeric cells stored as str with number_format "@".
+  - No extra columns, no missing required-field columns.
+  - Evidence: task-8-excel-mapping, task-8-excel-values (both PASS).
+
+T9 e2e verification .................. COMPLIANT
+  - 8-step chain verified live: new workflow Valid; 4 existing workflows Valid
+    (re-verified); new test suites 22/22 PASS; Excel mapping exact; WorkflowManager
+    load = 4 stages; discovery ok; Mock engine run success=6/failed=0 with full
+    15-step ordered trace; msedge present in GUI browser_combo.
+  - No real browser launched; no implementation modified by T9.
+  - Evidence: task-9-e2e-validation, task-9-workflow-load, f3-manual-qa/*.
+
+================================================================================
+DEVIATIONS [documented — exactly 3, all pre-authorized/justified]
+================================================================================
+
+1. T1-fix  — wait_state added to $defs.post_fill_action.
+   Justified: pre-existing schema/engine mismatch — csms_proposal_group_v2 already
+   used wait_state (engine click_and_wait reads it); Definition of Done requires ALL
+   existing workflows to validate. Confirmed in schema lines 441-444 +
+   .sisyphus/evidence/task-1-fix-wait-state.txt.
+2. T1-fix2 — 11 handler_config keys added (mode, search_input_selector,
+   dropdown_selector, wait_after_input_ms, clear_before, hidden_input_selector,
+   upload_button_selector, file_input_selector, wait_for_upload_selector,
+   wait_upload_timeout_ms, wait_after_upload_ms).
+   Justified: the plan's own T7 workflow.json uses these keys and the schema must
+   support them (additionalProperties:false otherwise rejects). Confirmed in schema
+   lines 372-420 + .sisyphus/evidence/task-1-fix2-handler-config.txt.
+3. T8-fix2 — form_filler.py line 634: pd.read_excel(excel_path) ->
+   pd.read_excel(excel_path, dtype=str).
+   Documented guardrail deviation: technically violates "不改 form_filler.py GUI",
+   but it is a 1-line data-layer correctness fix (pandas inferred float ->
+   str(val) produced "12345.0"). GUI behavior untouched. Fully documented in
+   .sisyphus/evidence/task-8-fix2-form-filler-dtype.txt (before/after, rationale,
+   verification). Accepted as transparent necessary fix.
+
+No OTHER deviations found. All "Must NOT do" guardrails from every task verified:
+  - No field_config.type enum changes (schema intact, 7 types).
+  - stages not required; old workflows validate.
+  - Engine single-round path byte-for-byte same logic; execute() signature unchanged.
+  - Autocomplete/file_upload native behavior unchanged (tested).
+  - No new handler types; no SSO login config; no hardcoded ids 794641/413955.
+  - current_workflow unchanged; no other settings.json entries touched.
+  - Excel columns == fields keys exactly (no extra, no missing required).
+
+================================================================================
+CONTAMINATION [CLEAN]
+================================================================================
+Cross-task file ownership verified via modification timestamps — each task touched
+only its own files:
+  - T3 -> handlers/autocomplete_handler.py only
+  - T4 -> handlers/file_upload_handler.py only
+  - T5 -> handlers/input_handler.py only
+  - T2 -> workflow_engine.py + tests/test_stages_engine.py
+  - T1 -> workflows/schema/workflow-schema.json
+  - T6 -> workflows/settings.json
+  - T7 -> workflows/gracubuy_gr_flow/workflow.json
+  - T8 -> workflows/gracubuy_gr_flow/GR_Goods_Receipt_Data_Template.xlsx
+          (+ documented form_filler.py:634 deviation)
+  - Tests -> test_autocomplete_handler.py (T3), test_file_upload_handler.py (T4),
+             test_input_handler.py (T5) each owned by their task.
+  - workflow_manager.py, validate_workflow.py, base_handler.py, other handlers,
+    existing workflow dirs: timestamps predate execution window (07-23..07-29),
+    i.e. NOT touched. No cross-task contamination.
+
+================================================================================
+UNACCOUNTED [CLEAN — 0 files]
+================================================================================
+Every file whose mtime falls in the execution window (2026-07-31 17:27–17:42)
+is in the known set. No unplanned files modified. Evidence written under
+.sisyphus/evidence/ (task-* + final-qa/* + f3-manual-qa/*) as required.
+Pre-existing evidence from an earlier plan (task-0*, final-qa/F*-verdict.txt
+referencing a 16-task plan) predates this plan (07-23) and is benign leftover.
+
+================================================================================
+VERDICT: APPROVE
+================================================================================
+Tasks [9/9 compliant] — every implementation step in each task spec exists;
+no missing features. The 3 deviations are the ONLY deviations, all documented
+and justified. All "Must NOT do" guardrails respected (one guardrail deviation
+for the necessary 1-line dtype fix, transparently documented). Contamination
+CLEAN; Unaccounted CLEAN.
+================================================================================

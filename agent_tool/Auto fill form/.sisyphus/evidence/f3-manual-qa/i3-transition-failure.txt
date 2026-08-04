@@ -1,0 +1,5 @@
+﻿Workflow execution failed: Navigation step 1 action 'wait_selector' failed: Timeout 30000ms exceeded waiting for #never-appears
+I3-result-error-key: True
+I3-error-msg: Navigation step 1 action 'wait_selector' failed: Timeout 30000ms exceeded waiting for #never-appears
+I3-navigation-error: True
+I3-expected-exception-type: WorkflowNavigationError WorkflowNavigationError

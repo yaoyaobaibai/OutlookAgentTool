@@ -1,0 +1,21 @@
+Task 6: Register workflow gracubuy_gr_flow in workflows/settings.json
+=====================================================================
+
+JSON validation output:
+  ['csms_create_proposal', 'csms_proposal_group_v2', 'gracubuy_create_gr', 'gracubuy_login', 'gracubuy_gr_flow']
+  current: csms_proposal_group_v2
+
+Confirmations:
+  - settings.json is valid JSON (parsed successfully with json.load, encoding='utf-8').
+  - gracubuy_gr_flow IS present in workflow_list (last entry, index 4).
+  - current_workflow is UNCHANGED: 'csms_proposal_group_v2'.
+  - No other workflow entries were modified.
+
+Discovery note:
+  WorkflowManager.list_workflows() is populated by discover_workflows() which scans
+  the workflows/ directory for subdirectories containing workflow.json; it does NOT
+  read workflow_list from settings.json. Since workflows/gracubuy_gr_flow/workflow.json
+  does not exist yet (created in a later task), WorkflowManager().list_workflows()
+  will NOT show gracubuy_gr_flow at this point -- EXPECTED and CORRECT.
+  Directory-based discovery will surface it automatically once
+  workflows/gracubuy_gr_flow/workflow.json is created.

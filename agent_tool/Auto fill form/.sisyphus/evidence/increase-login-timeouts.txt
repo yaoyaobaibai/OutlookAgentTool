@@ -1,0 +1,41 @@
+Increase Navigation/Login Timeouts for Manual SSO Login
+========================================================
+Date: 2026-08-03
+Task: Give workflow enough time for a MANUAL SSO login when not yet authenticated.
+
+Changes Made
+------------
+1. workflow_engine.py (line 306)
+   - BEFORE: self.page.goto(url, wait_until=wait_until)
+   - AFTER:  self.page.goto(url, wait_until=wait_until, timeout=step.get("timeout", 30000))
+   - Rationale: goto now honors the step's `timeout` when present. Default kept at 30000ms
+     (same as Playwright's default), so existing workflows without a goto timeout are
+     unaffected. Steps needing a long manual-login window can set an explicit timeout.
+
+2. workflows/gracubuy_gr_flow/workflow.json (stage create_gr)
+   - goto step (line 68): added "timeout": 300000  (5 min for manual Microsoft SSO login)
+   - wait_selector #body_x_tabc_prxDelivery_prxprxDelivery_x_txtCode (line 69): timeout 20000 -> 60000
+
+3. workflows/gracubuy_gr_flow_test/workflow.json (stage create_gr)
+   - goto step (line 68): added "timeout": 300000
+   - wait_selector #body_x_tabc_prxDelivery_prxprxDelivery_x_txtCode (line 69): timeout 20000 -> 60000
+
+Non-login stages (edit_item / advance_workflow / select_approver) left unchanged.
+
+Verification (all passed)
+-------------------------
+1. py_compile workflow_engine.py           -> OK (exit 0)
+2. validate_workflow.py on both workflows  -> "Valid" for both
+3. Grep confirmation:
+   - "timeout": 300000 present in goto step of BOTH workflow files
+   - "timeout": 60000 present in txtCode wait_selector of BOTH workflow files
+   - workflow_engine.py line 306 now has timeout=step.get("timeout", 30000) in goto
+4. Regression tests (23 passed):
+   python -m pytest tests/test_stages_engine.py tests/test_autocomplete_handler.py \
+       tests/test_input_handler.py tests/test_file_upload_handler.py -q
+   -> 23 passed
+
+Backward compatibility
+----------------------
+Old workflows whose goto steps have no `timeout` fall back to 30000ms,
+matching Playwright's previous default — no behavior change for them.

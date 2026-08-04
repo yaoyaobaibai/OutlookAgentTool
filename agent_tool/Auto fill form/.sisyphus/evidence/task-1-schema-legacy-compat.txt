@@ -1,0 +1,5 @@
+﻿======================================================================
+Scenario C (legacy workflow.json must PASS / backward compat) => PASS
+======================================================================
+OVERALL: ALL TESTS PASSED
+

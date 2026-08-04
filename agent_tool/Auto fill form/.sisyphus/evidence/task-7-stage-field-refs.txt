@@ -1,0 +1,43 @@
+Task 7 — GR-Acubuy stage→field reference map
+=============================================
+Workflow: workflows/gracubuy_gr_flow/workflow.json
+Single source of truth: top-level "fields" (6 entries)
+
+Stage order & field subsets
+---------------------------
+1. create_gr
+   navigation:
+     - goto https://singtel.ivalua.app/page.aspx/en/ord/delivery_manage?Create (networkidle)
+     - wait_selector #body_x_tabc_prxDelivery_prxprxDelivery_x_txtCode (20s)
+   fields: [Order, Code, Internal Comment, Attachment File]
+   post_fill: click_button #proxyActionBar_x__cmdSave (保存创建 GR...)
+
+2. edit_item
+   navigation:
+     - wait_selector #..._gridDeliveryItems_grd (20s)
+     - click first delivery row manage-cell pencil:
+       #..._gridDeliveryItems_grd tr[data-object-type='delivery']:first-child
+       td[data-iv-role='cell'] i.iv-grid-fa-icon.fa-pencil-alt
+       (generic, NO hardcoded row id 794641)
+     - wait_selector iframe[src*='modal.aspx'] (15s)
+   fields: [Quantity]  (handler_config.iframe_selector = iframe[src*='modal.aspx'])
+   post_fill: click_button #proxyActionBar_x__cmdEnd (保存并关闭明细编辑...)
+
+3. advance_workflow
+   navigation:
+     - wait_selector #proxyActionBar_x_valsingtel_receipt_v2create (20s)
+     - click #proxyActionBar_x_valsingtel_receipt_v2create
+     - wait_selector #..._selector_single_delivery_20240816105603081_search (20s)
+   fields: []   (no fields — navigation-only stage)
+   post_fill: {} (none)
+
+4. select_approver
+   navigation: []  (no navigation — continue from stage 3 state)
+   fields: [Approver 2]
+   post_fill: click_button #proxyActionBar_x__cmdSave (保存审批人...)
+
+Top-level post_fill (after ALL stages):
+  manual_review — "GR 创建完成，请检查结果"
+
+Dangling reference check: none — every stage field name exists in top-level fields.
+Result: PASS ✅

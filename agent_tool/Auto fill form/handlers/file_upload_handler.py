@@ -5,12 +5,9 @@ Supports two modes:
   - "html5_uploader" (iValua style): click button, find hidden input, wait for upload
 """
 
-import logging
 import os
 from typing import Any
 from .base_handler import BaseHandler
-
-logger = logging.getLogger(__name__)
 
 
 class FileUploadHandler(BaseHandler):
@@ -36,14 +33,12 @@ class FileUploadHandler(BaseHandler):
 
         # Validate file exists
         if not os.path.exists(value):
-            logger.error("File not found: %s", value)
             return {
                 "success": False,
                 "message": f"File not found: {value}",
                 "evidence": {"file_path": value}
             }
 
-        logger.debug("File upload starting, mode=%s, file='%s'", mode, value)
         try:
             if mode == "native":
                 return self._handle_native(field_config, value)
@@ -53,7 +48,6 @@ class FileUploadHandler(BaseHandler):
                 # Unknown mode - fall back to native
                 return self._handle_native(field_config, value)
         except Exception as e:
-            logger.error("File upload failed: %s", e)
             return {
                 "success": False,
                 "message": f"File upload failed: {str(e)}",
@@ -66,7 +60,6 @@ class FileUploadHandler(BaseHandler):
         element = self.page.locator(selector)
         element.wait_for(state="visible", timeout=5000)
         element.set_input_files(value)
-        logger.info("File uploaded via native mode: %s", value)
         return {
             "success": True,
             "message": f"File uploaded to '{selector}': {value}",
@@ -74,28 +67,31 @@ class FileUploadHandler(BaseHandler):
         }
 
     def _handle_html5(self, field_config: dict, value: str) -> dict:
-        """Handle HTML5 uploader (iValua style with progress bar)."""
+        """Handle HTML5 uploader (iValua style with progress bar).
+
+        NOTE: html5_uploader mode does NOT click the upload button (that opens
+        a native file dialog); it sets files directly on the hidden input,
+        which triggers iValua's change-based upload.
+        """
         selector = field_config.get("selector", "")
         hc = field_config.get("handler_config", {})
         file_input_selector = hc.get("file_input_selector", selector)
-        upload_btn_sel = hc.get("upload_button_selector")
         wait_sel = hc.get("wait_for_upload_selector")
         wait_timeout = hc.get("wait_upload_timeout_ms", 30000)
-
-        # Click upload button if configured
-        if upload_btn_sel:
-            self.page.locator(upload_btn_sel).click()
-            self.page.wait_for_timeout(500)
+        wait_after = hc.get("wait_after_upload_ms")
 
         # Find the hidden file input element
         file_input = self.page.locator(file_input_selector)
         if file_input.count() == 0:
             file_input = self.page.locator('input[type="file"]').first
         file_input.set_input_files(value)
-        logger.info("File upload initiated via HTML5: %s", value)
 
         # Wait for upload to complete (progress indicator to disappear)
-        if wait_sel:
+        # wait_after_upload_ms is the highest priority wait (fixed elapsed time,
+        # used when the upload+refresh cycle is measured, e.g. iValua ~4.3s).
+        if wait_after is not None:
+            self.page.wait_for_timeout(int(wait_after))
+        elif wait_sel:
             try:
                 self.page.wait_for_selector(wait_sel, state="hidden", timeout=wait_timeout)
             except Exception:
@@ -113,6 +109,15 @@ class FileUploadHandler(BaseHandler):
         errors = super().validate(field_config)
         hc = field_config.get("handler_config", {})
         mode = hc.get("mode", "native")
-        if mode == "html5_uploader" and not hc.get("upload_button_selector"):
-            errors.append("html5_uploader mode requires 'upload_button_selector' in handler_config")
+        if mode == "html5_uploader":
+            # The upload button is OPTIONAL now — html5_uploader mode sets files
+            # directly on the hidden file input (clicking the button would open
+            # a native file dialog). Base validate() already requires `selector`;
+            # file_input_selector falls back to `selector` at runtime, so no
+            # extra hard requirement is needed.
+            if not hc.get("file_input_selector") and not field_config.get("selector"):
+                errors.append(
+                    "html5_uploader mode requires 'file_input_selector' in "
+                    "handler_config or a 'selector' fallback"
+                )
         return errors

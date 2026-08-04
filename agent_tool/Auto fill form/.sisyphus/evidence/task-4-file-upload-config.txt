@@ -1,0 +1,91 @@
+================================================================================
+Task 4 - File Upload Handler: iValua HTML5 uploader verification + config
+Date: 2026-07-31
+Python: C:\Users\p1325970\AppData\Local\Python\bin\python.exe
+================================================================================
+
+1. HANDLER VERIFICATION
+--------------------------------------------------------------------------------
+File modified: handlers/file_upload_handler.py
+
+The html5_uploader mode was verified against the recorded iValua flow
+(recordings/recorder_log_20260731_140316.json ~lines 963-1021):
+  - Upload button:  #body_x_tabc_prxDelivery_prxprxDelivery_x_file_delivery_20240807224049492_x_UploadButtonControl
+  - Hidden input:   #fileselect_body_x_tabc_prxDelivery_prxprxDelivery_x_file_delivery_20240807224049492_x
+                    (type=file, multiple, display:none)
+  - After selection: AJAX POST to /ajax.aspx/en/fil/file_control/internalgr/delivery/...
+                    (~3.5s) then list-refresh postback (~4.3s total)
+
+The existing _handle_html5 flow already matches: click upload button ->
+wait 500ms -> set_input_files on hidden input -> wait. Verified working.
+
+NEW CAPABILITY (this task): the handler previously did NOT read
+wait_after_upload_ms. Added support in _handle_html5 (after set_input_files):
+  - if hc.get("wait_after_upload_ms") is set -> page.wait_for_timeout(int(ms))
+  - else -> existing wait_for_upload_selector / 2000ms fallback logic
+  - wait_after_upload_ms is the HIGHEST priority wait (wins over
+    wait_for_upload_selector when both are configured).
+
+2. PRODUCED handler_config FOR THE WORKFLOW "Attachment File" FIELD
+--------------------------------------------------------------------------------
+{
+  "mode": "html5_uploader",
+  "upload_button_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_file_delivery_20240807224049492_x_UploadButtonControl",
+  "file_input_selector": "#fileselect_body_x_tabc_prxDelivery_prxprxDelivery_x_file_delivery_20240807224049492_x",
+  "wait_after_upload_ms": 4000
+}
+(4000ms chosen: measured upload+refresh cycle is ~4.3s; a fixed wait is more
+reliable than polling a progress-bar selector that may not be stable in iValua.)
+
+3. SCHEMA FINDING (IMPORTANT - schema DOES block these keys)
+--------------------------------------------------------------------------------
+File inspected: workflows/schema/workflow-schema.json
+  - $defs.handler_config (line ~256) declares "additionalProperties": false
+  - Its "properties" list does NOT include ANY of the file-upload keys:
+      mode, upload_button_selector, file_input_selector,
+      wait_for_upload_selector, wait_upload_timeout_ms, wait_after_upload_ms
+
+Verified empirically with the project validator:
+  VALID: False
+  - [fields -> Attachment File -> handler_config] Additional properties are not
+    allowed ('file_input_selector', 'mode', 'upload_button_selector',
+    'wait_after_upload_ms' were unexpected)
+
+CONCLUSION: The schema MUST be updated in a LATER task to add these keys to
+$defs.handler_config.properties (and allow "mode" via enum or string). Until
+then, adding this handler_config to a workflow field will fail load_workflow
+schema validation. NOT modified in this task (out of scope).
+
+4. TESTS
+--------------------------------------------------------------------------------
+New file: tests/test_file_upload_handler.py (pytest style, MockPage-based,
+offline-safe; also runnable directly with `python tests/...`)
+
+  - test_html5_uploader_clicks_button_sets_input_waits          PASS
+    (full iValua config -> button clicked, hidden input set,
+     wait_for_timeout(4000) called)
+  - test_wait_after_upload_ms_highest_priority                  PASS
+    (wait_after_upload_ms wins over wait_for_upload_selector)
+  - test_html5_fallback_wait_for_selector                       PASS
+    (no wait_after_upload_ms -> wait_for_selector(state="hidden"))
+  - test_html5_default_wait_2000ms                              PASS
+    (existing default preserved)
+  - test_html5_hidden_input_fallback                             PASS
+    (count()==0 -> generic input[type="file"] fallback preserved)
+  - test_native_mode_unchanged                                   PASS
+    (native: no click, no timeout waits, direct set_input_files)
+  - test_native_mode_unchanged_with_handler_config               PASS
+    (html5 keys ignored when mode=native)
+  - test_validate_html5_requires_upload_button                   PASS
+
+  RESULT: 8 passed, 0 failed
+
+Integration suite (tests/test_integration.py):
+  RESULT: 25 passed, 1 failed, 1 error
+  - FAILED test_list_workflows  -> PRE-EXISTING, unrelated (workflow count
+    drift: 4 workflows discovered vs the 2 the test expects). NOT fixed (per
+    task instructions).
+  - ERROR 'test' at collection  -> PRE-EXISTING file structure: the file
+    defines a decorator function named `test()` which pytest collects as a
+    test. Unrelated to this change.
+  => No NEW failures introduced by this task.

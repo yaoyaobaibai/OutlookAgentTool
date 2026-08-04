@@ -1,0 +1,57 @@
+HARDEN EDGE CLEANUP — EVIDENCE
+===============================
+Date: 2026-08-03
+File modified: form_filler.py
+Python: C:\Users\p1325970\AppData\Local\Python\bin\python.exe
+
+PROBLEM
+-------
+_on_closing() cleanup used self._edge_proc.terminate(), which only signals the
+main Edge process. Chromium/Edge spawns many child processes (renderer, GPU,
+utility); terminate() leaves them as orphan/zombie processes, especially if the
+automation was mid-run (page.goto / wait_for_selector blocked).
+
+CHANGE
+------
+Replaced the terminate() block in cleanup() inside _on_closing() with a forced
+whole-tree kill via taskkill /PID <pid> /T /F, with .kill() fallback:
+
+    # Terminate the bare-launched Edge we spawned — kill the whole tree
+    if getattr(self, "_edge_proc", None):
+        try:
+            subprocess.run(
+                ["taskkill", "/PID", str(self._edge_proc.pid), "/T", "/F"],
+                capture_output=True,
+                timeout=10,
+            )
+        except Exception:
+            try:
+                self._edge_proc.kill()
+            except Exception:
+                pass
+        self._edge_proc = None
+
+subprocess is already imported at module top (line 15), so used directly.
+No other logic changed; WM_DELETE_WINDOW binding and confirm-dialog untouched.
+
+VERIFICATION
+------------
+1) python -m py_compile form_filler.py  -> exit 0 (PY_COMPILE_OK)
+2) python -c "import form_filler; print('OK')" -> OK
+3) Live cleanup test (unique profile dir edge_cleanup_test_profile, port 9223):
+   - Spawned bare Edge like the app: 16 msedge processes with the test profile
+     BEFORE kill (main + 15 children).
+   - Ran: taskkill /PID <pid> /T /F  -> rc=0; output shows every child PID and
+     the main PID terminated successfully.
+   - AFTER kill: msedge processes with test profile = 0
+   - RESULT: PASS (remaining_with_test_profile=0)
+   - Full test log: .sisyphus/evidence/edge-cleanup-taskkill-test.txt
+   - No pre-existing user Edge processes touched (only processes whose command
+     line contained the unique test profile dir were counted/killed).
+4) Final _on_closing cleanup block read back (form_filler.py lines 665-678):
+   taskkill /PID <pid> /T /F confirmed in place.
+
+CONCLUSION
+----------
+Closing the GUI window (top-right X) now force-kills the ENTIRE Edge process
+tree. No browser processes are left behind when the app is packaged as an .exe.

@@ -1,22 +1,11 @@
-{
-  "active_plan": "C:\\Users\\p1325970\\AILearn\\Auto fill form\\.sisyphus\\plans\\improve-recorder-details.md",
-  "started_at": "2026-07-28T06:14:28.155Z",
-  "session_ids": [
-    "ses_05de42cddffeC1tsl8eTUAu4v6"
-  ],
+﻿{
+  "active_plan": "C:\\Users\\p1325970\\AILearn\\Auto fill form\\.sisyphus\\plans\\gracubuy-gr-flow.md",
+  "started_at": "2026-07-31T09:21:00.000Z",
+  "session_ids": ["ses_04d3d2cacffetD4UUdA7MDQkiN"],
   "session_origins": {
-    "ses_05de42cddffeC1tsl8eTUAu4v6": "direct"
+    "ses_04d3d2cacffetD4UUdA7MDQkiN": "direct"
   },
-  "plan_name": "improve-recorder-details",
+  "plan_name": "gracubuy-gr-flow",
   "agent": "atlas",
-  "task_sessions": {
-    "todo:1": {
-      "task_key": "todo:1",
-      "task_label": "1",
-      "task_title": "**修复 CSS 类名正则 bug**",
-      "session_id": "ses_05c7d0c27ffe6kdreLij9thOuD",
-      "agent": "Sisyphus-Junior",
-      "updated_at": "2026-07-28T06:17:39.345Z"
-    }
-  }
+  "task_sessions": {}
 }
