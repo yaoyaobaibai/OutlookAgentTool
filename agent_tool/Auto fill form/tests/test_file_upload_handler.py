@@ -361,6 +361,57 @@ def test_validate_html5_no_upload_button_required():
 
 
 # ---------------------------------------------------------------------------
+# Readable error messages (file validation — no page interaction needed)
+# ---------------------------------------------------------------------------
+
+def test_missing_file_readable_message():
+    """A non-existent path returns a readable Chinese message naming the file."""
+    page = MockPage()
+    handler = _make_handler(page)
+    missing = os.path.join(os.path.abspath(os.path.sep), "definitely", "missing", "6000017449.pdf")
+
+    field_config = {"selector": "#file_input", "type": "file_upload"}
+    result = handler.execute(field_config, missing)
+
+    assert result["success"] is False, result
+    assert "附件文件不存在" in result["message"], result["message"]
+    assert missing in result["message"], result["message"]
+    assert result["evidence"]["file_path"] == missing, result["evidence"]
+    # No page interaction happened at all
+    assert page.file_inputs == [], page.file_inputs
+
+
+def test_folder_value_readable_message(tmp_path):
+    """A folder path returns a readable Chinese message saying it's a folder."""
+    page = MockPage()
+    handler = _make_handler(page)
+    folder = str(tmp_path)
+
+    field_config = {"selector": "#file_input", "type": "file_upload"}
+    result = handler.execute(field_config, folder)
+
+    assert result["success"] is False, result
+    assert "文件夹" in result["message"], result["message"]
+    assert folder in result["message"], result["message"]
+    assert result["evidence"]["is_dir"] is True, result["evidence"]
+    assert page.file_inputs == [], page.file_inputs
+
+
+def test_empty_value_readable_message():
+    """An empty value returns a readable Chinese message saying the path is empty."""
+    page = MockPage()
+    handler = _make_handler(page)
+
+    field_config = {"selector": "#file_input", "type": "file_upload"}
+    result = handler.execute(field_config, "")
+
+    assert result["success"] is False, result
+    assert "为空" in result["message"], result["message"]
+    assert result["evidence"]["file_path"] == "", result["evidence"]
+    assert page.file_inputs == [], page.file_inputs
+
+
+# ---------------------------------------------------------------------------
 # Runner (for direct execution without pytest)
 # ---------------------------------------------------------------------------
 

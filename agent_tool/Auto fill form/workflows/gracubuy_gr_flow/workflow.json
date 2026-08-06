@@ -15,7 +15,7 @@
         "mode": "autocompletion",
         "search_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder_search",
         "result_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder_MenuItem span.text",
-        "wait_after_input_ms": 1500,
+        "wait_after_input_ms": 3000,
         "clear_before": true
       }
     },
@@ -56,7 +56,7 @@
         "mode": "autocompletion",
         "search_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selector_single_delivery_20240816105603081_search",
         "result_selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_selector_single_delivery_20240816105603081_MenuItem span.text",
-        "wait_after_input_ms": 1500,
+        "wait_after_input_ms": 3000,
         "clear_before": true
       }
     }

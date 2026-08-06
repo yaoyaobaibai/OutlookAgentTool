@@ -486,6 +486,19 @@ class FormFillerApp:
         else:
             self._log("[i] 未选择 Excel 文件 — 使用默认字段值。")
 
+        # --- Auto-construct attachment path from folder + Order value ---
+        # Business rule: Excel "Attachment File" holds a FOLDER; the actual file is
+        # "<folder>\<Order value>.pdf". Only applied when both fields are present.
+        folder = field_values.get("Attachment File", "").strip()
+        order_val = field_values.get("Order", "").strip()
+        if folder and order_val:
+            attachment_path = os.path.join(folder, f"{order_val}.pdf")
+            field_values["Attachment File"] = attachment_path
+            self._log(f"[i] 附件路径已自动构建: {attachment_path}")
+            if not os.path.isfile(attachment_path):
+                self._log(f"[!] 附件文件不存在: {attachment_path}")
+                self._log("[!] 请确认该文件夹中存在文件名为「<Order值>.pdf」的文件，例如 6000017449.pdf")
+
         return field_values
 
     # ------------------------------------------------------------------

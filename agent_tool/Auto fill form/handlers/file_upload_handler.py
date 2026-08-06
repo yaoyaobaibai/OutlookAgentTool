@@ -31,12 +31,32 @@ class FileUploadHandler(BaseHandler):
         hc = field_config.get("handler_config", {})
         mode = hc.get("mode", "native")
 
-        # Validate file exists
-        if not os.path.exists(value):
+        # Validate file exists — with clear, actionable Chinese guidance
+        if not value:
             return {
                 "success": False,
-                "message": f"File not found: {value}",
+                "message": "附件文件路径为空：请在 Excel 的 Attachment File 列填写附件所在文件夹，"
+                           "或检查自动拼接的文件路径是否正确。",
                 "evidence": {"file_path": value}
+            }
+        if os.path.isdir(value):
+            return {
+                "success": False,
+                "message": (
+                    f"附件路径指向的是文件夹而不是文件：{value}\n"
+                    "请确认文件夹中已存在要上传的文件（文件名为 Order 列的值 + .pdf，例如 6000017449.pdf）。"
+                ),
+                "evidence": {"file_path": value, "is_dir": True}
+            }
+        if not os.path.isfile(value):
+            return {
+                "success": False,
+                "message": (
+                    f"附件文件不存在：{value}\n"
+                    "请确认 Excel 的 Attachment File 列填写的文件夹中存在该文件，"
+                    "且文件名 = Order 列的值 + .pdf（例如：订单 6000017449 对应文件 6000017449.pdf）。"
+                ),
+                "evidence": {"file_path": value, "is_file": False}
             }
 
         try:
@@ -50,7 +70,10 @@ class FileUploadHandler(BaseHandler):
         except Exception as e:
             return {
                 "success": False,
-                "message": f"File upload failed: {str(e)}",
+                "message": (
+                    f"附件上传失败：{str(e)}\n"
+                    "请检查附件文件是否存在、格式是否为 PDF，以及页面是否正常。"
+                ),
                 "evidence": {"error": str(e)}
             }
 

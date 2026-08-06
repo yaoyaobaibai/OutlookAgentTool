@@ -9,10 +9,12 @@ Covers:
   2. handler_config.result_selector overrides the default dropdown item selector.
   3. handler_config.search_selector (schema key) is honoured alongside the legacy
      search_input_selector key.
-  4. Backward compatibility: without search_value, the field value itself is typed
-     into the search input (identical to previous behaviour).
-  5. No results after search -> success with a warning (not a hard failure).
-  6. hidden_input_selector JS fallback still runs when no items appear.
+   4. Backward compatibility: without search_value, the field value itself is typed
+      into the search input (identical to previous behaviour).
+   5. No results after search -> success with a warning (not a hard failure).
+   6. hidden_input_selector JS fallback still runs when no items appear.
+   7. press_sequentially (per-keystroke typing) is used for the search input — not a
+      single fill() — so iValua's per-character AJAX search fires.
 
 All tests are OFFLINE-SAFE — a MockPage records interactions; no Playwright browser
 is launched. Runnable directly (`python tests/test_autocomplete_handler.py`) or via
@@ -58,6 +60,10 @@ class MockLocator:
         self.page.fills.append((self.selector, str(value)))
         return None
 
+    def press_sequentially(self, text, delay=None):
+        self.page.press_seq.append((self.selector, str(text), delay))
+        return None
+
     # --- item traversal ---
     def nth(self, index):
         return MockLocator(self.page, self.selector, index)
@@ -80,7 +86,8 @@ class MockPage:
 
     def __init__(self):
         self.clicks = []          # [(selector, index_or_None)]
-        self.fills = []           # [(selector, value)]
+        self.fills = []           # [(selector, value)]  (used for clear_before)
+        self.press_seq = []       # [(selector, text, delay)]  (per-keystroke typing)
         self.timeouts = []        # wait_for_timeout(ms) calls
         self.wait_for_calls = []  # [(selector, kwargs)]
         self.locator_counts = {}  # selector -> count()
@@ -130,10 +137,13 @@ def test_two_step_search_then_select():
     assert result["success"] is True, result
     assert result["evidence"]["search_value"] == "6000017449"
 
-    # The search input was filled with the SEARCH TERM, not the field value
+    # The search input received the SEARCH TERM via press_sequentially (not fill),
+    # and the clear_before fill("") happened first on the same input
     fills = [v for (sel, v) in page.fills if sel == "#sel_search"]
-    assert fills == ["", "6000017449"], f"expected clear+search term, got {fills}"
-    assert ("#sel_search", "PO0147739") not in page.fills
+    assert fills == [""], f"expected only the clear_before fill, got {fills}"
+    press_calls = [t for (sel, t, _d) in page.press_seq if sel == "#sel_search"]
+    assert press_calls == ["6000017449"], press_calls
+    assert ("#sel_search", "PO0147739") not in page.press_seq
 
     # The clicked item is the one whose displayed text contains the field value
     assert ("#sel_results .text", 0) in page.clicks, page.clicks
@@ -160,7 +170,9 @@ def test_two_step_no_result_selector_uses_default():
 
     assert result["success"] is True, result
     fills = [v for (sel, v) in page.fills if sel == "#sel_search"]
-    assert fills == ["", "6000017449"], fills
+    assert fills == [""], fills
+    press_calls = [t for (sel, t, _d) in page.press_seq if sel == "#sel_search"]
+    assert press_calls == ["6000017449"], press_calls
     assert ("#sel .menu > .item", 0) in page.clicks, page.clicks
 
 
@@ -182,9 +194,11 @@ def test_two_step_no_results_returns_success_warning():
     assert result["success"] is True, result
     assert result["evidence"]["warning"] == "No dropdown items appeared"
     assert "no dropdown items appeared" in result["message"]
-    # The search term was still typed before giving up
+    # The search term was still typed (per keystroke) before giving up
     fills = [v for (sel, v) in page.fills if sel == "#sel_search"]
-    assert "6000017449" in fills, fills
+    assert fills == [""], fills
+    press_calls = [t for (sel, t, _d) in page.press_seq if sel == "#sel_search"]
+    assert "6000017449" in press_calls, press_calls
 
 
 # ---------------------------------------------------------------------------
@@ -208,7 +222,10 @@ def test_search_selector_key_supported():
     assert result["success"] is True, result
     fills = [v for (sel, v) in page.fills
              if sel == "#body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder_search"]
-    assert fills == ["", "PO0147739 - 广州"], fills
+    assert fills == [""], fills
+    press_calls = [t for (sel, t, _d) in page.press_seq
+                   if sel == "#body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder_search"]
+    assert press_calls == ["PO0147739 - 广州"], press_calls
 
 
 def test_legacy_search_input_selector_still_supported():
@@ -224,7 +241,9 @@ def test_legacy_search_input_selector_still_supported():
     result = handler.execute(field_config, "ABC123")
 
     assert result["success"] is True, result
-    assert ("#legacy_search", "ABC123") in page.fills
+    press_calls = [t for (sel, t, _d) in page.press_seq if sel == "#legacy_search"]
+    assert press_calls == ["ABC123"], press_calls
+    assert not any(sel == "#sel_search" for (sel, _t, _d) in page.press_seq)
     assert not any(sel == "#sel_search" for (sel, _v) in page.fills)
 
 
@@ -255,7 +274,10 @@ def test_selector_can_be_data_selector_div():
     assert result["success"] is True, result
     fills = [v for (sel, v) in page.fills
              if sel == "#body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder_search"]
-    assert fills == ["", "PO0147739 - 广州"], fills
+    assert fills == [""], fills
+    press_calls = [t for (sel, t, _d) in page.press_seq
+                   if sel == "#body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder_search"]
+    assert press_calls == ["PO0147739 - 广州"], press_calls
     # The visible wrapper div (data-selector) is the element waited on + clicked
     div_sel = "div[data-selector='body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder']"
     assert (div_sel, None) in page.clicks, page.clicks
@@ -271,13 +293,37 @@ def test_backward_compat_fill_value_directly():
     result = handler.execute(field_config, "ABC123")
 
     assert result["success"] is True, result
-    # Fill happens with the value itself, via the default "{selector}_search" input
+    # clear_before fill("") happens first, then the value is typed per keystroke
     fills = [v for (sel, v) in page.fills if sel == "#sel_search"]
-    assert fills == ["", "ABC123"], fills
+    assert fills == [""], fills
+    press_calls = [t for (sel, t, _d) in page.press_seq if sel == "#sel_search"]
+    assert press_calls == ["ABC123"], press_calls
     # Exact match item clicked
     assert ("#sel .menu > .item", 0) in page.clicks, page.clicks
     # Evidence has no search_value key (unchanged shape)
     assert "search_value" not in result["evidence"]
+
+
+def test_press_sequentially_used_for_search():
+    """The search input receives press_sequentially (NOT fill) with the value,
+    and the clear_before fill("") still happens first."""
+    page = MockPage()
+    page.item_texts["#sel .menu > .item"] = ["ABC123", "XYZ789"]
+    handler = _make_handler(page)
+
+    field_config = {"selector": "#sel", "handler_config": {}}
+    result = handler.execute(field_config, "ABC123")
+
+    assert result["success"] is True, result
+    # clear_before fill("") happens first on the search input
+    fills = [v for (sel, v) in page.fills if sel == "#sel_search"]
+    assert fills == [""], fills
+    # The value is typed via press_sequentially, never via fill
+    press_calls = [t for (sel, t, _d) in page.press_seq if sel == "#sel_search"]
+    assert press_calls == ["ABC123"], press_calls
+    assert ("#sel_search", "ABC123") not in page.fills
+    # The dropdown item is still selected by matching the value
+    assert ("#sel .menu > .item", 0) in page.clicks, page.clicks
 
 
 # ---------------------------------------------------------------------------

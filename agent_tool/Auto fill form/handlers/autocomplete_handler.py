@@ -7,9 +7,16 @@ Supports two modes via handler_config.mode:
   - "autocompletion": Type into _search input (triggers server-side search), select from suggestions
 
 Supports a two-step search-then-select interaction for iValua SelectorControl widgets:
-when handler_config.search_value is set, the search input is filled with the search
-term while dropdown items are matched against the field value (displayed text).
+when handler_config.search_value is set, the search input receives the search term
+(typed character-by-character via press_sequentially) while dropdown items are
+matched against the field value (displayed text).
 handler_config.result_selector overrides the default dropdown item selector.
+
+Typing is done with press_sequentially (per keystroke) rather than a single fill():
+iValua's SelectorControl fires a server-side AJAX search (GetQueryHandle) for each
+character typed, so the dropdown results only render after the per-character search
+chain completes. A one-shot fill() fires a single input event and never populates
+the dropdown.
 """
 
 from typing import Any
@@ -20,9 +27,11 @@ class AutoCompleteHandler(BaseHandler):
     """Handles 'autocomplete' field type - custom SelectorControl widgets (iValua).
 
     Two-step interaction (handler_config.search_value): type the search term into
-    the _search input (server-side AJAX search), wait for results, then click the
-    dropdown item whose text matches the field value. handler_config.result_selector
-    overrides the default dropdown item selector (default "{selector} {dropdown_selector}").
+    the _search input character-by-character via press_sequentially (each keystroke
+    triggers iValua's server-side AJAX search, so the dropdown results only appear
+    after the per-character search chain), wait for results, then click the dropdown
+    item whose text matches the field value. handler_config.result_selector overrides
+    the default dropdown item selector (default "{selector} {dropdown_selector}").
     """
 
     def execute(self, field_config: dict, value: str) -> dict:
@@ -42,9 +51,9 @@ class AutoCompleteHandler(BaseHandler):
 
         hc = field_config.get("handler_config", {})
         mode = hc.get("mode", "dropdown")
-        # Two-step search-then-select: when set, the search input is filled with
-        # search_value (the search term) while dropdown items are matched against
-        # the field value (the displayed text of the desired result).
+        # Two-step search-then-select: when set, the search input receives
+        # search_value (the search term, typed per keystroke) while dropdown items
+        # are matched against the field value (the displayed text of the desired result).
         search_value = hc.get("search_value")
         # Accept both the legacy search_input_selector key and the schema-level
         # search_selector key used by existing workflows, falling back to the
@@ -58,7 +67,9 @@ class AutoCompleteHandler(BaseHandler):
         # widgets (e.g. iValua "{selector}_MenuItem span.text") can be targeted.
         result_sel = hc.get("result_selector")
         dropdown_sel = hc.get("dropdown_selector", ".menu > .item")
-        wait_ms = hc.get("wait_after_input_ms", 1000)
+        # Per-character AJAX search + server round-trip takes longer than a single
+        # fill, so the default wait after typing is higher (still configurable).
+        wait_ms = hc.get("wait_after_input_ms", 3000)
         clear_before = hc.get("clear_before", True)
         hidden_sel = hc.get("hidden_input_selector")
 
@@ -77,7 +88,7 @@ class AutoCompleteHandler(BaseHandler):
             #    focuses the control in "autocompletion" mode)
             main_element.click()
 
-            # 3. Find the search input and fill the value
+            # 3. Find the search input and type the value character-by-character
             search_input = self._find_search_input(search_sel, main_element)
             if search_input is None:
                 return {
@@ -89,13 +100,12 @@ class AutoCompleteHandler(BaseHandler):
             if clear_before:
                 search_input.fill("")
 
-            if search_value is not None:
-                # Two-step: fill the search term (triggers server-side search),
-                # then select the result whose displayed text matches the value.
-                search_input.fill(str(search_value))
-            else:
-                # Backward compatible: fill the field value itself.
-                search_input.fill(str(value))
+            search_term = str(search_value) if search_value is not None else str(value)
+            # Type character-by-character so the widget's per-keystroke
+            # server-side search (iValua GetQueryHandle AJAX) fires.
+            # This is what makes the dropdown results appear at all.
+            press_delay = hc.get("delay_between_chars", 50)
+            search_input.press_sequentially(search_term, delay=press_delay)
 
             # 4. Wait for suggestions to appear (server roundtrip in autocompletion mode,
             #    dropdown render in dropdown mode)

@@ -1,5 +1,5 @@
 {
-  "current_workflow": "gracubuy_gr_flow",
+  "current_workflow": "gracubuy_gr_flow_test",
   "workflow_list": [
     {
       "name": "csms_create_proposal",
