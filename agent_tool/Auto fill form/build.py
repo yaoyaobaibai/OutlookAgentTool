@@ -7,11 +7,13 @@ Usage:
     python build.py              # standard build (clean + build + verify + smoke)
     python build.py --no-clean   # skip cleanup
     python build.py --no-test    # skip smoke test
+    python build.py --exclude-test  # skip *_test workflows when copying
     python build.py --verbose    # show pyinstaller stdout in real-time
     python build.py --help       # show usage
 """
 
 import argparse
+import json
 import os
 import shutil
 import subprocess
@@ -115,6 +117,136 @@ def _clean_dirs(root_dir: str) -> None:
             count += 1
     if count:
         _info(f"Removed {count} __pycache__ directories")
+
+
+# ---------------------------------------------------------------------------
+# Workflow copy helpers
+# ---------------------------------------------------------------------------
+
+# Files/dirs to never copy into dist/workflows/ (noise filter)
+_WORKFLOW_IGNORES = shutil.ignore_patterns(
+    "__pycache__", "*.pyc", "*.pyo", "*.bak", "*.tmp", ".DS_Store"
+)
+
+
+def _is_noise(name: str) -> bool:
+    """True for files we never ship (caches, backups, temp, macOS junk)."""
+    return (
+        name in ("__pycache__", ".DS_Store")
+        or name.endswith((".pyc", ".pyo", ".bak", ".tmp"))
+    )
+
+
+def _validate_workflow_json(workflow_json: str, validator_py: str) -> None:
+    """Validate a workflow.json against the schema. Warn on failure, never block."""
+    if not os.path.isfile(validator_py):
+        _warn(f"validate_workflow.py not found at {validator_py}; skipping schema check")
+        return
+    result = subprocess.run(
+        [sys.executable, validator_py, workflow_json],
+        capture_output=True,
+        text=True,
+        check=False,
+        creationflags=CREATION_FLAGS,
+    )
+    if result.returncode == 0:
+        _info(f"schema OK: {os.path.relpath(workflow_json, os.path.dirname(os.path.dirname(workflow_json)))}")
+    else:
+        _warn(f"schema validation FAILED for {workflow_json}")
+        for line in result.stdout.splitlines()[-5:]:
+            _info(f"  {line}")
+
+
+def _copy_workflows(root_dir: str, exclude_test: bool = False) -> None:
+    """Copy workflows/ into dist/workflows/ with per-workflow logging.
+
+    - Logs each workflow dir as OK: copied workflows/<name>/ or SKIP: <reason>
+    - Includes *_test workflows by default (excluded via --exclude-test)
+    - Filters noise (__pycache__/, *.pyc, *.bak, *.tmp, .DS_Store)
+    - Validates workflows/schema/ and workflows/settings.json exist
+    - Validates each workflow.json against the schema (warn only)
+    """
+    workflows_src = os.path.join(root_dir, "workflows")
+    workflows_dst = os.path.join(root_dir, "dist", "workflows")
+
+    if not os.path.isdir(workflows_src):
+        _warn(f"workflows/ not found at {workflows_src}")
+        return
+
+    # 7a. Validate workflows/schema/ exists (workflow_manager depends on it)
+    schema_dir = os.path.join(workflows_src, "schema")
+    if not os.path.isdir(schema_dir):
+        _warn(f"workflows/schema/ not found at {schema_dir} -- workflow_manager needs it")
+    validator_py = os.path.join(schema_dir, "validate_workflow.py")
+
+    # 7b. Validate settings.json exists; print current_workflow
+    settings_path = os.path.join(workflows_src, "settings.json")
+    current_workflow = "?"
+    if os.path.isfile(settings_path):
+        try:
+            with open(settings_path, "r", encoding="utf-8") as f:
+                current_workflow = json.load(f).get("current_workflow", "?")
+        except (OSError, ValueError) as e:
+            _warn(f"Could not read settings.json: {e}")
+        _ok(f"settings.json found (current_workflow: {current_workflow})")
+    else:
+        _warn(f"settings.json not found at {settings_path}")
+
+    # 7c. Copy top-level non-noise files (settings.json, README.md, ...)
+    os.makedirs(workflows_dst, exist_ok=True)
+    for entry in sorted(os.listdir(workflows_src)):
+        src = os.path.join(workflows_src, entry)
+        if os.path.isfile(src) and not _is_noise(entry):
+            shutil.copy2(src, os.path.join(workflows_dst, entry))
+            _ok(f"OK: copied workflows/{entry}")
+
+    # 7d. Copy each workflow directory (excluding noise)
+    copied = 0
+    prod_count = 0
+    test_count = 0
+    for name in sorted(os.listdir(workflows_src)):
+        src = os.path.join(workflows_src, name)
+        if not os.path.isdir(src):
+            continue
+
+        # schema/ is runtime infrastructure for workflow_manager -- copy it,
+        # but it is not a workflow (no count, no per-workflow validation)
+        if name == "schema":
+            schema_dst = os.path.join(workflows_dst, "schema")
+            try:
+                shutil.copytree(src, schema_dst, dirs_exist_ok=True, ignore=_WORKFLOW_IGNORES)
+                _ok("OK: copied workflows/schema/")
+            except OSError as e:
+                _warn(f"SKIP: workflows/schema/ (copy failed: {e})")
+            continue
+
+        # 7e. Optionally skip *_test workflows
+        is_test = name.endswith("_test")
+        if is_test and exclude_test:
+            _info(f"SKIP: workflows/{name}/ (excluded by --exclude-test)")
+            continue
+
+        dst = os.path.join(workflows_dst, name)
+        try:
+            shutil.copytree(src, dst, dirs_exist_ok=True, ignore=_WORKFLOW_IGNORES)
+        except OSError as e:
+            _warn(f"SKIP: workflows/{name}/ (copy failed: {e})")
+            continue
+
+        _ok(f"OK: copied workflows/{name}/")
+        copied += 1
+        if is_test:
+            test_count += 1
+        else:
+            prod_count += 1
+
+        # 7f. Validate workflow.json against schema (warn on fail, don't block)
+        workflow_json = os.path.join(src, "workflow.json")
+        if os.path.isfile(workflow_json):
+            _validate_workflow_json(workflow_json, validator_py)
+
+    # 7g. Summary
+    _ok(f"Copied {copied} workflows ({prod_count} production + {test_count} test)")
 
 
 # ---------------------------------------------------------------------------
@@ -373,13 +505,7 @@ def build(args: argparse.Namespace) -> int:
     _step_header(step, total_steps, "Copying workflows/ directory to dist")
     step += 1
 
-    workflows_src = os.path.join(root_dir, "workflows")
-    workflows_dst = os.path.join(root_dir, "dist", "workflows")
-    if os.path.isdir(workflows_src):
-        shutil.copytree(workflows_src, workflows_dst, dirs_exist_ok=True)
-        _ok(f"Copied: workflows/ -> dist/workflows/")
-    else:
-        _info(f"Skipped (not found): workflows/")
+    _copy_workflows(root_dir, exclude_test=args.exclude_test)
 
     # =======================================================================
     # Summary
@@ -406,6 +532,7 @@ Examples:
   python build.py                 standard build (clean + build + verify + smoke)
   python build.py --no-clean      skip cleanup (incremental)
   python build.py --no-test       skip smoke test
+  python build.py --exclude-test  skip *_test workflows when copying
   python build.py --verbose       show pyinstaller stdout in real-time
 """,
     )
@@ -418,6 +545,11 @@ Examples:
         "--no-test",
         action="store_true",
         help="Skip post-build smoke test (launch EXE for 10s)",
+    )
+    parser.add_argument(
+        "--exclude-test",
+        action="store_true",
+        help="Exclude *_test workflow directories when copying workflows/",
     )
     parser.add_argument(
         "--verbose",

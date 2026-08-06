@@ -8,3 +8,42 @@ __pycache__/
 agent_tool/Auto fill form/recordings/*.json
 agent_tool/Auto fill form/recordings/*.json.bak
 agent_tool/Auto fill form/workflows/*_prod_*.json
+
+# Local FormFiller config (may contain real credentials, NOT for commit)
+agent_tool/FormFiller/
+agent_tool/FormFiller.zip
+
+# PyInstaller build artifacts (should be built, not committed)
+agent_tool/**/build/
+agent_tool/**/dist/
+
+# Local extracted EXE dumps and zip releases
+PRPOAgent.exe_extracted/
+OutlookAgent.zip
+OutlookAgent/
+
+# Editor / OS / temp files
+*~
+.DS_Store
+Thumbs.db
+~$*
+*.tmp
+*.bak
+!.gitkeep
+
+# Workspace litter
+"New folder/"
+"New Text Document.txt"
+merged*.pdf
+key.txt
+OT.txt
+
+# AI tool state (transient, not part of code)
+.omo/
+.opencode/
+.playwright-mcp/
+AI_Assistant/
+ai-assistant-web/
+vector.v0.8.2-pg16/
+vector.v0.8.2-pg17/
+python-cms/
