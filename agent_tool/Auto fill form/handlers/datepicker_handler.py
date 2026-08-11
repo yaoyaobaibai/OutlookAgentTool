@@ -7,9 +7,13 @@ Supports two modes:
 """
 
 import datetime
+import logging
 from typing import Any, Tuple
 
+from logging_setup import mask_value
 from .base_handler import BaseHandler
+
+logger = logging.getLogger(__name__)
 
 
 class DatePickerHandler(BaseHandler):
@@ -33,6 +37,7 @@ class DatePickerHandler(BaseHandler):
         try:
             hc = field_config.get("handler_config", {})
             mode = hc.get("mode", "direct_input")
+            logger.debug("[datepicker] start selector=%s value=%s mode=%s", selector, mask_value(value), mode)
 
             if mode == "popup":
                 return self._execute_popup(field_config, selector, value, hc)
@@ -40,6 +45,7 @@ class DatePickerHandler(BaseHandler):
                 return self._execute_direct_input(field_config, selector, value, hc)
 
         except Exception as e:
+            logger.debug("[datepicker] failed %s: %s", selector, e)
             return {
                 "success": False,
                 "message": f"Failed to fill datepicker '{selector}': {str(e)}",
@@ -58,6 +64,7 @@ class DatePickerHandler(BaseHandler):
         date_format = hc.get("date_format", "MM/DD/YYYY")
         year, month, day = self._parse_date(value)
         formatted_date = self._format_date(year, month, day, date_format)
+        logger.debug("[datepicker] parsed date=%s", formatted_date)
 
         # Clear and fill
         element.fill("")
@@ -72,6 +79,7 @@ class DatePickerHandler(BaseHandler):
             }
         }""", selector)
 
+        logger.debug("[datepicker] success %s (direct_input)", selector)
         return {
             "success": True,
             "message": f"Filled date '{formatted_date}' into '{selector}'",
@@ -94,6 +102,7 @@ class DatePickerHandler(BaseHandler):
 
         # Parse date components
         year, month, day = self._parse_date(value)
+        logger.debug("[datepicker] parsed date=%s-%s-%s", year, month, day)
 
         # Find and click the trigger button to open the popup
         trigger = self.page.locator(trigger_selector)
@@ -103,6 +112,7 @@ class DatePickerHandler(BaseHandler):
         trigger.wait_for(state="visible", timeout=5000)
 
         # Use expect_popup to capture the popup window
+        logger.debug("[datepicker] popup trigger click %s", trigger_selector)
         with self.page.expect_popup() as popup_info:
             trigger.click()
 
@@ -115,6 +125,7 @@ class DatePickerHandler(BaseHandler):
         year_elem = popup_page.locator(year_selector)
         if year_elem.count() > 0:
             year_elem.wait_for(state="visible", timeout=3000)
+            logger.debug("[datepicker] popup year select=%s", year)
             year_elem.select_option(value=year)
 
         # Select month
@@ -122,6 +133,7 @@ class DatePickerHandler(BaseHandler):
         month_elem = popup_page.locator(month_selector)
         if month_elem.count() > 0:
             month_elem.wait_for(state="visible", timeout=3000)
+            logger.debug("[datepicker] popup month select=%s", month)
             month_elem.select_option(value=month)
 
         # Click the day link
@@ -136,11 +148,13 @@ class DatePickerHandler(BaseHandler):
                 "evidence": {"year": year, "month": month, "day": day}
             }
 
+        logger.debug("[datepicker] popup day click=%s", day)
         day_elem.first.click()
 
         # Popup should auto-close after day selection; wait briefly
         popup_page.wait_for_timeout(500)
 
+        logger.debug("[datepicker] success %s (popup)", selector)
         return {
             "success": True,
             "message": f"Selected date {year}-{month}-{day} via popup",

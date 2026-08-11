@@ -1,11 +1,11 @@
 {
   "$schema": "../../workflows/schema/workflow-schema.json",
   "workflow_name": "GR-Acubuy Create GR (TEST - 不提交)",
-  "version": "1.0.0",
-  "description": "⚠️ 测试专用：只填写表单，不点击任何提交按钮。用于生产环境验证字段填充。不会创建真实收货单。",
+  "version": "1.1.0",
+  "description": "Singtel iValua Acubuy 收货单创建（测试版，不提交）：SSO登录→创建→手动审核。初始定位到登录页，点击 NCS Employee Login 完成 SSO。",
   "status": "active",
   "browser": { "channel": "msedge" },
-  "login": { "url": "", "enabled": false },
+  "login": { "url": "https://singtel.ivalua.app/page.aspx/en/usr/login", "enabled": false },
   "fields": {
     "Order": {
       "selector": "div[data-selector='body_x_tabc_prxDelivery_prxprxDelivery_x_selOrder']",
@@ -63,9 +63,20 @@
   },
   "stages": [
     {
+      "name": "sso_login",
+      "navigation": [
+        { "action": "goto", "url": "https://singtel.ivalua.app/page.aspx/en/usr/login", "wait_until": "load", "timeout": 60000 },
+        { "action": "wait_selector", "selector": "#body_x_button_login_20240212134848558", "timeout": 8000, "optional": true },
+        { "action": "click", "selector": "#body_x_button_login_20240212134848558", "optional": true },
+        { "action": "wait_selector", "selector": "#header_x_headerNavBar", "timeout": 120000 }
+      ],
+      "fields": [],
+      "post_fill": {}
+    },
+    {
       "name": "create_gr",
       "navigation": [
-        { "action": "goto", "url": "https://singtel.ivalua.app/page.aspx/en/ord/delivery_manage?Create", "wait_until": "networkidle", "timeout": 300000 },
+        { "action": "goto", "url": "https://singtel.ivalua.app/page.aspx/en/ord/delivery_manage?Create", "wait_until": "load", "timeout": 300000 },
         { "action": "wait_selector", "selector": "#body_x_tabc_prxDelivery_prxprxDelivery_x_txtCode", "timeout": 60000 }
       ],
       "fields": ["Order", "Code", "Internal Comment", "Attachment File"],

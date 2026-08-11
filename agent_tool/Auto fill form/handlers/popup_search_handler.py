@@ -8,8 +8,13 @@ This is designed for fields like CSMS's Priming Project Manager, where
 a trigger button opens a search popup for selecting values.
 """
 
+import logging
 from typing import Any
+
+from logging_setup import mask_value
 from .base_handler import BaseHandler
+
+logger = logging.getLogger(__name__)
 
 
 class PopupSearchHandler(BaseHandler):
@@ -41,6 +46,8 @@ class PopupSearchHandler(BaseHandler):
         popup_timeout_ms = hc.get("popup_timeout_ms", 10000)
         steps = hc.get("steps", [])
 
+        logger.debug("[popup_search] start trigger=%s value=%s", trigger_sel, mask_value(value))
+
         try:
             # --- Step 1: Click trigger button ---
             print(f"  Clicking trigger: '{trigger_sel}'")
@@ -51,9 +58,12 @@ class PopupSearchHandler(BaseHandler):
 
             # --- Step 2: Detect popup/iframe ---
             popup = self._detect_popup(popup_timeout_ms)
+            detected = popup is not None
             if popup is None:
                 print(f"  ℹ No popup detected, falling back to main page")
                 popup = self.page
+            is_iframe = detected and not hasattr(popup, "wait_for_load_state")
+            logger.debug("[popup_search] popup detected=%s (iframe=%s)", detected, is_iframe)
 
             # Wait for popup to settle
             try:
@@ -69,8 +79,10 @@ class PopupSearchHandler(BaseHandler):
                     steps_executed += 1
                 except Exception as e:
                     print(f"  Step {i + 1} failed: {e}")
+                    logger.warning("[popup_search] step %s failed: %s", step.get("action", ""), e)
                     # Continue with next step (non-fatal)
 
+            logger.debug("[popup_search] success %s (%s/%s steps)", selector, steps_executed, len(steps))
             return {
                 "success": True,
                 "message": f"Popup search completed for '{selector}' ({steps_executed}/{len(steps)} steps executed)",
@@ -82,6 +94,7 @@ class PopupSearchHandler(BaseHandler):
             }
 
         except Exception as e:
+            logger.debug("[popup_search] failed: %s", e)
             return {
                 "success": False,
                 "message": f"Popup search failed: {str(e)}",
@@ -147,6 +160,8 @@ class PopupSearchHandler(BaseHandler):
         sel = step.get("selector", "")
         step_value = step.get("value", value)
         step_num = index + 1
+
+        logger.debug("[popup_search] step %s selector=%s value=%s", action, sel, mask_value(step_value))
 
         if action == "fill":
             print(f"    Step {step_num}: fill '{step_value}' into '{sel}'")

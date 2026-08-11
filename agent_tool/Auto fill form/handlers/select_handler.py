@@ -3,8 +3,13 @@ SelectHandler - Built-in handler for 'select' field type.
 Handles native HTML <select> dropdowns with ASP.NET __doPostBack support.
 """
 
+import logging
 from typing import Any
+
+from logging_setup import mask_value
 from .base_handler import BaseHandler
+
+logger = logging.getLogger(__name__)
 
 
 class SelectHandler(BaseHandler):
@@ -37,11 +42,14 @@ class SelectHandler(BaseHandler):
 
             hc = field_config.get("handler_config", {})
             value_type = hc.get("value_type", "value")  # "value" or "label"
+            logger.debug("[select] start selector=%s value=%s value_type=%s", selector, mask_value(value), value_type)
             trigger_change = hc.get("trigger_change_event", True)
             trigger_postback = hc.get("trigger_postback", False)
             wait_after = hc.get("wait_after_ms", 1000)
 
             # Select by value or label
+            mode_label = "label" if value_type == "label" else "value"
+            logger.debug("[select] select_option %s=%s on %s", mode_label, mask_value(value), selector)
             if value_type == "label":
                 element.select_option(label=value)
             else:
@@ -60,15 +68,18 @@ class SelectHandler(BaseHandler):
                         }}
                     }}
                 }}""", element_id)
+                logger.debug("[select] dispatched change/postback on %s", selector)
 
             self.page.wait_for_timeout(wait_after)
 
+            logger.debug("[select] success %s", selector)
             return {
                 "success": True,
                 "message": f"Selected '{value}' in '{selector}'",
                 "evidence": {"selector": selector, "value": value}
             }
         except Exception as e:
+            logger.debug("[select] failed %s: %s", selector, e)
             return {
                 "success": False,
                 "message": f"Failed to select in '{selector}': {str(e)}",

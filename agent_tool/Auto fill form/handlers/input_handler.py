@@ -3,8 +3,13 @@ InputHandler - Built-in handler for 'input' field type.
 Handles text inputs and textareas using Playwright fill().
 """
 
+import logging
 from typing import Any
+
+from logging_setup import mask_value
 from .base_handler import BaseHandler
+
+logger = logging.getLogger(__name__)
 
 
 class InputHandler(BaseHandler):
@@ -25,10 +30,13 @@ class InputHandler(BaseHandler):
         if not selector:
             return {"success": False, "message": "No selector provided", "evidence": {}}
 
+        logger.debug("[input] start selector=%s value=%s", selector, mask_value(value))
+
         try:
             iframe_selector = field_config.get("handler_config", {}).get("iframe_selector", "")
             if iframe_selector:
                 # Field lives inside an iframe (e.g. modal.aspx delivery_item_manage)
+                logger.debug("[input] using iframe %s", iframe_selector)
                 element = self.page.frame_locator(iframe_selector).locator(selector)
             else:
                 element = self.page.locator(selector)
@@ -41,8 +49,13 @@ class InputHandler(BaseHandler):
             clear_first = field_config.get("handler_config", {}).get("clear_first", True)
             if clear_first:
                 element.fill("")
+                logger.debug("[input] cleared %s", selector)
+            else:
+                logger.debug("[input] skip clear")
+            logger.debug("[input] filling value=%s into %s", mask_value(value), selector)
             element.fill(str(value))
 
+            logger.debug("[input] success %s", selector)
             evidence = {"selector": selector, "value": value}
             if iframe_selector:
                 evidence["iframe"] = iframe_selector
@@ -52,6 +65,7 @@ class InputHandler(BaseHandler):
                 "evidence": evidence
             }
         except Exception as e:
+            logger.debug("[input] failed %s: %s", selector, e)
             return {
                 "success": False,
                 "message": f"Failed to fill '{selector}': {str(e)}",

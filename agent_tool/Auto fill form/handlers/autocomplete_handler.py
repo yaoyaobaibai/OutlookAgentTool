@@ -19,8 +19,13 @@ chain completes. A one-shot fill() fires a single input event and never populate
 the dropdown.
 """
 
+import logging
 from typing import Any
+
+from logging_setup import mask_value
 from .base_handler import BaseHandler
+
+logger = logging.getLogger(__name__)
 
 
 class AutoCompleteHandler(BaseHandler):
@@ -55,6 +60,10 @@ class AutoCompleteHandler(BaseHandler):
         # search_value (the search term, typed per keystroke) while dropdown items
         # are matched against the field value (the displayed text of the desired result).
         search_value = hc.get("search_value")
+        logger.debug(
+            "[autocomplete] start selector=%s value=%s mode=%s",
+            selector, mask_value(value), mode,
+        )
         # Accept both the legacy search_input_selector key and the schema-level
         # search_selector key used by existing workflows, falling back to the
         # conventional "{selector}_search" suffix.
@@ -83,10 +92,12 @@ class AutoCompleteHandler(BaseHandler):
                     "evidence": {}
                 }
             main_element.wait_for(state="visible", timeout=5000)
+            logger.debug("[autocomplete] main element visible %s", selector)
 
             # 2. Click the selector div to activate/focus it (opens dropdown in "dropdown" mode,
             #    focuses the control in "autocompletion" mode)
             main_element.click()
+            logger.debug("[autocomplete] clicked selector div %s", selector)
 
             # 3. Find the search input and type the value character-by-character
             search_input = self._find_search_input(search_sel, main_element)
@@ -106,6 +117,10 @@ class AutoCompleteHandler(BaseHandler):
             # This is what makes the dropdown results appear at all.
             press_delay = hc.get("delay_between_chars", 50)
             search_input.press_sequentially(search_term, delay=press_delay)
+            logger.debug(
+                "[autocomplete] typed '%s' into search %s (clear=%s, delay=%s)",
+                mask_value(search_term), search_sel, clear_before, press_delay,
+            )
 
             # 4. Wait for suggestions to appear (server roundtrip in autocompletion mode,
             #    dropdown render in dropdown mode)
@@ -117,12 +132,25 @@ class AutoCompleteHandler(BaseHandler):
             item_selector = result_sel or f"{selector} {dropdown_sel}"
             items = self.page.locator(item_selector)
             item_count = items.count()
+            first5 = []
+            for i in range(min(item_count, 5)):
+                try:
+                    t = items.nth(i).text_content()
+                    first5.append(mask_value((t or "").strip()))
+                except Exception:
+                    first5.append("?")
+            logger.debug("[autocomplete] dropdown items=%d first5=%s", item_count, first5)
 
             if item_count > 0:
                 self._select_matching_item(items, str(value))
             else:
+                logger.warning(
+                    "[autocomplete] NO dropdown items appeared for value=%s (selector=%s)",
+                    mask_value(value), selector,
+                )
                 # If no dropdown items appeared, attempt JS fallback
                 if hidden_sel:
+                    logger.debug("[autocomplete] setting hidden input %s=%s", hidden_sel, mask_value(value))
                     self._set_hidden_input(hidden_sel, value)
 
                 evidence = {
@@ -145,6 +173,7 @@ class AutoCompleteHandler(BaseHandler):
 
             # 6. Optionally set hidden input as extra fallback
             if hidden_sel:
+                logger.debug("[autocomplete] setting hidden input %s=%s", hidden_sel, mask_value(value))
                 self._set_hidden_input(hidden_sel, value)
 
             evidence = {
@@ -155,6 +184,7 @@ class AutoCompleteHandler(BaseHandler):
             if search_value is not None:
                 evidence["search_value"] = search_value
 
+            logger.debug("[autocomplete] success selected value=%s", mask_value(value))
             return {
                 "success": True,
                 "message": f"Selected '{value}' from autocomplete '{selector}'",
@@ -162,6 +192,7 @@ class AutoCompleteHandler(BaseHandler):
             }
 
         except Exception as e:
+            logger.debug("[autocomplete] failed for %s: %s", selector, e)
             return {
                 "success": False,
                 "message": f"Autocomplete failed for '{selector}': {str(e)}",
@@ -198,24 +229,43 @@ class AutoCompleteHandler(BaseHandler):
 
         # 1. Try exact match
         for i in range(items.count()):
-            item_text = items.nth(i).text_content().strip()
+            item_raw = items.nth(i).text_content()
+            item_text = item_raw.strip() if item_raw is not None else ""
+            if item_raw != item_text:
+                logger.debug(
+                    "[autocomplete] item had whitespace: raw='%s' stripped='%s'",
+                    mask_value(item_raw), mask_value(item_text),
+                )
+            logger.debug("[autocomplete] exact match: searching item=%s", mask_value(item_text))
             if item_text == value:
                 items.nth(i).click()
                 clicked = True
+                logger.debug("[autocomplete] exact match item='%s' clicked", mask_value(item_text))
                 break
 
         # 2. Try case-insensitive partial match
         if not clicked:
             value_lower = value.lower()
             for i in range(items.count()):
-                item_text = items.nth(i).text_content().strip()
+                item_raw = items.nth(i).text_content()
+                item_text = item_raw.strip() if item_raw is not None else ""
+                logger.debug(
+                    "[autocomplete] partial match: value='%s' vs item='%s'",
+                    mask_value(value), mask_value(item_text),
+                )
                 if value_lower in item_text.lower():
                     items.nth(i).click()
                     clicked = True
+                    logger.debug("[autocomplete] partial match item='%s' clicked", mask_value(item_text))
                     break
 
         # 3. Fall back to first item
         if not clicked:
+            first_text = items.first.text_content()
+            logger.debug(
+                "[autocomplete] NO exact/partial match - fallback to first item='%s'",
+                mask_value(first_text or ""),
+            )
             items.first.click()
 
     def _set_hidden_input(self, hidden_sel: str, value: str) -> None:

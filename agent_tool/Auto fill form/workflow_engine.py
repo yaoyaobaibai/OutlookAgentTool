@@ -21,6 +21,7 @@ import logging
 import time
 from typing import Any, Callable, Optional
 
+import logging_setup
 from handlers import get_handler
 
 logger = logging.getLogger(__name__)
@@ -248,7 +249,7 @@ class WorkflowEngine:
                     locator.fill("")
                     if value:
                         locator.fill(str(value))
-                    logger.debug("Filled '%s' into selector '%s'", value, sel)
+                    logger.debug("Filled '%s' into selector '%s'", logging_setup.mask_value(value), sel)
                     return True
             except Exception:
                 continue
@@ -388,6 +389,8 @@ class WorkflowEngine:
             field_type = field_config.get("type", "input")
             handler = self._get_handler(field_type)
 
+            logger.info("Field '%s' (type=%s): start", field_name, field_type)
+
             # Execute with retry
             retries = handler.retry_count()
             last_error: Optional[dict] = None
@@ -397,6 +400,7 @@ class WorkflowEngine:
                     result = handler.execute(field_config, value)
                     if result.get("success"):
                         self.results[field_name] = result
+                        logger.info("Field '%s': success - %s", field_name, logging_setup.mask_message(result.get("message", "")))
                         self._emit("on_field_end", field_name, result)
                         break
                     last_error = result
@@ -413,6 +417,7 @@ class WorkflowEngine:
             # If all retries failed, emit error and raise
             if last_error and not last_error.get("success"):
                 self.results[field_name] = last_error
+                logger.warning("Field '%s': FAILED - %s", field_name, logging_setup.mask_message(last_error.get("message", "")))
                 self._emit("on_error", field_name, last_error)
                 raise WorkflowFieldError(
                     f"Field '{field_name}' failed after {retries} retries: "

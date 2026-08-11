@@ -19,6 +19,8 @@ import time
 import urllib.request
 import logging
 
+import logging_setup
+
 from workflow_manager import WorkflowManager, WorkflowNotFoundError
 from workflow_engine import WorkflowEngine
 from playwright.sync_api import sync_playwright
@@ -78,6 +80,18 @@ class FormFillerApp:
         self._check_backward_compatibility()
         self._create_widgets()
         self._init_workflow_selector()
+
+        # 启动时清理旧日志 + 挂接 GUI bridge（日志文件将在每次执行开始时创建）
+        try:
+            logging_setup.cleanup_old_logs(days=30)
+        except Exception as e:
+            self._log(f"[!] 日志清理失败: {e}")
+        self._log("[i] 日志系统就绪（文件将在执行开始时创建）")
+
+        # 挂接 GuiLogBridge 到 root logger，将 logging 记录显示到 GUI 日志区
+        _bridge = logging_setup.GuiLogBridge(sink=self._log)
+        _bridge.setFormatter(logging.Formatter("%(message)s"))
+        logging.getLogger().addHandler(_bridge)
 
     # ------------------------------------------------------------------
     # Backward Compatibility
@@ -530,6 +544,12 @@ class FormFillerApp:
     def _on_engine_error(self, field_or_step, error):
         self._log(f"  错误 ({field_or_step}): {error}")
 
+    def _on_step_start(self, step):
+        self._log(f">>> 步骤: {step}")
+
+    def _on_step_end(self, step):
+        self._log(f"<<< 步骤完成: {step}")
+
     # ------------------------------------------------------------------
     # Execution Control
     # ------------------------------------------------------------------
@@ -562,6 +582,14 @@ class FormFillerApp:
         if not fields:
             self._log("[i] 当前工作流没有表单字段，仅执行登录和导航步骤")
 
+        # 每次执行创建独立日志文件（秒级命名）
+        try:
+            log_file = logging_setup.configure_logging()
+            self._log(f"[i] 日志文件: {log_file}")
+        except Exception as e:
+            self._log(f"[!] 日志配置失败: {e}")
+        logger.info("=== 会话开始: %s ===", name)
+
         self._log(f"\n{'='*55}")
         self._log(f"开始执行工作流: {name}")
         self._log(f"{'='*55}\n")
@@ -590,6 +618,8 @@ class FormFillerApp:
             self.engine.register_callback("on_field_start", self._on_field_start)
             self.engine.register_callback("on_field_end", self._on_field_end)
             self.engine.register_callback("on_error", self._on_engine_error)
+            self.engine.register_callback("on_step_start", self._on_step_start)
+            self.engine.register_callback("on_step_end", self._on_step_end)
 
             # Build field values from Excel (if selected)
             field_values = self._build_field_values(config)
@@ -610,6 +640,7 @@ class FormFillerApp:
             self._log(traceback.format_exc())
             self.root.after(0, lambda err=e: self._on_execution_error(err))
         finally:
+            logging_setup.flush_file_handler()
             self.is_running = False
             self.root.after(0, lambda: self.btn_stop.config(state=tk.DISABLED))
             self.root.after(0, lambda: self.btn_start.config(state=tk.NORMAL))

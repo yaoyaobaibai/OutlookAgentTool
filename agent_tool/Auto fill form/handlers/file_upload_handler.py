@@ -5,9 +5,14 @@ Supports two modes:
   - "html5_uploader" (iValua style): click button, find hidden input, wait for upload
 """
 
+import logging
 import os
 from typing import Any
+
+from logging_setup import mask_value
 from .base_handler import BaseHandler
+
+logger = logging.getLogger(__name__)
 
 
 class FileUploadHandler(BaseHandler):
@@ -30,9 +35,12 @@ class FileUploadHandler(BaseHandler):
 
         hc = field_config.get("handler_config", {})
         mode = hc.get("mode", "native")
+        logger.debug("[file_upload] mode=%s file=%s", mode, mask_value(value))
 
         # Validate file exists — with clear, actionable Chinese guidance
         if not value:
+            logger.debug("[file_upload] validation path=%s is_dir=False is_file=False", mask_value(value))
+            logger.debug("[file_upload] validation failed: %s", "附件文件路径为空")
             return {
                 "success": False,
                 "message": "附件文件路径为空：请在 Excel 的 Attachment File 列填写附件所在文件夹，"
@@ -40,6 +48,8 @@ class FileUploadHandler(BaseHandler):
                 "evidence": {"file_path": value}
             }
         if os.path.isdir(value):
+            logger.debug("[file_upload] validation path=%s is_dir=True is_file=False", mask_value(value))
+            logger.debug("[file_upload] validation failed: %s", "附件路径指向的是文件夹而不是文件")
             return {
                 "success": False,
                 "message": (
@@ -49,6 +59,8 @@ class FileUploadHandler(BaseHandler):
                 "evidence": {"file_path": value, "is_dir": True}
             }
         if not os.path.isfile(value):
+            logger.debug("[file_upload] validation path=%s is_dir=False is_file=False", mask_value(value))
+            logger.debug("[file_upload] validation failed: %s", "附件文件不存在")
             return {
                 "success": False,
                 "message": (
@@ -59,6 +71,8 @@ class FileUploadHandler(BaseHandler):
                 "evidence": {"file_path": value, "is_file": False}
             }
 
+        logger.debug("[file_upload] validation path=%s is_dir=False is_file=True", mask_value(value))
+
         try:
             if mode == "native":
                 return self._handle_native(field_config, value)
@@ -68,6 +82,7 @@ class FileUploadHandler(BaseHandler):
                 # Unknown mode - fall back to native
                 return self._handle_native(field_config, value)
         except Exception as e:
+            logger.debug("[file_upload] failed: %s", e)
             return {
                 "success": False,
                 "message": (
@@ -83,6 +98,7 @@ class FileUploadHandler(BaseHandler):
         element = self.page.locator(selector)
         element.wait_for(state="visible", timeout=5000)
         element.set_input_files(value)
+        logger.debug("[file_upload] success %s (native)", mask_value(value))
         return {
             "success": True,
             "message": f"File uploaded to '{selector}': {value}",
@@ -113,15 +129,19 @@ class FileUploadHandler(BaseHandler):
         # wait_after_upload_ms is the highest priority wait (fixed elapsed time,
         # used when the upload+refresh cycle is measured, e.g. iValua ~4.3s).
         if wait_after is not None:
+            logger.debug("[file_upload] wait strategy=%s", "wait_after_upload_ms")
             self.page.wait_for_timeout(int(wait_after))
         elif wait_sel:
+            logger.debug("[file_upload] wait strategy=%s", "wait_for_upload_selector")
             try:
                 self.page.wait_for_selector(wait_sel, state="hidden", timeout=wait_timeout)
             except Exception:
                 self.page.wait_for_timeout(3000)
         else:
+            logger.debug("[file_upload] wait strategy=%s", "default_timeout")
             self.page.wait_for_timeout(2000)
 
+        logger.debug("[file_upload] success %s (html5)", mask_value(value))
         return {
             "success": True,
             "message": f"HTML5 upload completed: {value}",
