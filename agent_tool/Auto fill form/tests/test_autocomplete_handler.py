@@ -15,6 +15,12 @@ Covers:
    6. hidden_input_selector JS fallback still runs when no items appear.
    7. press_sequentially (per-keystroke typing) is used for the search input — not a
       single fill() — so iValua's per-character AJAX search fires.
+   8. Prefix normalization: a digits-only value (e.g. "600123") matches a dropdown
+      item carrying a PO/GR prefix (e.g. "PO-600123 - Vendor A") via _normalize().
+   9. When no normalized match exists, the first item is still clicked (fallback
+      decision unchanged) but evidence["warning"] reports the risk.
+  10. Normalization is conservative: plain email values (approver fields) still
+      match exactly with no warning.
 
 All tests are OFFLINE-SAFE — a MockPage records interactions; no Playwright browser
 is launched. Runnable directly (`python tests/test_autocomplete_handler.py`) or via
@@ -192,7 +198,7 @@ def test_two_step_no_results_returns_success_warning():
     result = handler.execute(field_config, "PO0147739")
 
     assert result["success"] is True, result
-    assert result["evidence"]["warning"] == "No dropdown items appeared"
+    assert result["evidence"]["warning"] == "未找到下拉选项，可能搜索无结果，请人工确认"
     assert "no dropdown items appeared" in result["message"]
     # The search term was still typed (per keystroke) before giving up
     fills = [v for (sel, v) in page.fills if sel == "#sel_search"]
@@ -345,6 +351,81 @@ def test_hidden_input_fallback_on_no_items():
     assert result["success"] is True, result
     assert page.hidden_inputs, "hidden input should be set via JS fallback"
     assert page.hidden_inputs[0] == ["#sel_hidden", "ABC123"]
+
+
+# ---------------------------------------------------------------------------
+# Normalized matching (Bug 2) + fallback warning (Bug 3)
+# ---------------------------------------------------------------------------
+
+def test_prefix_normalized_exact_match():
+    """Digits-only Excel value matches a PO-prefixed dropdown item via _normalize.
+
+    value="600123" vs item "PO-600123 - Vendor A": the ' - ' token and PO prefix
+    are stripped, so the normalized keys collide -> exact match, no warning.
+    """
+    page = MockPage()
+    page.item_texts["#sel_results .text"] = [
+        "PO-600123 - Vendor A",
+        "PO999999 - Vendor B",
+    ]
+    page.locator_counts["#sel_results .text"] = 2
+    handler = _make_handler(page)
+
+    field_config = {
+        "selector": "#sel",
+        "handler_config": {
+            "result_selector": "#sel_results .text",
+            "wait_after_input_ms": 100,
+        },
+    }
+    result = handler.execute(field_config, "600123")
+
+    assert result["success"] is True, result
+    # The correct item (index 0) is clicked, not the fallback
+    assert ("#sel_results .text", 0) in page.clicks, page.clicks
+    assert "warning" not in result["evidence"], result["evidence"]
+
+
+def test_fallback_reports_warning():
+    """No normalized match -> first item is still clicked (fallback unchanged)
+    but evidence['warning'] flags the risk."""
+    page = MockPage()
+    page.item_texts["#sel_results .text"] = ["PO0147739 - Vendor A"]
+    handler = _make_handler(page)
+
+    field_config = {
+        "selector": "#sel",
+        "handler_config": {
+            "result_selector": "#sel_results .text",
+            "wait_after_input_ms": 100,
+        },
+    }
+    result = handler.execute(field_config, "600123")
+
+    assert result["success"] is True, result
+    # Fallback still selects the first item
+    assert ("#sel_results .text", 0) in page.clicks, page.clicks
+    assert "可能不是目标订单" in result["evidence"]["warning"]
+
+
+def test_email_match_unchanged():
+    """Normalization must not break plain email values (approver fields)."""
+    page = MockPage()
+    page.item_texts["#sel_results .text"] = ["jo@gmail.com"]
+    handler = _make_handler(page)
+
+    field_config = {
+        "selector": "#sel",
+        "handler_config": {
+            "result_selector": "#sel_results .text",
+            "wait_after_input_ms": 100,
+        },
+    }
+    result = handler.execute(field_config, "jo@gmail.com")
+
+    assert result["success"] is True, result
+    assert ("#sel_results .text", 0) in page.clicks, page.clicks
+    assert "warning" not in result["evidence"], result["evidence"]
 
 
 # ---------------------------------------------------------------------------

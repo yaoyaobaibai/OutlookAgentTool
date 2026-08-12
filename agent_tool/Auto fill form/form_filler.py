@@ -27,6 +27,29 @@ from playwright.sync_api import sync_playwright
 
 logger = logging.getLogger(__name__)
 
+
+def format_field_result(result):
+    """Format a field result dict into ``(status_text, has_warning)``.
+
+    Pure function — no GUI/tkinter dependency, safe to call offline
+    (unit tests never instantiate the Tk app).
+
+    Args:
+        result: dict with keys ``success``, ``message`` and optional
+            ``evidence.warning`` (written by handlers on autocomplete
+            fallback / no-match cases).
+
+    Returns:
+        tuple[str, bool]: status text of the form ``"✓ 成功 — <message>"``
+        or ``"✗ 失败 — <message>"``, and ``has_warning`` which is True when
+        ``evidence.warning`` holds a truthy value.
+    """
+    status = "✓ 成功" if result.get("success") else "✗ 失败"
+    message = result.get("message", "")
+    has_warning = bool(result.get("evidence", {}).get("warning"))
+    return f"{status} — {message}", has_warning
+
+
 # ==============================================================================
 # Main Application
 # ==============================================================================
@@ -247,6 +270,10 @@ class FormFillerApp:
 
         self.log_text = tk.Text(log_inner, height=10, wrap=tk.WORD, state=tk.DISABLED)
         self.log_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        # Yellow tag for field-result warnings (autocomplete fallback / likely
+        # wrong selection). tag_configure works even while the Text is DISABLED.
+        self.log_text.tag_configure("warning", foreground="#B8860B")
 
         log_scrollbar = ttk.Scrollbar(log_inner, orient=tk.VERTICAL, command=self.log_text.yview)
         self.log_text.configure(yscrollcommand=log_scrollbar.set)
@@ -519,12 +546,19 @@ class FormFillerApp:
     # Logging
     # ------------------------------------------------------------------
 
-    def _log(self, message):
-        """Append a message to the log panel (thread-safe via root.after)."""
+    def _log(self, message, tag=None):
+        """Append a message to the log panel (thread-safe via root.after).
+
+        ``tag`` is optional — when given, the inserted text is tagged
+        (e.g. "warning" renders yellow). Existing callers are unaffected.
+        """
 
         def _append():
             self.log_text.configure(state=tk.NORMAL)
-            self.log_text.insert(tk.END, message + "\n")
+            if tag:
+                self.log_text.insert(tk.END, message + "\n", tag)
+            else:
+                self.log_text.insert(tk.END, message + "\n")
             self.log_text.see(tk.END)
             self.log_text.configure(state=tk.DISABLED)
 
@@ -538,8 +572,11 @@ class FormFillerApp:
         self._log(f">>> 处理字段: {field_name}")
 
     def _on_field_end(self, field_name, result):
-        status = "✓ 成功" if result.get("success") else "✗ 失败"
-        self._log(f"  {field_name}: {status} — {result.get('message', '')}")
+        status_text, has_warning = format_field_result(result)
+        self._log(f"  {field_name}: {status_text}")
+        if has_warning:
+            warning = result.get("evidence", {}).get("warning", "")
+            self._log(f"  ⚠ {warning}", tag="warning")
 
     def _on_engine_error(self, field_or_step, error):
         self._log(f"  错误 ({field_or_step}): {error}")

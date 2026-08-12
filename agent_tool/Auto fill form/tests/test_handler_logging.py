@@ -158,7 +158,7 @@ def test_autocomplete_no_items_warning(caplog):
 
     # Handler still succeeds (warning path, not hard failure)
     assert result["success"] is True, result
-    assert result["evidence"]["warning"] == "No dropdown items appeared"
+    assert result["evidence"]["warning"] == "未找到下拉选项，可能搜索无结果，请人工确认"
     assert "NO dropdown items appeared" in caplog.text, caplog.text
     assert any(
         rec.levelno == 30 for rec in caplog.records

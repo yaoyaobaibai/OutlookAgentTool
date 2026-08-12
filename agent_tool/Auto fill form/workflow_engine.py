@@ -401,7 +401,16 @@ class WorkflowEngine:
                     if result.get("success"):
                         self.results[field_name] = result
                         logger.info("Field '%s': success - %s", field_name, logging_setup.mask_message(result.get("message", "")))
+                        # Surface non-fatal evidence warnings (e.g. autocomplete
+                        # fallback / no dropdown items) without affecting success
+                        # semantics or triggering a retry.
+                        warning = result.get("evidence", {}).get("warning")
+                        if warning:
+                            logger.warning("Field '%s': %s", field_name, warning)
                         self._emit("on_field_end", field_name, result)
+                        # Clear the stale failure from an earlier attempt so the
+                        # post-loop guard does not misreport a retried success.
+                        last_error = None
                         break
                     last_error = result
                 except Exception as e:

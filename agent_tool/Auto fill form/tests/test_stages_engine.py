@@ -15,6 +15,7 @@ All tests are OFFLINE-SAFE: a MockPage records interactions, no browser is launc
 Run with:  python -m pytest tests/test_stages_engine.py -v
 """
 
+import logging
 import os
 import sys
 
@@ -24,6 +25,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
+from handlers.base_handler import BaseHandler
 from workflow_engine import WorkflowEngine, WorkflowFieldError
 
 
@@ -274,6 +276,142 @@ def test_stage_missing_field_raises():
     # The public execute() path surfaces the same error in the result dict
     result = engine.execute(field_values={"X": "1"})
     assert "Ghost" in result.get("error", ""), result
+
+
+# ---------------------------------------------------------------------------
+# Retry + evidence.warning tests (regression for stale last_error after break)
+# ---------------------------------------------------------------------------
+
+class FlakyHandler(BaseHandler):
+    """Fails on the first execute() call, succeeds on the second.
+
+    Injected via engine._get_handler to exercise the retry path without a
+    browser. Mirrors the production bug: attempt 0 fails (last_error set),
+    attempt 1 succeeds, `break` must clear last_error so the post-loop
+    ``if last_error and not last_error.get("success")`` guard does not
+    misreport the field as FAILED.
+    """
+
+    def __init__(self, page, workflow_config):
+        super().__init__(page, workflow_config)
+        self.calls = 0
+
+    def execute(self, field_config, value):
+        self.calls += 1
+        if self.calls == 1:
+            return {"success": False, "message": "Element not found", "evidence": {}}
+        return {
+            "success": True,
+            "message": f"Filled '{value}' into '{field_config.get('selector')}'",
+            "evidence": {"selector": field_config.get("selector"), "value": value},
+        }
+
+
+class AlwaysFailHandler(BaseHandler):
+    """Fails on every execute() call (all retries exhausted)."""
+
+    def execute(self, field_config, value):
+        return {"success": False, "message": "Element not found", "evidence": {}}
+
+
+class WarningHandler(BaseHandler):
+    """Succeeds but returns evidence.warning (e.g. autocomplete fallback)."""
+
+    def execute(self, field_config, value):
+        return {
+            "success": True,
+            "message": "Filled via fallback",
+            "evidence": {
+                "selector": field_config.get("selector"),
+                "value": value,
+                "warning": "No dropdown items appeared",
+            },
+        }
+
+
+def _engine_with_handler(handler, page, config):
+    """Build an engine whose _get_handler returns the given handler instance."""
+    engine = WorkflowEngine(page, config)
+    engine._get_handler = lambda field_type: handler
+    return engine
+
+
+def test_fail_then_succeed_not_misreported(monkeypatch):
+    """Bug 1: a field that fails on attempt 0 then succeeds on attempt 1 must
+    be reported as SUCCESS — the stale last_error must not trip the post-loop
+    FAILED guard and raise WorkflowFieldError."""
+    monkeypatch.setattr("workflow_engine.time.sleep", lambda s: None)
+    page = MockPage()
+    config = _base_config(
+        fields={
+            "Code": {
+                "selector": "#code",
+                "type": "input",
+                "required": True,
+                "post_fill": {"action": "click_button", "click_selector": "#submit"},
+            },
+        },
+    )
+    engine = _engine_with_handler(FlakyHandler(page, config), page, config)
+    field_ends = []
+    engine.register_callback("on_field_end", lambda name, result: field_ends.append(name))
+
+    result = engine.execute(field_values={"Code": "A1"})
+
+    # Not a failure: success=True and the engine did not raise/record FAILED
+    assert result["success"] == 1, result
+    assert result["failed"] == 0, result
+    assert result["results"]["Code"]["success"] is True, result
+    # on_field_end fired exactly once (only the successful attempt)
+    assert field_ends == ["Code"], field_ends
+    # post_fill still runs after the retried-but-successful field
+    assert clicks(page) == ["#submit"], page.calls
+
+
+def test_all_retries_failed_marks_field_failed(monkeypatch):
+    """A field that fails on every attempt must still be reported as FAILED
+    (regression guard: ensure the fix does not swallow real failures)."""
+    monkeypatch.setattr("workflow_engine.time.sleep", lambda s: None)
+    page = MockPage()
+    config = _base_config(
+        fields={
+            "Code": {"selector": "#code", "type": "input", "required": True},
+        },
+    )
+    engine = _engine_with_handler(AlwaysFailHandler(page, config), page, config)
+
+    result = engine.execute(field_values={"Code": "A1"})
+
+    # execute() swallows WorkflowFieldError into the result dict
+    assert result["failed"] == 1, result
+    assert result["success"] == 0, result
+    assert "failed after 2 retries" in result.get("error", ""), result
+
+
+def test_evidence_warning_is_logged(caplog):
+    """Bug 2: a successful result carrying evidence.warning (autocomplete
+    fallback / no dropdown items) must surface as a WARNING log line."""
+    page = MockPage()
+    config = _base_config(
+        fields={
+            "Code": {"selector": "#code", "type": "input", "required": True},
+        },
+    )
+    engine = _engine_with_handler(WarningHandler(page, config), page, config)
+
+    with caplog.at_level(logging.WARNING, logger="workflow_engine"):
+        result = engine.execute(field_values={"Code": "A1"})
+
+    # Warning does NOT change the success semantics
+    assert result["success"] == 1, result
+    assert result["failed"] == 0, result
+    # The engine-level logger must surface the evidence warning
+    warnings = [
+        r.getMessage()
+        for r in caplog.records
+        if r.name == "workflow_engine" and r.levelno == logging.WARNING
+    ]
+    assert any("Code" in w and "No dropdown items appeared" in w for w in warnings), warnings
 
 
 if __name__ == "__main__":

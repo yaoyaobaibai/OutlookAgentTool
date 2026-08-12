@@ -20,12 +20,18 @@ the dropdown.
 """
 
 import logging
+import re
 from typing import Any
 
 from logging_setup import mask_value
 from .base_handler import BaseHandler
 
 logger = logging.getLogger(__name__)
+
+# Common PO/GR prefixes (case-insensitive) that iValua prepends to order/receipt
+# numbers in dropdown item labels. Stripped in _normalize() so a digits-only Excel
+# value ("600123") still matches "PO-600123" / "PO0147739" dropdown items.
+_PREFIX_RE = re.compile(r"^(po|gr)[\s-]*", re.IGNORECASE)
 
 
 class AutoCompleteHandler(BaseHandler):
@@ -142,7 +148,7 @@ class AutoCompleteHandler(BaseHandler):
             logger.debug("[autocomplete] dropdown items=%d first5=%s", item_count, first5)
 
             if item_count > 0:
-                self._select_matching_item(items, str(value))
+                match_status = self._select_matching_item(items, str(value))
             else:
                 logger.warning(
                     "[autocomplete] NO dropdown items appeared for value=%s (selector=%s)",
@@ -160,7 +166,7 @@ class AutoCompleteHandler(BaseHandler):
                 }
                 if search_value is not None:
                     evidence["search_value"] = search_value
-                evidence["warning"] = "No dropdown items appeared"
+                evidence["warning"] = "未找到下拉选项，可能搜索无结果，请人工确认"
 
                 return {
                     "success": True,
@@ -183,6 +189,9 @@ class AutoCompleteHandler(BaseHandler):
             }
             if search_value is not None:
                 evidence["search_value"] = search_value
+
+            if match_status == "fallback":
+                evidence["warning"] = "未找到匹配项，已选中第一项，可能不是目标订单，请人工确认"
 
             logger.debug("[autocomplete] success selected value=%s", mask_value(value))
             return {
@@ -220,32 +229,49 @@ class AutoCompleteHandler(BaseHandler):
         search_input.click()
         return search_input
 
-    def _select_matching_item(self, items, value: str) -> None:
+    @staticmethod
+    def _normalize(text: str) -> str:
+        """Normalize a display/text value into a comparison key.
+
+        - Keeps only the first ' - ' separated token, so vendor/description
+          suffixes (e.g. " - Vendor A") never affect matching.
+        - Strips common PO/GR prefixes (PO-, PO, GR-, GR) case-insensitively.
+        - Lowercases and strips surrounding whitespace.
+
+        Conservative by design: values that match no prefix pattern (e.g. email
+        addresses like "jo@gmail.com") pass through untouched apart from the
+        lowercase/trim, so approver-field matching is unchanged.
+        """
+        token = (text or "").split(" - ")[0]
+        token = _PREFIX_RE.sub("", token)
+        return token.strip().lower()
+
+    def _select_matching_item(self, items, value: str) -> str:
         """
         Select a dropdown item matching the given value.
-        Priority: exact match > partial (case-insensitive) match > first item.
-        """
-        clicked = False
 
-        # 1. Try exact match
+        Priority: exact (normalized keys equal) > partial (normalized value is a
+        case-insensitive substring of the normalized item) > first item.
+
+        Returns a match status string: "exact", "partial", or "fallback".
+        Matching is done on normalized comparison keys only - the clicked item
+        always uses its original displayed text (item_text is never rewritten).
+        """
+        value_key = self._normalize(value)
+
+        # 1. Try exact match (normalized comparison keys)
         for i in range(items.count()):
             item_raw = items.nth(i).text_content()
             item_text = item_raw.strip() if item_raw is not None else ""
-            if item_raw != item_text:
-                logger.debug(
-                    "[autocomplete] item had whitespace: raw='%s' stripped='%s'",
-                    mask_value(item_raw), mask_value(item_text),
-                )
             logger.debug("[autocomplete] exact match: searching item=%s", mask_value(item_text))
-            if item_text == value:
+            if self._normalize(item_text) == value_key:
                 items.nth(i).click()
-                clicked = True
                 logger.debug("[autocomplete] exact match item='%s' clicked", mask_value(item_text))
-                break
+                return "exact"
 
-        # 2. Try case-insensitive partial match
-        if not clicked:
-            value_lower = value.lower()
+        # 2. Try case-insensitive partial match (only when the normalized key is
+        #    non-empty, otherwise an empty key would match every item)
+        if value_key:
             for i in range(items.count()):
                 item_raw = items.nth(i).text_content()
                 item_text = item_raw.strip() if item_raw is not None else ""
@@ -253,20 +279,19 @@ class AutoCompleteHandler(BaseHandler):
                     "[autocomplete] partial match: value='%s' vs item='%s'",
                     mask_value(value), mask_value(item_text),
                 )
-                if value_lower in item_text.lower():
+                if value_key in self._normalize(item_text):
                     items.nth(i).click()
-                    clicked = True
                     logger.debug("[autocomplete] partial match item='%s' clicked", mask_value(item_text))
-                    break
+                    return "partial"
 
         # 3. Fall back to first item
-        if not clicked:
-            first_text = items.first.text_content()
-            logger.debug(
-                "[autocomplete] NO exact/partial match - fallback to first item='%s'",
-                mask_value(first_text or ""),
-            )
-            items.first.click()
+        first_text = items.first.text_content()
+        logger.debug(
+            "[autocomplete] NO exact/partial match - fallback to first item='%s'",
+            mask_value(first_text or ""),
+        )
+        items.first.click()
+        return "fallback"
 
     def _set_hidden_input(self, hidden_sel: str, value: str) -> None:
         """Set a hidden input's value via JavaScript as safety fallback."""
